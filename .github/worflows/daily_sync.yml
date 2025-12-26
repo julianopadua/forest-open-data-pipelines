@@ -4,7 +4,6 @@ name: Daily Open Data Sync
 on:
   workflow_dispatch:
   schedule:
-    # 09:00 BRT ~ 12:00 UTC (ajuste se quiser)
     - cron: "0 12 * * *"
 
 jobs:
