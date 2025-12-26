@@ -1,0 +1,10 @@
+# configs/app.yml
+app:
+  name: forest-open-data-pipelines
+  data_dir: data
+  logs_dir: logs
+
+supabase:
+  bucket_open_data_env: SUPABASE_BUCKET_OPEN_DATA
+
+datasets_dir: configs/datasets

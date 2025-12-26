@@ -1,0 +1,24 @@
+# pyproject.toml
+[project]
+name = "forest-open-data-pipelines"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+  "requests>=2.31.0",
+  "beautifulsoup4>=4.12.0",
+  "PyYAML>=6.0.1",
+  "python-dotenv>=1.0.1",
+  "typer>=0.12.0",
+  "pydantic>=2.7.0",
+  "supabase>=2.6.0",
+]
+
+[project.scripts]
+forest-pipelines = "forest_pipelines.cli:app"
+
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "src"}

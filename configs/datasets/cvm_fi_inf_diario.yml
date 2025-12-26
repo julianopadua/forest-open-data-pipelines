@@ -1,0 +1,7 @@
+id: cvm_fi_inf_diario
+source: cvm_ckan
+dataset_slug: fi-doc-inf_diario
+bucket_prefix: cvm/fi/inf_diario
+mode: mirror_latest_months
+latest_months: 12
+include_meta: true
