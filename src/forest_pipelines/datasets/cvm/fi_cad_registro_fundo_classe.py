@@ -45,7 +45,12 @@ def load_dataset_cfg(datasets_dir: Path, dataset_id: str) -> DatasetCfg:
     if not bucket_prefix:
         raise ValueError(f"Config inválida: faltando 'bucket_prefix' em {path.as_posix()}")
 
-    return DatasetCfg(id=ds_id, title=title, source_dataset_url=source_dataset_url, bucket_prefix=bucket_prefix)
+    return DatasetCfg(
+        id=ds_id,
+        title=title,
+        source_dataset_url=source_dataset_url,
+        bucket_prefix=bucket_prefix,
+    )
 
 
 def extract_resource_urls(dataset_url: str) -> list[str]:
@@ -70,7 +75,12 @@ def find_by_filename(urls: list[str], filename: str) -> str:
     raise ValueError(f"Não encontrei resource URL para '{filename}' na página do dataset.")
 
 
-def sync(settings: Any, storage: Any, logger: Any) -> dict[str, Any]:
+def sync(
+    settings: Any,
+    storage: Any,
+    logger: Any,
+    latest_months: int | None = None,  # compat CLI (não usado)
+) -> dict[str, Any]:
     cfg = load_dataset_cfg(settings.datasets_dir, "cvm_fi_cad_registro_fundo_classe")
 
     data_filename = "registro_fundo_classe.zip"

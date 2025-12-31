@@ -27,12 +27,6 @@ class DatasetCfg:
 
 
 def load_dataset_cfg(datasets_dir: Path, dataset_id: str) -> DatasetCfg:
-    """
-    Compatível com dois formatos de YAML:
-    A) completo: {id, title, source_dataset_url, bucket_prefix, latest_years, include_current}
-    B) “slug-based”: {id, dataset_slug, bucket_prefix, ...}
-       -> source_dataset_url é derivado de dataset_slug.
-    """
     path = datasets_dir / f"{dataset_id}.yml"
     with open(path, "r", encoding="utf-8") as f:
         raw = yaml.safe_load(f) or {}
@@ -88,11 +82,6 @@ def pick_urls(
     latest_years: int,
     include_current: bool,
 ) -> tuple[list[tuple[str, str]], str | None]:
-    """
-    Retorna:
-      - items: lista de (period, url) onde period é "Atual" ou "YYYY"
-      - meta_url: url do dicionário, se existir
-    """
     meta_url: str | None = None
     current_url: str | None = None
     yearly: list[tuple[str, str]] = []
@@ -128,10 +117,10 @@ def sync(
     settings: Any,
     storage: Any,
     logger: Any,
-    latest_years: int | None = None,
+    latest_months: int | None = None,  # compat com CLI (atua como latest_years)
 ) -> dict[str, Any]:
     cfg = load_dataset_cfg(settings.datasets_dir, "cvm_fi_doc_extrato")
-    ly = latest_years or cfg.latest_years
+    ly = latest_months or cfg.latest_years
 
     logger.info("Lendo resources do dataset: %s", cfg.source_dataset_url)
     urls = extract_resource_urls(cfg.source_dataset_url)

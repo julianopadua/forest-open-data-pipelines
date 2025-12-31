@@ -75,7 +75,7 @@ def extract_resource_urls(dataset_url: str) -> list[str]:
 
 
 def pick_latest_year_zip_urls(urls: list[str], latest_years: int) -> tuple[list[tuple[str, str]], str | None]:
-    yearly: list[tuple[str, str]] = []  # (YYYY, url)
+    yearly: list[tuple[str, str]] = []
     meta_url: str | None = None
 
     for u in urls:
@@ -100,16 +100,21 @@ def sync(
     settings: Any,
     storage: Any,
     logger: Any,
-    latest_years: int | None = None,
+    latest_months: int | None = None,  # compat com CLI (atua como latest_years)
 ) -> dict[str, Any]:
     cfg = load_dataset_cfg(settings.datasets_dir, "cvm_fii_doc_inf_trimestral")
-    ly = latest_years or cfg.latest_years
+    ly = latest_months or cfg.latest_years
 
     logger.info("Lendo resources do dataset: %s", cfg.source_dataset_url)
     urls = extract_resource_urls(cfg.source_dataset_url)
 
     zip_urls, meta_url = pick_latest_year_zip_urls(urls, ly)
-    logger.info("Encontrados %d ZIPs (latest_years=%d). Meta=%s", len(zip_urls), ly, "sim" if meta_url else "não")
+    logger.info(
+        "Encontrados %d ZIPs (latest_years=%d). Meta=%s",
+        len(zip_urls),
+        ly,
+        "sim" if meta_url else "não",
+    )
 
     items: list[dict[str, Any]] = []
 
