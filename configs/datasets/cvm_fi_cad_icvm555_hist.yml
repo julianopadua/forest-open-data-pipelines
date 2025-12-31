@@ -1,0 +1,5 @@
+# configs/datasets/cvm_fi_cad_icvm555_hist.yml
+id: cvm_fi_cad_icvm555_hist
+title: CVM - FI - Cadastro - ICVM 555 (Histórico de alterações)
+dataset_slug: fi-cad
+bucket_prefix: cvm/fi/cad/icvm555_hist

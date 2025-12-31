@@ -1,0 +1,5 @@
+# configs/datasets/cvm_fi_cad_nao_adaptados_rcvm175.yml
+id: cvm_fi_cad_nao_adaptados_rcvm175
+title: CVM - FI - Cadastro - Não Adaptados RCVM175 (último dia útil)
+dataset_slug: fi-cad
+bucket_prefix: cvm/fi/cad/nao_adaptados_rcvm175
