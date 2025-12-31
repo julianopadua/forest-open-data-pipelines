@@ -1,0 +1,5 @@
+# configs/datasets/cvm_fi_cad_registro_fundo_classe.yml
+id: cvm_fi_cad_registro_fundo_classe
+title: CVM - FI - Cadastro - Registro de Fundos, Classes e Subclasses
+dataset_slug: fi-cad
+bucket_prefix: cvm/fi/cad/registro_fundo_classe

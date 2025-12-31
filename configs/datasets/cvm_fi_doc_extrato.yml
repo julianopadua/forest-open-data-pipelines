@@ -1,0 +1,7 @@
+# configs/datasets/cvm_fi_doc_extrato.yml
+id: cvm_fi_doc_extrato
+title: CVM - FI - Documentos - Extrato das Informações
+dataset_slug: fi-doc-extrato
+bucket_prefix: cvm/fi/doc/extrato
+latest_years: 5
+include_current: true
