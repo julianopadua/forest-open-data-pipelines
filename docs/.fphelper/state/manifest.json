@@ -1,0 +1,114 @@
+{
+  "files": {
+    "datasets/__init__.py": {
+      "sha256": "e398bbd0dd3b260221b609be9b8ba9d33d10df36cb75c252ab0b5edcc5ad75fa",
+      "model": "openai/gpt-oss-120b",
+      "updated_at": "2026-01-02T20:16:07.947779+00:00"
+    },
+    "logging_.py": {
+      "sha256": "9dc299fc3d98d9d6f9e1fb438ec2ea1dac66b0a38aa2a47ff80b551a1df818ce",
+      "model": "openai/gpt-oss-120b",
+      "updated_at": "2026-01-02T20:16:11.551793+00:00"
+    },
+    "cli.py": {
+      "sha256": "20b85666bea276f6b44a1eab2ffe22e134a310e7c3e27a83c8fa0045874e4926",
+      "model": "openai/gpt-oss-120b",
+      "updated_at": "2026-01-02T20:16:16.366371+00:00"
+    },
+    "registry/datasets.py": {
+      "sha256": "1086f3fc046404150edc0e64393887443d5ff482754ce9c4f58230148407f925",
+      "model": "openai/gpt-oss-120b",
+      "updated_at": "2026-01-02T20:16:20.009615+00:00"
+    },
+    "storage/supabase_storage.py": {
+      "sha256": "dde680c3249be9949c62b969fa5da3283a2f24bef5fcb61c756e9bc1bd27cbdc",
+      "model": "openai/gpt-oss-120b",
+      "updated_at": "2026-01-02T20:16:24.371685+00:00"
+    },
+    "manifests/build_manifest.py": {
+      "sha256": "083f4710674c6094d690b49e5fe8a8ffab3cdffb065a33f901cded0e4976b8e1",
+      "model": "openai/gpt-oss-120b",
+      "updated_at": "2026-01-02T20:17:28.651012+00:00"
+    },
+    "utils/hashing.py": {
+      "sha256": "74bfa5522fdb0234c6ddde126d59eb903c5e63de9e45360e41f139f0c7a3d69d",
+      "model": "openai/gpt-oss-120b",
+      "updated_at": "2026-01-02T20:17:31.204455+00:00"
+    },
+    "datasets/cvm/fi_inf_diario.py": {
+      "sha256": "1673fd9cf6298f986049a203efef304810a032316ee9241bf7a4cd33f0151b40",
+      "model": "openai/gpt-oss-120b",
+      "updated_at": "2026-01-02T20:17:36.764382+00:00"
+    },
+    "utils/__init__.py": {
+      "sha256": "906afa5bba542c5f95b0a9ffe2335c82978415eb928d7debef31438b70ed128d",
+      "model": "openai/gpt-oss-120b",
+      "updated_at": "2026-01-02T20:17:39.183648+00:00"
+    },
+    "datasets/cvm/__init__.py": {
+      "sha256": "7d660b7677d632dc5b7d3fde285d94b6455eed72412fd8d5d71435fa25757c76",
+      "model": "openai/gpt-oss-120b",
+      "updated_at": "2026-01-02T20:18:39.587840+00:00"
+    },
+    "datasets/cvm/fi_cad_nao_adaptados_rcvm175.py": {
+      "sha256": "a9cd8b57332ccda69af5bbc1f7ad4377bc686639b33b55a6d9734c0ade5903b4",
+      "model": "openai/gpt-oss-120b",
+      "updated_at": "2026-01-02T20:18:45.363306+00:00"
+    },
+    "http.py": {
+      "sha256": "d864294419dd3014a7d282c098b27c0e0599c26b11516fefcb2489a9c553eb91",
+      "model": "openai/gpt-oss-120b",
+      "updated_at": "2026-01-02T20:18:49.181587+00:00"
+    },
+    "utils/dates.py": {
+      "sha256": "30972120085c35188205f7d1b881f79ead0c59c974f3edceae92a1c433971261",
+      "model": "openai/gpt-oss-120b",
+      "updated_at": "2026-01-02T20:18:54.571052+00:00"
+    },
+    "__init__.py": {
+      "sha256": "aac206c7389e6b9adf8fa79379d14a6f8e9a876dfc9f0d477500c31343c44816",
+      "model": "openai/gpt-oss-120b",
+      "updated_at": "2026-01-02T20:19:56.632978+00:00"
+    },
+    "datasets/cvm/fi_doc_extrato.py": {
+      "sha256": "813eab5f15422192f8993579ccab02bbc76fed516e78cc015800e9bbc8096aea",
+      "model": "openai/gpt-oss-120b",
+      "updated_at": "2026-01-02T20:20:02.742126+00:00"
+    },
+    "datasets/cvm/fii_doc_inf_trimestral.py": {
+      "sha256": "4b180b98a25185500a4ca2562a436bd591f1638b32caa034adbcaa9cbf7eb389",
+      "model": "openai/gpt-oss-120b",
+      "updated_at": "2026-01-02T20:20:08.764329+00:00"
+    },
+    "datasets/cvm/fi_cad_registro_fundo_classe.py": {
+      "sha256": "9d34538fb89d3248cbacb5f64f0bca3bdf0f66a43f26f0f31b7e0934f4b5c9a6",
+      "model": "openai/gpt-oss-120b",
+      "updated_at": "2026-01-02T20:21:14.854523+00:00"
+    },
+    "storage/__init__.py": {
+      "sha256": "d1f9b2658040351989c8c5577ae64b132ff3850612e63c562ebf6b5df81e042d",
+      "model": "openai/gpt-oss-120b",
+      "updated_at": "2026-01-02T20:21:17.720631+00:00"
+    },
+    "datasets/cvm/fi_cad_icvm555_hist.py": {
+      "sha256": "4ca9e10aee7425d54f907ca1ef4381c360e90e6e2a76fa5272e1ad678150740f",
+      "model": "openai/gpt-oss-120b",
+      "updated_at": "2026-01-02T20:21:23.112406+00:00"
+    },
+    "manifests/__init__.py": {
+      "sha256": "27231e76476dcbce14bd530ff8e4d7cd5662c443d9efebef3e34ba6f4243db9a",
+      "model": "openai/gpt-oss-120b",
+      "updated_at": "2026-01-02T20:22:23.411670+00:00"
+    },
+    "settings.py": {
+      "sha256": "dbb747aab76893b69cf227db75d3a69ac3b580be57c34c8df01224d491027a06",
+      "model": "openai/gpt-oss-120b",
+      "updated_at": "2026-01-02T20:22:27.700275+00:00"
+    },
+    "registry/__init__.py": {
+      "sha256": "1e16d989a6f8fef49c300222ecc084af05a59141c13f6a274962d3ff128a05d3",
+      "model": "openai/gpt-oss-120b",
+      "updated_at": "2026-01-02T20:22:30.407695+00:00"
+    }
+  }
+}

@@ -1,0 +1,26 @@
+# Indice de documentacao
+
+Gerado automaticamente pelo forest-portal-helper.
+
+- __init__.py -> [src/__init__/__init__.md](src/__init__/__init__.md)
+- cli.py -> [src/cli/cli.md](src/cli/cli.md)
+- datasets/__init__.py -> [src/datasets/__init__/__init__.md](src/datasets/__init__/__init__.md)
+- datasets/cvm/__init__.py -> [src/datasets/cvm/__init__/__init__.md](src/datasets/cvm/__init__/__init__.md)
+- datasets/cvm/fi_cad_icvm555_hist.py -> [src/datasets/cvm/fi_cad_icvm555_hist/fi_cad_icvm555_hist.md](src/datasets/cvm/fi_cad_icvm555_hist/fi_cad_icvm555_hist.md)
+- datasets/cvm/fi_cad_nao_adaptados_rcvm175.py -> [src/datasets/cvm/fi_cad_nao_adaptados_rcvm175/fi_cad_nao_adaptados_rcvm175.md](src/datasets/cvm/fi_cad_nao_adaptados_rcvm175/fi_cad_nao_adaptados_rcvm175.md)
+- datasets/cvm/fi_cad_registro_fundo_classe.py -> [src/datasets/cvm/fi_cad_registro_fundo_classe/fi_cad_registro_fundo_classe.md](src/datasets/cvm/fi_cad_registro_fundo_classe/fi_cad_registro_fundo_classe.md)
+- datasets/cvm/fi_doc_extrato.py -> [src/datasets/cvm/fi_doc_extrato/fi_doc_extrato.md](src/datasets/cvm/fi_doc_extrato/fi_doc_extrato.md)
+- datasets/cvm/fi_inf_diario.py -> [src/datasets/cvm/fi_inf_diario/fi_inf_diario.md](src/datasets/cvm/fi_inf_diario/fi_inf_diario.md)
+- datasets/cvm/fii_doc_inf_trimestral.py -> [src/datasets/cvm/fii_doc_inf_trimestral/fii_doc_inf_trimestral.md](src/datasets/cvm/fii_doc_inf_trimestral/fii_doc_inf_trimestral.md)
+- http.py -> [src/http/http.md](src/http/http.md)
+- logging_.py -> [src/logging_/logging_.md](src/logging_/logging_.md)
+- manifests/__init__.py -> [src/manifests/__init__/__init__.md](src/manifests/__init__/__init__.md)
+- manifests/build_manifest.py -> [src/manifests/build_manifest/build_manifest.md](src/manifests/build_manifest/build_manifest.md)
+- registry/__init__.py -> [src/registry/__init__/__init__.md](src/registry/__init__/__init__.md)
+- registry/datasets.py -> [src/registry/datasets/datasets.md](src/registry/datasets/datasets.md)
+- settings.py -> [src/settings/settings.md](src/settings/settings.md)
+- storage/__init__.py -> [src/storage/__init__/__init__.md](src/storage/__init__/__init__.md)
+- storage/supabase_storage.py -> [src/storage/supabase_storage/supabase_storage.md](src/storage/supabase_storage/supabase_storage.md)
+- utils/__init__.py -> [src/utils/__init__/__init__.md](src/utils/__init__/__init__.md)
+- utils/dates.py -> [src/utils/dates/dates.md](src/utils/dates/dates.md)
+- utils/hashing.py -> [src/utils/hashing/hashing.md](src/utils/hashing/hashing.md)
