@@ -121,7 +121,7 @@ def sync(
     Não engole exceção: mantém traceback (bom para debug),
     mas sem vazar service role key via repr do storage (corrigido no dataclass).
     """
-    cfg = load_dataset_cfg(settings.datasets_dir, "cvm_fi_inf_diario")
+    cfg = load_dataset_cfg(settings.datasets_dir, "cvm/fi_inf_diario")
     lm = latest_months or cfg.latest_months
 
     logger.info("Lendo resources do dataset: %s", cfg.source_dataset_url)

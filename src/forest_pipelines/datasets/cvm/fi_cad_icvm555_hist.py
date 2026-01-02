@@ -81,7 +81,7 @@ def sync(
     logger: Any,
     latest_months: int | None = None,  # compat CLI (não usado)
 ) -> dict[str, Any]:
-    cfg = load_dataset_cfg(settings.datasets_dir, "cvm_fi_cad_icvm555_hist")
+    cfg = load_dataset_cfg(settings.datasets_dir, "cvm/fi_cad_icvm555_hist")
 
     data_filename = "cad_fi_hist.zip"
     meta_filename = "meta_cad_fi.zip"

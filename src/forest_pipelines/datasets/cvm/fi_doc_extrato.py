@@ -119,7 +119,7 @@ def sync(
     logger: Any,
     latest_months: int | None = None,  # compat com CLI (atua como latest_years)
 ) -> dict[str, Any]:
-    cfg = load_dataset_cfg(settings.datasets_dir, "cvm_fi_doc_extrato")
+    cfg = load_dataset_cfg(settings.datasets_dir, "cvm/fi_doc_extrato")
     ly = latest_months or cfg.latest_years
 
     logger.info("Lendo resources do dataset: %s", cfg.source_dataset_url)

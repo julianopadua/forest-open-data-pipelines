@@ -1,0 +1,7 @@
+# configs/datasets/eia/petroleum_weekly.yml
+id: eia_petroleum_weekly
+title: "EIA - Weekly Petroleum Status Report"
+source_url: "https://www.eia.gov/petroleum/supply/weekly/"
+bucket_prefix: eia/petroleum_weekly
+mode: scrap_all_links
+include_meta: true
