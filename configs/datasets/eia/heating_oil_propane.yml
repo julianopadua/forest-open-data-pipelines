@@ -1,0 +1,4 @@
+id: eia_heating_oil_propane
+title: "EIA - Weekly Heating Oil and Propane Prices"
+source_url: "https://www.eia.gov/dnav/pet/pet_pri_wfr_a_EPD2F_prs_dpgal_w.htm"
+bucket_prefix: eia/heating_oil_propane
