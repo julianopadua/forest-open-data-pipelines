@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import re
+import unicodedata
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 from urllib.parse import urljoin
@@ -21,129 +23,138 @@ class DatasetCfg:
     source_url: str
     bucket_prefix: str
 
+def slugify(value: str) -> str:
+    """Converte 'U.S. Petroleum Balance Sheet' em 'us_petroleum_balance_sheet'"""
+    value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore').decode('ascii')
+    value = re.sub(r'[^\w\s-]', '', value).strip().lower()
+    return re.sub(r'[-\s]+', '_', value)
+
+def parse_eia_date(date_str: str) -> str:
+    """Converte 'Dec. 31, 2025' ou 'Jan. 7, 2026' em '2025-12-31'"""
+    clean_date = date_str.replace('.', '').strip()
+    try:
+        dt = datetime.strptime(clean_date, "%b %d, %Y")
+        return dt.strftime("%Y-%m-%d")
+    except ValueError:
+        return date_str  # Fallback caso o formato mude
+
 def load_dataset_cfg(datasets_dir: Path, dataset_id: str) -> DatasetCfg:
     path = datasets_dir / f"{dataset_id}.yml"
     with open(path, "r", encoding="utf-8") as f:
         raw = yaml.safe_load(f) or {}
     
     return DatasetCfg(
-        id=raw.get("id", dataset_id),
+        id=raw.get("id", "eia_petroleum_weekly"),
         title=raw.get("title", "Weekly Petroleum Status Report"),
         source_url=raw.get("source_url", "https://www.eia.gov/petroleum/supply/weekly/"),
         bucket_prefix=raw.get("bucket_prefix", "eia/petroleum_weekly")
     )
 
 def scrape_eia_content(source_url: str) -> dict[str, Any]:
-    """
-    Extrai metadados de release e mapeia todos os arquivos por horário.
-    """
     r = requests.get(source_url, timeout=60)
     r.raise_for_status()
     soup = BeautifulSoup(r.text, "html.parser")
 
-    # 1. Extração de Datas (Para o Front-end)
+    # 1. Metadados de Release (Datas Limpas)
+    metadata = {"week_ending_raw": "", "release_date_iso": "", "next_release_date_iso": ""}
     header = soup.select_one(".release-dates")
-    metadata = {
-        "week_ending": "",
-        "release_date": "",
-        "next_release_date": ""
-    }
     if header:
-        text = header.get_text(separator="|").split("|")
-        # Lógica simples de busca nos spans baseada no seu HTML
         for span in header.select(".responsive-container"):
             txt = span.get_text().strip()
             if "Data for week ending" in txt:
-                metadata["week_ending"] = txt.replace("Data for week ending", "").strip()
+                metadata["week_ending_raw"] = txt.replace("Data for week ending", "").strip()
             elif "Release Date:" in txt:
-                metadata["release_date"] = span.select_one(".date").get_text().strip() if span.select_one(".date") else ""
+                raw_date = span.select_one(".date").get_text().strip() if span.select_one(".date") else ""
+                metadata["release_date_iso"] = parse_eia_date(raw_date)
             elif "Next Release Date:" in txt:
-                metadata["next_release_date"] = span.select_one(".date").get_text().strip() if span.select_one(".date") else ""
+                raw_date = span.select_one(".date").get_text().strip() if span.select_one(".date") else ""
+                metadata["next_release_date_iso"] = parse_eia_date(raw_date)
 
-    # 2. Mapeamento da Tabela
+    # 2. Mapeamento de Arquivos com Nomes Fixos Sluggificados
     files = []
     tables = soup.select("div.basic-table table")
-    
     for table in tables:
         rows = table.select("tbody tr")
         for row in rows:
             cols = row.find_all("td")
-            if len(cols) < 5: continue # Pula linhas de título/header interno
+            if len(cols) < 5 or "terminated" in row.get('class', []): 
+                continue 
             
-            # A estrutura da EIA:
-            # Col 0: Número | Col 1: Nome | Col 2 & 3: 10:30 AM | Col 4: 1:00 PM
-            title = cols[1].get_text().strip()
-            
-            # Links das 10:30 AM (Colunas 2 e 3)
+            raw_title = cols[1].get_text().strip()
+            name_slug = slugify(raw_title)
+
+            # Colunas 2 e 3 (10:30 AM)
             for col_idx in [2, 3]:
                 link = cols[col_idx].find("a")
                 if link and link.get("href"):
+                    url = urljoin(source_url, link.get("href"))
+                    ext = url.split(".")[-1].split("?")[0]
                     files.append({
-                        "title": title,
-                        "url": urljoin(source_url, link.get("href")),
-                        "release_time": "10:30 AM"
+                        "fixed_name": f"{name_slug}.{ext}",
+                        "display_title": raw_title,
+                        "url": url,
+                        "release_time": "10:30"
                     })
             
-            # Links das 1:00 PM (Coluna 4)
+            # Coluna 4 (01:00 PM)
             link_pm = cols[4].find("a")
             if link_pm and link_pm.get("href"):
+                url = urljoin(source_url, link_pm.get("href"))
+                ext = url.split(".")[-1].split("?")[0]
                 files.append({
-                    "title": title,
-                    "url": urljoin(source_url, link_pm.get("href")),
-                    "release_time": "01:00 PM"
+                    "fixed_name": f"{name_slug}.{ext}",
+                    "display_title": raw_title,
+                    "url": url,
+                    "release_time": "13:00"
                 })
 
     return {"metadata": metadata, "files": files}
 
 def sync(settings: Any, storage: Any, logger: Any, **kwargs) -> dict[str, Any]:
     cfg = load_dataset_cfg(settings.datasets_dir, "eia/petroleum_weekly")
-    
-    logger.info("Iniciando scrap da EIA: %s", cfg.source_url)
     scraped = scrape_eia_content(cfg.source_url)
     
-    items = []
-    # Usamos a data de release para organizar as pastas no bucket
-    folder_date = scraped["metadata"]["release_date"].replace(",", "").replace(" ", "_")
+    release_date = scraped["metadata"]["release_date_iso"]
+    logger.info("Sincronizando EIA - Release: %s", release_date)
 
-    for file_info in scraped["files"]:
-        url = file_info["url"]
-        filename = url.split("/")[-1]
+    items = []
+    for f in scraped["files"]:
+        # Download
+        local_path = settings.data_dir / "eia" / f["fixed_name"]
+        dl = stream_download(f["url"], local_path)
+
+        # Storage Path: eia/petroleum_weekly/data/2025-12-31/10-30/us_petroleum_balance_sheet.csv
+        time_folder = f["release_time"].replace(":", "-")
+        object_path = f"{cfg.bucket_prefix}/data/{release_date}/{time_folder}/{f['fixed_name']}"
         
-        # Evita baixar arquivos duplicados se houver (mesma URL para nomes diferentes)
-        local_path = settings.data_dir / "eia" / filename
+        # Determinar Content-Type
+        ctype = "application/pdf" if f["fixed_name"].endswith(".pdf") else "application/octet-stream"
+        if f["fixed_name"].endswith(".csv"): ctype = "text/csv"
         
-        logger.info(f"Baixando [{file_info['release_time']}] {filename}")
-        dl = stream_download(url, local_path)
-        
-        # Estrutura: eia/petroleum_weekly/data/Dec_31_2025/1030AM/file.csv
-        time_slug = file_info["release_time"].replace(" ", "").replace(":", "")
-        object_path = f"{cfg.bucket_prefix}/data/{folder_date}/{time_slug}/{filename}"
-        
-        storage.upload_file(object_path, str(dl.file_path), "application/octet-stream", upsert=True)
+        storage.upload_file(object_path, str(dl.file_path), ctype, upsert=True)
         
         items.append({
             "kind": "data",
-            "title": file_info["title"],
-            "release_time": file_info["release_time"],
+            "title": f["display_title"],
+            "filename": f["fixed_name"],
+            "release_time": f["release_time"],
             "sha256": dl.sha256,
             "size_bytes": dl.size_bytes,
             "public_url": storage.public_url(object_path),
-            "source_url": url
+            "source_url": f["url"]
         })
 
-    # Construção do Manifesto com a "Última Atualização" no topo
-    manifest = build_manifest(
+    # Manifesto Final (Aparece no Front automaticamente)
+    return build_manifest(
         dataset_id=cfg.id,
         title=cfg.title,
         source_dataset_url=cfg.source_url,
         bucket_prefix=cfg.bucket_prefix,
         items=items,
         meta={
-            "kind": "metadata",
-            "last_eia_update": scraped["metadata"]["release_date"],
-            "week_ending": scraped["metadata"]["week_ending"],
-            "next_release": scraped["metadata"]["next_release_date"]
+            "last_release_iso": release_date,
+            "week_ending": scraped["metadata"]["week_ending_raw"],
+            "next_release_iso": scraped["metadata"]["next_release_date_iso"],
+            "scraped_at": datetime.utcnow().isoformat()
         }
     )
-    
-    return manifest
