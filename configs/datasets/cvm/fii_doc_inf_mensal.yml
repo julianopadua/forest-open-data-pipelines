@@ -1,0 +1,11 @@
+id: cvm_fii_doc_inf_mensal
+title: "CVM - FII - Documentos: Informe Mensal"
+source_dataset_url: "https://dados.cvm.gov.br/dataset/fii-doc-inf_mensal"
+
+source: cvm_ckan
+dataset_slug: fii-doc-inf_mensal
+bucket_prefix: cvm/fii/doc/inf_mensal
+mode: mirror_latest_months
+# Como os arquivos são anuais, latest_months=5 pega os últimos 5 anos
+latest_months: 5
+include_meta: true
