@@ -9,6 +9,7 @@ from forest_pipelines.datasets.cvm import (
     fi_cad_nao_adaptados_rcvm175,
     fi_cad_icvm555_hist,
     fii_doc_inf_trimestral,
+    fi_doc_entrega,
 )
 from forest_pipelines.datasets.eia import petroleum_weekly, heating_oil_propane
 
@@ -22,7 +23,8 @@ RUNNERS: dict[str, DatasetRunner] = {
     "cvm_fi_cad_nao_adaptados_rcvm175": fi_cad_nao_adaptados_rcvm175.sync,
     "cvm_fi_cad_icvm555_hist": fi_cad_icvm555_hist.sync,
     "cvm_fii_doc_inf_trimestral": fii_doc_inf_trimestral.sync,
-    
+    "cvm_fi_doc_entrega": fi_doc_entrega.sync,
+
     # EIA Datasets
     "eia_petroleum_weekly": petroleum_weekly.sync,
     "eia_heating_oil_propane": heating_oil_propane.sync,
