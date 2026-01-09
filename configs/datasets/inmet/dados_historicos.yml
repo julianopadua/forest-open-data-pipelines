@@ -1,0 +1,6 @@
+# configs/datasets/inmet/dados_historicos.yml
+id: inmet_dados_historicos
+title: "INMET - Dados Históricos Anuais (Estações Automáticas)"
+source_url: "https://portal.inmet.gov.br/dadoshistoricos"
+bucket_prefix: inmet/dados_historicos
+include_meta: false
