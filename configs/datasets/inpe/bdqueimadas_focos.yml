@@ -1,0 +1,6 @@
+# configs/datasets/inpe/bdqueimadas_focos.yml
+id: inpe_bdqueimadas_focos
+title: "INPE - BDQueimadas - Focos Brasil (Satélite de Referência)"
+source_url: "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/anual/Brasil_sat_ref/"
+bucket_prefix: inpe/bdqueimadas/focos_br_ref
+include_meta: false
