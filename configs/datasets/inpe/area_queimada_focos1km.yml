@@ -1,0 +1,6 @@
+# configs/datasets/inpe/area_queimada_focos1km.yml
+id: inpe_area_queimada_focos1km
+title: "INPE - Área Queimada - FOCOS 1km (TIF)"
+source_url: "https://dataserver-coids.inpe.br/queimadas/queimadas/area_queimada/FOCOS1km/tif/"
+bucket_prefix: inpe/area_queimada/focos1km
+include_meta: false

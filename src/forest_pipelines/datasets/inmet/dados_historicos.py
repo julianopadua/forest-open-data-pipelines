@@ -6,15 +6,13 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 from urllib.parse import urljoin
+from datetime import datetime
 
 import requests
 import yaml
 from bs4 import BeautifulSoup
-
-from forest_pipelines.http import stream_download
 from forest_pipelines.manifests.build_manifest import build_manifest
 
-# Regex para capturar o ano: 2024.zip
 RE_ZIP_YEAR = re.compile(r"(\d{4})\.zip$", re.IGNORECASE)
 
 @dataclass(frozen=True)
@@ -35,68 +33,58 @@ def load_dataset_cfg(datasets_dir: Path, dataset_id: str) -> DatasetCfg:
         bucket_prefix=raw.get("bucket_prefix", "inmet/dados_historicos")
     )
 
-def extract_annual_zip_urls(source_url: str) -> list[tuple[str, str]]:
-    """Extrai links da página e retorna lista de (ano, url) ordenada pelo mais recente"""
-    r = requests.get(source_url, timeout=60)
-    r.raise_for_status()
-    soup = BeautifulSoup(r.text, "html.parser")
-    
-    found = []
-    # Busca links dentro da estrutura de artigos listada no HTML do INMET
-    for a in soup.find_all("a", href=True):
-        href = a["href"]
-        filename = href.split("/")[-1]
-        match = RE_ZIP_YEAR.search(filename)
-        if match:
-            year = match.group(1)
-            found.append((year, urljoin(source_url, href)))
-    
-    # Remove duplicatas e ordena decrescentemente pelo ano
-    return sorted(list(set(found)), key=lambda x: x[0], reverse=True)
+def get_remote_file_size(url: str, logger: Any) -> int:
+    """Faz um HEAD request para obter o Content-Length sem baixar o arquivo"""
+    try:
+        # allow_redirects=True é vital pois o INMET pode redirecionar para o servidor de arquivos
+        r = requests.head(url, allow_redirects=True, timeout=15)
+        return int(r.headers.get("Content-Length", 0))
+    except Exception as e:
+        logger.warning(f"Não foi possível obter o tamanho para {url}: {e}")
+        return 0
 
 def sync(
     settings: Any,
     storage: Any,
     logger: Any,
-    latest_months: int | None = None, # Interpretado como N anos para este dataset
+    **kwargs
 ) -> dict[str, Any]:
-    # 1. Carrega Configuração
     cfg = load_dataset_cfg(settings.datasets_dir, "inmet/dados_historicos")
     
-    # 2. Descoberta de recursos
-    logger.info("Explorando servidor INMET: %s", cfg.source_url)
-    all_resources = extract_annual_zip_urls(cfg.source_url)
+    logger.info("Indexando links e tamanhos do INMET: %s", cfg.source_url)
+    r = requests.get(cfg.source_url, timeout=60)
+    r.raise_for_status()
+    soup = BeautifulSoup(r.text, "html.parser")
     
-    # Filtra pelos N anos mais recentes se solicitado via CLI (--latest-months)
-    limit = latest_months if latest_months else len(all_resources)
-    selected_resources = all_resources[:limit]
-    
-    items: list[dict[str, Any]] = []
-    
-    # 3. Processamento de Downloads e Uploads
-    for year, url in selected_resources:
-        filename = f"{year}.zip"
-        local_path = settings.data_dir / "inmet_historico" / filename
+    items = []
+    # Busca links dentro da estrutura de artigos listada no HTML
+    for a in soup.find_all("a", href=True):
+        href = a["href"]
+        filename = href.split("/")[-1]
+        match = RE_ZIP_YEAR.search(filename)
         
-        logger.info(f"Processando Ano {year}: {filename}")
-        dl = stream_download(url, local_path)
-        
-        # Estrutura de pastas padronizada: inmet/dados_historicos/data/2024/2024.zip
-        object_path = f"{cfg.bucket_prefix}/data/{year}/{filename}"
-        
-        storage.upload_file(object_path, str(dl.file_path), "application/zip", upsert=True)
-        
-        items.append({
-            "kind": "data",
-            "period": year,
-            "filename": filename,
-            "sha256": dl.sha256,
-            "size_bytes": dl.size_bytes,
-            "public_url": storage.public_url(object_path),
-            "source_url": url
-        })
+        if match:
+            year = match.group(1)
+            full_url = urljoin(cfg.source_url, href)
+            
+            logger.info(f"Obtendo metadados do arquivo de {year}...")
+            # Pega o tamanho real via HEAD request
+            size_bytes = get_remote_file_size(full_url, logger)
+            
+            items.append({
+                "kind": "data",
+                "period": year,
+                "filename": filename,
+                "sha256": "external", 
+                "size_bytes": size_bytes, # Agora com o valor real!
+                "public_url": full_url,
+                "source_url": full_url
+            })
 
-    # 4. Construção do Manifesto para o Portal Web
+    # Ordena para o mais recente ficar no topo
+    items.sort(key=lambda x: x["period"], reverse=True)
+
+    # Gera o manifesto e sobe para o bucket
     return build_manifest(
         dataset_id=cfg.id,
         title=cfg.title,
@@ -105,7 +93,8 @@ def sync(
         items=items,
         meta={
             "source": "INMET - Instituto Nacional de Meteorologia",
-            "observation": "Dados históricos anuais de estações automáticas",
-            "total_years_synced": len(items)
+            "observation": "Links indexados com metadados de tamanho obtidos via HTTP HEAD.",
+            "total_items": len(items),
+            "generated_at": datetime.utcnow().isoformat()
         }
     )

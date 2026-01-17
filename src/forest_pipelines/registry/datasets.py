@@ -14,7 +14,7 @@ from forest_pipelines.datasets.cvm import (
     fii_doc_inf_anual
 )
 from forest_pipelines.datasets.eia import petroleum_weekly, heating_oil_propane
-from forest_pipelines.datasets.inpe import bdqueimadas_focos
+from forest_pipelines.datasets.inpe import bdqueimadas_focos, area_queimada_focos1km
 from forest_pipelines.datasets.inmet import dados_historicos
 
 DatasetRunner = Callable[..., dict[str, Any]]
@@ -37,6 +37,7 @@ RUNNERS: dict[str, DatasetRunner] = {
 
     # INPE Datasets
     "inpe_bdqueimadas_focos": bdqueimadas_focos.sync,
+    "inpe_area_queimada_focos1km": area_queimada_focos1km.sync,
 
     # INMET Datasets
     "inmet_dados_historicos": dados_historicos.sync,
