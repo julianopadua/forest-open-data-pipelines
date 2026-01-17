@@ -1,4 +1,3 @@
-# src/forest_pipelines/datasets/eia/petroleum_monthly.py
 from __future__ import annotations
 
 import re
@@ -22,8 +21,20 @@ class DatasetCfg:
     source_url: str
     bucket_prefix: str
 
+def load_dataset_cfg(datasets_dir: Path, dataset_id: str) -> DatasetCfg:
+    """Loads configuration from the yaml file."""
+    path = datasets_dir / f"{dataset_id}.yml"
+    with open(path, "r", encoding="utf-8") as f:
+        raw = yaml.safe_load(f) or {}
+    return DatasetCfg(
+        id=raw.get("id", "eia_petroleum_monthly"),
+        title=raw.get("title", "Petroleum Supply Monthly"),
+        source_url=raw.get("source_url", "https://www.eia.gov/petroleum/supply/monthly/"),
+        bucket_prefix=raw.get("bucket_prefix", "eia/petroleum_monthly")
+    )
+
 def retry_request(retries: int = 3, backoff: int = 2):
-    """Decorator for simple exponential backoff on requests."""
+    """Decorator for exponential backoff on requests."""
     def decorator(func: Callable):
         def wrapper(*args, **kwargs):
             last_exception = None
@@ -33,9 +44,10 @@ def retry_request(retries: int = 3, backoff: int = 2):
                 except requests.RequestException as e:
                     last_exception = e
                     wait = backoff * (2 ** i)
-                    # We assume the last arg or a kwarg 'logger' is passed
-                    logger = kwargs.get('logger') or args[-1]
-                    logger.warning(f"Request failed (attempt {i+1}/{retries}). Retrying in {wait}s... Error: {e}")
+                    # Attempt to find logger in args or kwargs
+                    logger = kwargs.get('logger') or (args[1] if len(args) > 1 else None)
+                    if logger:
+                        logger.warning(f"Request failed (attempt {i+1}/{retries}). Retrying in {wait}s... Error: {e}")
                     time.sleep(wait)
             raise last_exception
         return wrapper
@@ -54,65 +66,65 @@ def safe_head(url: str, logger: Any):
     return r
 
 def extract_xls_link(sub_page_url: str, logger: Any) -> str | None:
+    """Extracts the direct .xls link from the sub-page structure."""
     try:
         r = safe_get(sub_page_url, logger)
         soup = BeautifulSoup(r.text, "html.parser")
         
-        # Priority 1: The 'crumb' class link you identified
+        # Priority 1: Link with class 'crumb' and specific text
         for a in soup.find_all("a", class_="crumb", href=True):
             if "Download Series History" in a.get_text() or ".xls" in a["href"]:
                 return urljoin(sub_page_url, a["href"])
         
-        # Priority 2: Fallback - any link ending in _cur.xls
-        fallback = soup.find("a", href=re.compile(r"\.xls$"))
+        # Priority 2: Regex fallback for any .xls file
+        fallback = soup.find("a", href=re.compile(r"\.xls$", re.IGNORECASE))
         if fallback:
-            logger.info(f"Used regex fallback for XLS link at {sub_page_url}")
+            logger.info(f"Fallback XLS found for {sub_page_url}")
             return urljoin(sub_page_url, fallback["href"])
             
     except Exception as e:
-        logger.error(f"Critical failure parsing sub-page {sub_page_url}: {e}")
+        logger.error(f"Error parsing sub-page {sub_page_url}: {e}")
     return None
 
 def sync(settings: Any, storage: Any, logger: Any, **kwargs) -> dict[str, Any]:
     cfg = load_dataset_cfg(settings.datasets_dir, "eia/petroleum_monthly")
-    logger.info(f"Starting sync for {cfg.title}")
+    logger.info(f"Starting indexing for {cfg.title}")
 
     try:
         r = safe_get(cfg.source_url, logger)
     except Exception as e:
-        logger.critical(f"Could not reach main index page: {e}")
+        logger.critical(f"Main index unreachable: {e}")
         raise
 
     soup = BeautifulSoup(r.text, "html.parser")
     table = soup.select_one("div.basic-table table")
     
     if not table:
-        logger.error("HTML Structure changed: 'div.basic-table table' not found.")
-        raise ValueError("Main data table missing.")
+        logger.error("Structure Error: Table not found in 'div.basic-table'.")
+        raise ValueError("Target table is missing from EIA page.")
 
     items = []
     links = table.select("tbody tr td a[href*='/dnav/pet/']")
-    logger.info(f"Found {len(links)} potential datasets to index.")
-
+    
     for a in links:
         display_title = a.get_text().strip()
         sub_page_url = urljoin(cfg.source_url, a["href"])
         
         try:
-            logger.info(f"Indexing: {display_title}")
+            logger.info(f"Checking sub-page: {display_title}")
             direct_url = extract_xls_link(sub_page_url, logger)
             
             if not direct_url:
-                logger.warning(f"Skipping {display_title}: No download link found on sub-page.")
+                logger.warning(f"No XLS link for: {display_title}")
                 continue
 
-            # Get metadata
+            # Metadata head request
             size_bytes = 0
             try:
                 h = safe_head(direct_url, logger)
                 size_bytes = int(h.headers.get("Content-Length", 0))
             except Exception:
-                logger.warning(f"Could not determine size for {direct_url}")
+                logger.warning(f"Size unknown for {direct_url}")
 
             items.append({
                 "kind": "data",
@@ -124,10 +136,10 @@ def sync(settings: Any, storage: Any, logger: Any, **kwargs) -> dict[str, Any]:
                 "source_url": sub_page_url
             })
         except Exception as e:
-            logger.error(f"Failed to process dataset '{display_title}': {e}")
-            continue # Move to next dataset instead of crashing the whole pipeline
+            logger.error(f"Dataset '{display_title}' failed: {e}")
+            continue 
 
-    logger.info(f"Successfully indexed {len(items)} datasets.")
+    logger.info(f"Indexing complete. {len(items)} items found.")
     
     return build_manifest(
         dataset_id=cfg.id,
@@ -137,7 +149,7 @@ def sync(settings: Any, storage: Any, logger: Any, **kwargs) -> dict[str, Any]:
         items=items,
         meta={
             "total_items": len(items),
-            "status": "partial_success" if len(items) < len(links) else "success",
+            "status": "success" if len(items) == len(links) else "partial",
             "scraped_at": datetime.utcnow().isoformat()
         }
     )
