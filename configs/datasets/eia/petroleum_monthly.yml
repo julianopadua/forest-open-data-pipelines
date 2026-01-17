@@ -1,0 +1,4 @@
+id: eia_petroleum_monthly
+title: "EIA - Petroleum Supply Monthly (Full History)"
+source_url: "https://www.eia.gov/petroleum/supply/monthly/"
+bucket_prefix: eia/petroleum_monthly
