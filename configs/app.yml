@@ -8,3 +8,4 @@ supabase:
   bucket_open_data_env: SUPABASE_BUCKET_OPEN_DATA
 
 datasets_dir: configs/datasets
+reports_dir: configs/reports
