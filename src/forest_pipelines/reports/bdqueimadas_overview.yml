@@ -1,0 +1,42 @@
+# configs/reports/bdqueimadas_overview.yml
+id: bdqueimadas_overview
+title: "BDQueimadas - Panorama Sintético de Focos"
+bucket_prefix: reports/bdqueimadas/overview
+source_label: "INPE - Programa Queimadas"
+summary: >
+  Report leve para publicação web, baseado em agregações do BDQueimadas.
+  O objetivo é expor tendências e comparações descritivas sem enviar a base bruta ao frontend.
+
+dataset:
+  dataset_id: inpe_bdqueimadas_focos
+  local_relative_dir: inpe_bdqueimadas
+  file_glob: "focos_br_ref_*.zip"
+  recent_years: 10
+
+columns:
+  datetime_candidates:
+    - data_hora_gmt
+    - data_hora
+    - datahora
+    - data
+    - date
+  state_candidates:
+    - estado
+    - uf
+    - estado_sigla
+    - state
+
+display:
+  monthly_points: 24
+  annual_years: 8
+  top_states_limit: 10
+
+editorial:
+  publish_generated_as_live: true
+  overrides_file: configs/reports/overrides/bdqueimadas_overview.live.yml
+
+llm:
+  enabled: true
+  provider: groq
+  model: null
+  max_chars_per_block: 700

@@ -9,3 +9,18 @@ supabase:
 
 datasets_dir: configs/datasets
 reports_dir: configs/reports
+
+llm:
+  provider: groq
+  api_key_env: GROQ_API_KEY
+  temperature: 0.2
+  top_p: 1.0
+  max_completion_tokens: 700
+  stream: false
+  service_tier: null
+  reasoning_effort: medium
+  timeout_s: 90.0
+  preferred_models:
+    - openai/gpt-oss-20b
+    - llama-3.3-70b-versatile
+    - qwen/qwen3-32b

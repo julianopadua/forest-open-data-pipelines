@@ -40,6 +40,7 @@ def build_package(
     monthly_frames: list[pd.DataFrame] = []
     annual_frames: list[pd.DataFrame] = []
     state_year_frames: list[pd.DataFrame] = []
+    yearly_file_stats: list[dict[str, Any]] = []
 
     for zip_path in zip_files:
         logger.info("Processando ZIP do report: %s", zip_path.name)
@@ -52,6 +53,18 @@ def build_package(
         if subset.empty:
             logger.warning("Arquivo sem linhas úteis para análise: %s", zip_path.name)
             continue
+
+        inferred_year = _extract_year_from_name(zip_path.name)
+        yearly_file_stats.append(
+            {
+                "file_name": zip_path.name,
+                "file_size_bytes": int(zip_path.stat().st_size),
+                "inferred_year": inferred_year,
+                "row_count": int(len(subset)),
+                "month_span_min": str(subset["period_month"].min()),
+                "month_span_max": str(subset["period_month"].max()),
+            }
+        )
 
         month_df = (
             subset.groupby("period_month")
@@ -107,6 +120,7 @@ def build_package(
 
     recent_12m_total = int(monthly_series["value"].tail(12).sum())
     prior_12m_total = int(monthly_series["value"].iloc[-24:-12].sum()) if len(monthly_series) >= 24 else 0
+    total_rows_processed = int(sum(item["row_count"] for item in yearly_file_stats))
 
     top_states_table = _build_top_states_table(
         state_year_series=state_year_series,
@@ -123,6 +137,8 @@ def build_package(
         recent_12m_total=recent_12m_total,
         prior_12m_total=prior_12m_total,
         latest_period=latest_period,
+        total_rows_processed=total_rows_processed,
+        file_count_used=len(zip_files),
     )
 
     analysis_context = {
@@ -133,6 +149,8 @@ def build_package(
         "previous_year_total": previous_year_total,
         "recent_12m_total": recent_12m_total,
         "prior_12m_total": prior_12m_total,
+        "total_rows_processed": total_rows_processed,
+        "file_count_used": len(zip_files),
         "top_states_current_year": [
             {
                 "state": row["state"],
@@ -141,6 +159,7 @@ def build_package(
             }
             for row in top_states_table[: min(5, len(top_states_table))]
         ],
+        "yearly_file_stats": yearly_file_stats[: min(6, len(yearly_file_stats))],
     }
 
     fallback_analysis = _build_fallback_analysis(
@@ -151,10 +170,14 @@ def build_package(
         recent_12m_total=recent_12m_total,
         prior_12m_total=prior_12m_total,
         latest_period=latest_period,
+        total_rows_processed=total_rows_processed,
+        file_count_used=len(zip_files),
     )
 
     analysis_blocks = maybe_generate_analysis_blocks(
+        settings=settings,
         llm_cfg=cfg.llm,
+        report_id=cfg.id,
         prompt_context=analysis_context,
         fallback_blocks=fallback_analysis,
         logger=logger,
@@ -171,6 +194,7 @@ def build_package(
             "dataset_id": cfg.dataset.dataset_id,
             "local_relative_dir": cfg.dataset.local_relative_dir,
             "file_count_used": len(zip_files),
+            "total_rows_processed": total_rows_processed,
         },
         "coverage": {
             "latest_year": latest_year,
@@ -215,7 +239,7 @@ def build_package(
         "methodology": {
             "source": cfg.source_label,
             "note": (
-                "Este report usa apenas artefatos agregados e leves para publicação. "
+                "Este report usa artefatos agregados e leves para publicação. "
                 "Os dados são processados localmente a partir dos ZIPs anuais do BDQueimadas "
                 "e a página pública consome somente o JSON final do report."
             ),
@@ -516,6 +540,8 @@ def _build_highlights(
     recent_12m_total: int,
     prior_12m_total: int,
     latest_period: str,
+    total_rows_processed: int,
+    file_count_used: int,
 ) -> list[dict[str, Any]]:
     return [
         {
@@ -533,6 +559,14 @@ def _build_highlights(
             "comparison_label": "12 meses anteriores",
             "comparison_value": prior_12m_total,
             "pct_change": _safe_pct_change(recent_12m_total, prior_12m_total),
+        },
+        {
+            "id": "total_rows_processed",
+            "label": "Linhas processadas",
+            "value": total_rows_processed,
+            "comparison_label": "Arquivos usados",
+            "comparison_value": file_count_used,
+            "pct_change": None,
         },
         {
             "id": "latest_period",
@@ -553,36 +587,39 @@ def _build_fallback_analysis(
     recent_12m_total: int,
     prior_12m_total: int,
     latest_period: str,
+    total_rows_processed: int,
+    file_count_used: int,
 ) -> dict[str, str]:
     yoy = _safe_pct_change(current_year_total, previous_year_total)
     recent_12m_change = _safe_pct_change(recent_12m_total, prior_12m_total)
 
     if previous_year is None:
         headline = (
-            f"O período mais recente disponível no processamento vai até {latest_period}, "
-            f"com { _fmt_int(current_year_total) } focos agregados em {latest_year}."
+            f"O processamento mais recente vai até {latest_period} e agrega "
+            f"{_fmt_int(current_year_total)} focos em {latest_year}."
         )
         comparison = (
-            "Ainda não há um ano anterior processado no escopo atual para comparação anual direta."
+            "Ainda não há ano anterior processado no escopo atual para comparação anual direta."
         )
     else:
         headline = (
-            f"Em {latest_year}, o conjunto processado registra { _fmt_int(current_year_total) } focos, "
-            f"contra { _fmt_int(previous_year_total) } em {previous_year}."
+            f"Em {latest_year}, o conjunto processado registra {_fmt_int(current_year_total)} focos, "
+            f"contra {_fmt_int(previous_year_total)} em {previous_year}."
         )
         comparison = (
-            f"A comparação anual indica uma variação de { _fmt_pct(yoy) } entre {previous_year} e {latest_year}. "
-            f"O último mês disponível no escopo atual é {latest_period}."
+            f"A comparação anual indica {_fmt_pct(yoy)} entre {previous_year} e {latest_year}. "
+            f"O último mês disponível no recorte processado é {latest_period}."
         )
 
     overview = (
-        f"Na janela móvel mais recente de 12 meses, o total agregado soma { _fmt_int(recent_12m_total) } focos, "
-        f"contra { _fmt_int(prior_12m_total) } nos 12 meses imediatamente anteriores, "
-        f"o que corresponde a { _fmt_pct(recent_12m_change) }."
+        f"Foram processadas {_fmt_int(total_rows_processed)} linhas distribuídas em {file_count_used} arquivos anuais. "
+        f"Na janela móvel mais recente de 12 meses, o total agregado soma {_fmt_int(recent_12m_total)} focos, "
+        f"contra {_fmt_int(prior_12m_total)} nos 12 meses imediatamente anteriores, "
+        f"o que corresponde a {_fmt_pct(recent_12m_change)}."
     )
 
     limitations = (
-        "Este texto é descritivo e não estabelece causalidade. "
+        "O texto é descritivo e não estabelece causalidade. "
         "O ano corrente pode estar incompleto, pois depende do arquivo anual mais recente disponível no BDQueimadas."
     )
 
