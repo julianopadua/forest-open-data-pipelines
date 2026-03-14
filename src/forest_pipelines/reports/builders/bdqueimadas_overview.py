@@ -17,6 +17,22 @@ from forest_pipelines.reports.llm.base import maybe_generate_analysis_blocks
 
 RE_YEAR = re.compile(r"(\d{4})")
 
+DEFAULT_DATETIME_CANDIDATES = [
+    "data_pas",
+    "data_hora_gmt",
+    "data_hora",
+    "datahora",
+    "data",
+    "date",
+]
+
+DEFAULT_STATE_CANDIDATES = [
+    "estado",
+    "uf",
+    "estado_sigla",
+    "state",
+]
+
 
 def build_package(
     settings: Any,
@@ -24,6 +40,15 @@ def build_package(
     logger: Any,
 ) -> dict[str, Any]:
     cfg = load_report_cfg(settings.reports_dir, "bdqueimadas_overview")
+
+    datetime_candidates = _merge_candidates(
+        cfg.columns.datetime_candidates,
+        DEFAULT_DATETIME_CANDIDATES,
+    )
+    state_candidates = _merge_candidates(
+        cfg.columns.state_candidates,
+        DEFAULT_STATE_CANDIDATES,
+    )
 
     zip_files = _select_zip_files(
         base_dir=settings.data_dir / cfg.dataset.local_relative_dir,
@@ -44,10 +69,17 @@ def build_package(
 
     for zip_path in zip_files:
         logger.info("Processando ZIP do report: %s", zip_path.name)
-        subset = _read_zip_subset(
+        subset, detected_columns = _read_zip_subset(
             zip_path=zip_path,
-            datetime_candidates=cfg.columns.datetime_candidates,
-            state_candidates=cfg.columns.state_candidates,
+            datetime_candidates=datetime_candidates,
+            state_candidates=state_candidates,
+        )
+
+        logger.info(
+            "Colunas detectadas em %s -> datetime=%s | state=%s",
+            zip_path.name,
+            detected_columns["datetime"],
+            detected_columns["state"],
         )
 
         if subset.empty:
@@ -63,6 +95,8 @@ def build_package(
                 "row_count": int(len(subset)),
                 "month_span_min": str(subset["period_month"].min()),
                 "month_span_max": str(subset["period_month"].max()),
+                "detected_datetime_column": detected_columns["datetime"],
+                "detected_state_column": detected_columns["state"],
             }
         )
 
@@ -274,6 +308,23 @@ def build_package(
     }
 
 
+def _merge_candidates(primary: list[str], defaults: list[str]) -> list[str]:
+    seen: set[str] = set()
+    merged: list[str] = []
+
+    for item in [*primary, *defaults]:
+        key = item.strip()
+        if not key:
+            continue
+        norm = _normalize(key)
+        if norm in seen:
+            continue
+        seen.add(norm)
+        merged.append(key)
+
+    return merged
+
+
 def _select_zip_files(base_dir: Path, file_glob: str, recent_years: int | None) -> list[Path]:
     candidates = sorted(base_dir.glob(file_glob))
     if not candidates:
@@ -310,7 +361,7 @@ def _read_zip_subset(
     zip_path: Path,
     datetime_candidates: list[str],
     state_candidates: list[str],
-) -> pd.DataFrame:
+) -> tuple[pd.DataFrame, dict[str, str]]:
     with zipfile.ZipFile(zip_path) as zf:
         member = _pick_member(zf)
         delimiter = _detect_delimiter(zf, member)
@@ -319,6 +370,7 @@ def _read_zip_subset(
             member=member,
             datetime_candidates=datetime_candidates,
             state_candidates=state_candidates,
+            delimiter=delimiter,
         )
 
         dt_col = columns["datetime"]
@@ -358,7 +410,10 @@ def _read_zip_subset(
     out["year"] = out["datetime"].dt.year.astype(int)
     out["period_month"] = out["datetime"].dt.to_period("M").astype(str)
 
-    return out[["datetime", "year", "period_month", "state"]]
+    return out[["datetime", "year", "period_month", "state"]], {
+        "datetime": dt_col,
+        "state": state_col,
+    }
 
 
 def _pick_member(zf: zipfile.ZipFile) -> str:
@@ -391,11 +446,12 @@ def _detect_columns(
     member: str,
     datetime_candidates: list[str],
     state_candidates: list[str],
+    delimiter: str,
 ) -> dict[str, str]:
     header_df = _read_member_csv(
         zf=zf,
         member=member,
-        delimiter=_detect_delimiter(zf, member),
+        delimiter=delimiter,
         nrows=0,
     )
     available = list(header_df.columns)
@@ -405,11 +461,15 @@ def _detect_columns(
 
     if dt_col is None:
         raise KeyError(
-            f"Não foi possível identificar a coluna temporal. Colunas disponíveis: {available}"
+            f"Não foi possível identificar a coluna temporal. "
+            f"Candidatas testadas: {datetime_candidates}. "
+            f"Colunas disponíveis: {available}"
         )
     if state_col is None:
         raise KeyError(
-            f"Não foi possível identificar a coluna de UF/estado. Colunas disponíveis: {available}"
+            f"Não foi possível identificar a coluna de UF/estado. "
+            f"Candidatas testadas: {state_candidates}. "
+            f"Colunas disponíveis: {available}"
         )
 
     return {

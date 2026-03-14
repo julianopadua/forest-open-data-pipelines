@@ -15,6 +15,7 @@ dataset:
 
 columns:
   datetime_candidates:
+    - data_pas
     - data_hora_gmt
     - data_hora
     - datahora
