@@ -1,0 +1,2120 @@
+{
+  "dataset_id": "inpe_bdqueimadas_focos",
+  "generated_at": "2026-03-14T21:24:46.360092Z",
+  "base_dir": "D:\\Projetos\\forest-open-data-pipelines\\data\\inpe_bdqueimadas",
+  "output_dir": "D:\\Projetos\\forest-open-data-pipelines\\docs\\audits\\inpe\\bdqueimadas_focos",
+  "files_total": 23,
+  "years_detected": [
+    2003,
+    2004,
+    2005,
+    2006,
+    2007,
+    2008,
+    2009,
+    2010,
+    2011,
+    2012,
+    2013,
+    2014,
+    2015,
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "datetime_column_frequency": {
+    "data_pas": 23
+  },
+  "state_column_frequency": {
+    "estado": 23
+  },
+  "intersection_columns": [
+    "bioma",
+    "data_pas",
+    "estado",
+    "foco_id",
+    "id_bdq",
+    "lat",
+    "lon",
+    "municipio",
+    "pais"
+  ],
+  "union_columns": [
+    "bioma",
+    "data_pas",
+    "estado",
+    "foco_id",
+    "id_bdq",
+    "lat",
+    "lon",
+    "municipio",
+    "pais"
+  ],
+  "modal_schema": {
+    "frequency": 23,
+    "columns": [
+      "id_bdq",
+      "foco_id",
+      "lat",
+      "lon",
+      "data_pas",
+      "pais",
+      "estado",
+      "municipio",
+      "bioma"
+    ]
+  },
+  "files": [
+    {
+      "zip_name": "focos_br_ref_2003.zip",
+      "year": 2003,
+      "member_name": "focos_br_ref_2003.csv",
+      "delimiter": ",",
+      "row_count": 341237,
+      "sample_rows_read": 2000,
+      "column_count": 9,
+      "columns": [
+        "id_bdq",
+        "foco_id",
+        "lat",
+        "lon",
+        "data_pas",
+        "pais",
+        "estado",
+        "municipio",
+        "bioma"
+      ],
+      "datetime_column_detected": "data_pas",
+      "state_column_detected": "estado",
+      "column_types": {
+        "id_bdq": "int",
+        "foco_id": "string",
+        "lat": "float",
+        "lon": "float",
+        "data_pas": "datetime",
+        "pais": "categorical",
+        "estado": "string",
+        "municipio": "string",
+        "bioma": "string"
+      },
+      "column_samples": {
+        "id_bdq": [
+          "9988885",
+          "9988884",
+          "9988882",
+          "9988881"
+        ],
+        "foco_id": [
+          "5e864494-5abb-11e8-911c-28924ad12c5c",
+          "5e864493-5abb-11e8-911c-28924ad12c5c",
+          "5e864492-5abb-11e8-911c-28924ad12c5c",
+          "5e864491-5abb-11e8-911c-28924ad12c5c"
+        ],
+        "lat": [
+          "-18.518000",
+          "-17.542000",
+          "-17.612000",
+          "-18.386000"
+        ],
+        "lon": [
+          "-55.028000",
+          "-48.815000",
+          "-47.160000",
+          "-51.919000"
+        ],
+        "data_pas": [
+          "2003-05-15 17:05:00",
+          "2003-05-15 17:04:00",
+          "2003-05-15 17:03:00",
+          "2003-05-15 17:02:00"
+        ],
+        "pais": [
+          "Brasil"
+        ],
+        "estado": [
+          "MATO GROSSO DO SUL",
+          "GOIÁS",
+          "MINAS GERAIS",
+          "PARANÁ"
+        ],
+        "municipio": [
+          "RIO VERDE DE MATO GROSSO",
+          "PIRACANJUBA",
+          "GUARDA-MOR",
+          "SERRANÓPOLIS"
+        ],
+        "bioma": [
+          "Cerrado",
+          "Pantanal",
+          "Mata Atlântica",
+          "Pampa"
+        ]
+      }
+    },
+    {
+      "zip_name": "focos_br_ref_2004.zip",
+      "year": 2004,
+      "member_name": "focos_br_ref_2004.csv",
+      "delimiter": ",",
+      "row_count": 380445,
+      "sample_rows_read": 2000,
+      "column_count": 9,
+      "columns": [
+        "id_bdq",
+        "foco_id",
+        "lat",
+        "lon",
+        "data_pas",
+        "pais",
+        "estado",
+        "municipio",
+        "bioma"
+      ],
+      "datetime_column_detected": "data_pas",
+      "state_column_detected": "estado",
+      "column_types": {
+        "id_bdq": "int",
+        "foco_id": "string",
+        "lat": "float",
+        "lon": "float",
+        "data_pas": "datetime",
+        "pais": "categorical",
+        "estado": "string",
+        "municipio": "string",
+        "bioma": "string"
+      },
+      "column_samples": {
+        "id_bdq": [
+          "20428955",
+          "20427978",
+          "17430581",
+          "17430580"
+        ],
+        "foco_id": [
+          "636d9801-5abb-11e8-911c-28924ad12c5c",
+          "636d96cc-5abb-11e8-911c-28924ad12c5c",
+          "87926927-5aba-11e8-911c-28924ad12c5c",
+          "87926926-5aba-11e8-911c-28924ad12c5c"
+        ],
+        "lat": [
+          "-14.582000",
+          "-14.031000",
+          "-12.418000",
+          "-12.178000"
+        ],
+        "lon": [
+          "-42.632000",
+          "-42.506000",
+          "-55.047000",
+          "-55.930000"
+        ],
+        "data_pas": [
+          "2004-10-14 16:30:00",
+          "2004-07-07 17:39:00",
+          "2004-01-01 15:36:00",
+          "2004-01-01 17:13:00"
+        ],
+        "pais": [
+          "Brasil"
+        ],
+        "estado": [
+          "BAHIA",
+          "MATO GROSSO",
+          "PARAÍBA",
+          "RORAIMA"
+        ],
+        "municipio": [
+          "URANDI",
+          "CAETITÉ",
+          "FELIZ NATAL",
+          "IPIRANGA DO NORTE"
+        ],
+        "bioma": [
+          "Cerrado",
+          "Caatinga",
+          "Amazônia",
+          "Mata Atlântica"
+        ]
+      }
+    },
+    {
+      "zip_name": "focos_br_ref_2005.zip",
+      "year": 2005,
+      "member_name": "focos_br_ref_2005.csv",
+      "delimiter": ",",
+      "row_count": 362563,
+      "sample_rows_read": 2000,
+      "column_count": 9,
+      "columns": [
+        "id_bdq",
+        "foco_id",
+        "lat",
+        "lon",
+        "data_pas",
+        "pais",
+        "estado",
+        "municipio",
+        "bioma"
+      ],
+      "datetime_column_detected": "data_pas",
+      "state_column_detected": "estado",
+      "column_types": {
+        "id_bdq": "int",
+        "foco_id": "string",
+        "lat": "float",
+        "lon": "float",
+        "data_pas": "datetime",
+        "pais": "categorical",
+        "estado": "string",
+        "municipio": "string",
+        "bioma": "string"
+      },
+      "column_samples": {
+        "id_bdq": [
+          "26730129",
+          "26653713",
+          "26547738",
+          "26444537"
+        ],
+        "foco_id": [
+          "8829e4c3-5aba-11e8-911c-28924ad12c5c",
+          "8824e288-5aba-11e8-911c-28924ad12c5c",
+          "88208bbf-5aba-11e8-911c-28924ad12c5c",
+          "881b9ac9-5aba-11e8-911c-28924ad12c5c"
+        ],
+        "lat": [
+          "-12.224000",
+          "-7.054000",
+          "-9.066000",
+          "-8.617000"
+        ],
+        "lon": [
+          "-48.347000",
+          "-49.799000",
+          "-46.998000",
+          "-55.129000"
+        ],
+        "data_pas": [
+          "2005-09-22 16:35:00",
+          "2005-09-20 16:49:00",
+          "2005-09-18 17:01:00",
+          "2005-09-16 17:13:00"
+        ],
+        "pais": [
+          "Brasil"
+        ],
+        "estado": [
+          "TOCANTINS",
+          "PARÁ",
+          "MARANHÃO",
+          "MATO GROSSO"
+        ],
+        "municipio": [
+          "PEIXE",
+          "XINGUARA",
+          "BALSAS",
+          "ALTAMIRA"
+        ],
+        "bioma": [
+          "Cerrado",
+          "Amazônia",
+          "Mata Atlântica",
+          "Pampa"
+        ]
+      }
+    },
+    {
+      "zip_name": "focos_br_ref_2006.zip",
+      "year": 2006,
+      "member_name": "focos_br_ref_2006.csv",
+      "delimiter": ",",
+      "row_count": 249179,
+      "sample_rows_read": 2000,
+      "column_count": 9,
+      "columns": [
+        "id_bdq",
+        "foco_id",
+        "lat",
+        "lon",
+        "data_pas",
+        "pais",
+        "estado",
+        "municipio",
+        "bioma"
+      ],
+      "datetime_column_detected": "data_pas",
+      "state_column_detected": "estado",
+      "column_types": {
+        "id_bdq": "int",
+        "foco_id": "string",
+        "lat": "float",
+        "lon": "float",
+        "data_pas": "datetime",
+        "pais": "categorical",
+        "estado": "string",
+        "municipio": "string",
+        "bioma": "string"
+      },
+      "column_samples": {
+        "id_bdq": [
+          "29968707",
+          "29968703",
+          "29968702",
+          "29686047"
+        ],
+        "foco_id": [
+          "55b07831-5abb-11e8-911c-28924ad12c5c",
+          "55b0782d-5abb-11e8-911c-28924ad12c5c",
+          "55b0782c-5abb-11e8-911c-28924ad12c5c",
+          "85e8ccb7-5aba-11e8-911c-28924ad12c5c"
+        ],
+        "lat": [
+          "-20.700000",
+          "-22.012000",
+          "-21.595000",
+          ".099000"
+        ],
+        "lon": [
+          "-48.513000",
+          "-53.741000",
+          "-48.343000",
+          "-68.585000"
+        ],
+        "data_pas": [
+          "2006-04-28 17:11:00",
+          "2006-04-04 18:06:00",
+          "2006-04-28 17:10:00",
+          "2006-04-28 17:09:00"
+        ],
+        "pais": [
+          "Brasil"
+        ],
+        "estado": [
+          "SÃO PAULO",
+          "MATO GROSSO DO SUL",
+          "AMAZONAS",
+          "PARANÁ"
+        ],
+        "municipio": [
+          "COLINA",
+          "NOVA ANDRADINA",
+          "MATÃO",
+          "SÃO GABRIEL DA CACHOEIRA"
+        ],
+        "bioma": [
+          "Cerrado",
+          "Mata Atlântica",
+          "Amazônia",
+          "Pampa"
+        ]
+      }
+    },
+    {
+      "zip_name": "focos_br_ref_2007.zip",
+      "year": 2007,
+      "member_name": "focos_br_ref_2007.csv",
+      "delimiter": ",",
+      "row_count": 393915,
+      "sample_rows_read": 2000,
+      "column_count": 9,
+      "columns": [
+        "id_bdq",
+        "foco_id",
+        "lat",
+        "lon",
+        "data_pas",
+        "pais",
+        "estado",
+        "municipio",
+        "bioma"
+      ],
+      "datetime_column_detected": "data_pas",
+      "state_column_detected": "estado",
+      "column_types": {
+        "id_bdq": "int",
+        "foco_id": "string",
+        "lat": "float",
+        "lon": "float",
+        "data_pas": "datetime",
+        "pais": "categorical",
+        "estado": "string",
+        "municipio": "string",
+        "bioma": "string"
+      },
+      "column_samples": {
+        "id_bdq": [
+          "40756604",
+          "40628131",
+          "40484560",
+          "40134917"
+        ],
+        "foco_id": [
+          "56344939-5abb-11e8-911c-28924ad12c5c",
+          "56329e4b-5abb-11e8-911c-28924ad12c5c",
+          "562fe0e9-5abb-11e8-911c-28924ad12c5c",
+          "2b4544d3-5abb-11e8-911c-28924ad12c5c"
+        ],
+        "lat": [
+          "-10.965000",
+          "-12.597000",
+          "-13.805000",
+          "-20.311000"
+        ],
+        "lon": [
+          "-39.248000",
+          "-39.917000",
+          "-44.892000",
+          "-48.856000"
+        ],
+        "data_pas": [
+          "2007-11-09 15:36:00",
+          "2007-11-01 16:25:00",
+          "2007-10-25 16:19:00",
+          "2007-10-08 17:13:00"
+        ],
+        "pais": [
+          "Brasil"
+        ],
+        "estado": [
+          "BAHIA",
+          "SÃO PAULO",
+          "MINAS GERAIS",
+          "PARÁ"
+        ],
+        "municipio": [
+          "CANSANÇÃO",
+          "IAÇU",
+          "JABORANDI",
+          "COLÔMBIA"
+        ],
+        "bioma": [
+          "Caatinga",
+          "Cerrado",
+          "Amazônia",
+          "Mata Atlântica"
+        ]
+      }
+    },
+    {
+      "zip_name": "focos_br_ref_2008.zip",
+      "year": 2008,
+      "member_name": "focos_br_ref_2008.csv",
+      "delimiter": ",",
+      "row_count": 211933,
+      "sample_rows_read": 2000,
+      "column_count": 9,
+      "columns": [
+        "id_bdq",
+        "foco_id",
+        "lat",
+        "lon",
+        "data_pas",
+        "pais",
+        "estado",
+        "municipio",
+        "bioma"
+      ],
+      "datetime_column_detected": "data_pas",
+      "state_column_detected": "estado",
+      "column_types": {
+        "id_bdq": "int",
+        "foco_id": "string",
+        "lat": "float",
+        "lon": "float",
+        "data_pas": "datetime",
+        "pais": "categorical",
+        "estado": "string",
+        "municipio": "string",
+        "bioma": "string"
+      },
+      "column_samples": {
+        "id_bdq": [
+          "45780180",
+          "46869385",
+          "45678159",
+          "46619944"
+        ],
+        "foco_id": [
+          "566bd0da-5abb-11e8-911c-28924ad12c5c",
+          "2e21e440-5abb-11e8-911c-28924ad12c5c",
+          "2dc8217a-5abb-11e8-911c-28924ad12c5c",
+          "865c3b2f-5aba-11e8-911c-28924ad12c5c"
+        ],
+        "lat": [
+          "-6.604000",
+          "-13.331000",
+          "-14.020000",
+          "-9.448000"
+        ],
+        "lon": [
+          "-43.830000",
+          "-41.197000",
+          "-44.827000",
+          "-56.421000"
+        ],
+        "data_pas": [
+          "2008-09-18 16:17:00",
+          "2008-11-05 16:16:00",
+          "2008-09-15 17:23:00",
+          "2008-10-24 17:31:00"
+        ],
+        "pais": [
+          "Brasil"
+        ],
+        "estado": [
+          "MARANHÃO",
+          "BAHIA",
+          "MATO GROSSO",
+          "PARÁ"
+        ],
+        "municipio": [
+          "NOVA IORQUE",
+          "IBICOARA",
+          "COCOS",
+          "PARANAÍTA"
+        ],
+        "bioma": [
+          "Cerrado",
+          "Caatinga",
+          "Amazônia",
+          "Mata Atlântica"
+        ]
+      }
+    },
+    {
+      "zip_name": "focos_br_ref_2009.zip",
+      "year": 2009,
+      "member_name": "focos_br_ref_2009.csv",
+      "delimiter": ",",
+      "row_count": 155102,
+      "sample_rows_read": 2000,
+      "column_count": 9,
+      "columns": [
+        "id_bdq",
+        "foco_id",
+        "lat",
+        "lon",
+        "data_pas",
+        "pais",
+        "estado",
+        "municipio",
+        "bioma"
+      ],
+      "datetime_column_detected": "data_pas",
+      "state_column_detected": "estado",
+      "column_types": {
+        "id_bdq": "int",
+        "foco_id": "string",
+        "lat": "float",
+        "lon": "float",
+        "data_pas": "datetime",
+        "pais": "categorical",
+        "estado": "string",
+        "municipio": "string",
+        "bioma": "string"
+      },
+      "column_samples": {
+        "id_bdq": [
+          "49553196",
+          "49738971",
+          "52204550",
+          "52222178"
+        ],
+        "foco_id": [
+          "8661c597-5aba-11e8-911c-28924ad12c5c",
+          "8661c76b-5aba-11e8-911c-28924ad12c5c",
+          "82f49015-5aba-11e8-911c-28924ad12c5c",
+          "82f490ea-5aba-11e8-911c-28924ad12c5c"
+        ],
+        "lat": [
+          "2.872000",
+          "-11.992000",
+          "-5.659000",
+          "-15.798000"
+        ],
+        "lon": [
+          "-60.894000",
+          "-56.784000",
+          "-49.824000",
+          "-54.204000"
+        ],
+        "data_pas": [
+          "2009-05-16 18:02:00",
+          "2009-06-03 17:45:00",
+          "2009-10-10 16:50:00",
+          "2009-10-11 17:30:00"
+        ],
+        "pais": [
+          "Brasil"
+        ],
+        "estado": [
+          "RORAIMA",
+          "MATO GROSSO",
+          "PARÁ",
+          "MARANHÃO"
+        ],
+        "municipio": [
+          "BOA VISTA",
+          "ITANHANGÁ",
+          "MARABÁ",
+          "POXORÉU"
+        ],
+        "bioma": [
+          "Amazônia",
+          "Cerrado",
+          "Caatinga",
+          "Mata Atlântica"
+        ]
+      }
+    },
+    {
+      "zip_name": "focos_br_ref_2010.zip",
+      "year": 2010,
+      "member_name": "focos_br_ref_2010.csv",
+      "delimiter": ",",
+      "row_count": 319383,
+      "sample_rows_read": 2000,
+      "column_count": 9,
+      "columns": [
+        "id_bdq",
+        "foco_id",
+        "lat",
+        "lon",
+        "data_pas",
+        "pais",
+        "estado",
+        "municipio",
+        "bioma"
+      ],
+      "datetime_column_detected": "data_pas",
+      "state_column_detected": "estado",
+      "column_types": {
+        "id_bdq": "int",
+        "foco_id": "string",
+        "lat": "float",
+        "lon": "float",
+        "data_pas": "datetime",
+        "pais": "categorical",
+        "estado": "string",
+        "municipio": "string",
+        "bioma": "string"
+      },
+      "column_samples": {
+        "id_bdq": [
+          "56560528",
+          "55851992",
+          "56022868",
+          "56199661"
+        ],
+        "foco_id": [
+          "8314a25e-5aba-11e8-911c-28924ad12c5c",
+          "830b5d98-5aba-11e8-911c-28924ad12c5c",
+          "830c7640-5aba-11e8-911c-28924ad12c5c",
+          "830e1910-5aba-11e8-911c-28924ad12c5c"
+        ],
+        "lat": [
+          "-6.566000",
+          "-4.246000",
+          "-6.831000",
+          "-4.438000"
+        ],
+        "lon": [
+          "-56.137000",
+          "-56.415000",
+          "-44.970000",
+          "-59.599000"
+        ],
+        "data_pas": [
+          "2010-08-06 17:12:00",
+          "2010-07-08 17:44:00",
+          "2010-07-18 16:41:00",
+          "2010-07-26 17:31:00"
+        ],
+        "pais": [
+          "Brasil"
+        ],
+        "estado": [
+          "PARÁ",
+          "MARANHÃO",
+          "AMAZONAS",
+          "MATO GROSSO"
+        ],
+        "municipio": [
+          "ITAITUBA",
+          "LORETO",
+          "BORBA",
+          "POXORÉU"
+        ],
+        "bioma": [
+          "Amazônia",
+          "Cerrado",
+          "Mata Atlântica",
+          "Pampa"
+        ]
+      }
+    },
+    {
+      "zip_name": "focos_br_ref_2011.zip",
+      "year": 2011,
+      "member_name": "focos_br_ref_2011.csv",
+      "delimiter": ",",
+      "row_count": 158099,
+      "sample_rows_read": 2000,
+      "column_count": 9,
+      "columns": [
+        "id_bdq",
+        "foco_id",
+        "lat",
+        "lon",
+        "data_pas",
+        "pais",
+        "estado",
+        "municipio",
+        "bioma"
+      ],
+      "datetime_column_detected": "data_pas",
+      "state_column_detected": "estado",
+      "column_types": {
+        "id_bdq": "int",
+        "foco_id": "string",
+        "lat": "float",
+        "lon": "float",
+        "data_pas": "datetime",
+        "pais": "categorical",
+        "estado": "string",
+        "municipio": "string",
+        "bioma": "string"
+      },
+      "column_samples": {
+        "id_bdq": [
+          "66464599",
+          "66007727",
+          "65004881",
+          "65005284"
+        ],
+        "foco_id": [
+          "3b5ba711-5abb-11e8-911c-28924ad12c5c",
+          "3aff447a-5abb-11e8-911c-28924ad12c5c",
+          "3a9da8b7-5abb-11e8-911c-28924ad12c5c",
+          "3a9daa31-5abb-11e8-911c-28924ad12c5c"
+        ],
+        "lat": [
+          "-4.288000",
+          "-6.474000",
+          "-13.851000",
+          "-11.931000"
+        ],
+        "lon": [
+          "-40.731000",
+          "-38.619000",
+          "-44.376000",
+          "-44.455000"
+        ],
+        "data_pas": [
+          "2011-12-16 16:16:00",
+          "2011-11-16 16:03:00",
+          "2011-09-23 16:38:00",
+          "2011-08-29 16:42:00"
+        ],
+        "pais": [
+          "Brasil"
+        ],
+        "estado": [
+          "CEARÁ",
+          "BAHIA",
+          "MINAS GERAIS",
+          "PARÁ"
+        ],
+        "municipio": [
+          "IPU",
+          "ICÓ",
+          "CORIBE",
+          "COTEGIPE"
+        ],
+        "bioma": [
+          "Caatinga",
+          "Cerrado",
+          "Amazônia",
+          "Pantanal"
+        ]
+      }
+    },
+    {
+      "zip_name": "focos_br_ref_2012.zip",
+      "year": 2012,
+      "member_name": "focos_br_ref_2012.csv",
+      "delimiter": ",",
+      "row_count": 217234,
+      "sample_rows_read": 2000,
+      "column_count": 9,
+      "columns": [
+        "id_bdq",
+        "foco_id",
+        "lat",
+        "lon",
+        "data_pas",
+        "pais",
+        "estado",
+        "municipio",
+        "bioma"
+      ],
+      "datetime_column_detected": "data_pas",
+      "state_column_detected": "estado",
+      "column_types": {
+        "id_bdq": "int",
+        "foco_id": "string",
+        "lat": "float",
+        "lon": "float",
+        "data_pas": "datetime",
+        "pais": "categorical",
+        "estado": "string",
+        "municipio": "string",
+        "bioma": "string"
+      },
+      "column_samples": {
+        "id_bdq": [
+          "85030996",
+          "85031083",
+          "85326464",
+          "85487336"
+        ],
+        "foco_id": [
+          "83af73f1-5aba-11e8-911c-28924ad12c5c",
+          "83af7435-5aba-11e8-911c-28924ad12c5c",
+          "83b1a598-5aba-11e8-911c-28924ad12c5c",
+          "83b2b401-5aba-11e8-911c-28924ad12c5c"
+        ],
+        "lat": [
+          "-5.615000",
+          "-5.617000",
+          "-8.462000",
+          "-8.181000"
+        ],
+        "lon": [
+          "-44.757000",
+          "-44.893000",
+          "-46.211000",
+          "-54.880000"
+        ],
+        "data_pas": [
+          "2012-08-24 16:41:00",
+          "2012-08-26 16:28:00",
+          "2012-08-27 17:11:00",
+          "2012-08-29 16:57:00"
+        ],
+        "pais": [
+          "Brasil"
+        ],
+        "estado": [
+          "MARANHÃO",
+          "PARÁ",
+          "TOCANTINS",
+          "AMAZONAS"
+        ],
+        "municipio": [
+          "TUNTUM",
+          "BALSAS",
+          "ALTAMIRA",
+          "ALMAS"
+        ],
+        "bioma": [
+          "Cerrado",
+          "Amazônia",
+          "Caatinga",
+          "Mata Atlântica"
+        ]
+      }
+    },
+    {
+      "zip_name": "focos_br_ref_2013.zip",
+      "year": 2013,
+      "member_name": "focos_br_ref_2013.csv",
+      "delimiter": ",",
+      "row_count": 128145,
+      "sample_rows_read": 2000,
+      "column_count": 9,
+      "columns": [
+        "id_bdq",
+        "foco_id",
+        "lat",
+        "lon",
+        "data_pas",
+        "pais",
+        "estado",
+        "municipio",
+        "bioma"
+      ],
+      "datetime_column_detected": "data_pas",
+      "state_column_detected": "estado",
+      "column_types": {
+        "id_bdq": "int",
+        "foco_id": "string",
+        "lat": "float",
+        "lon": "float",
+        "data_pas": "datetime",
+        "pais": "categorical",
+        "estado": "string",
+        "municipio": "string",
+        "bioma": "string"
+      },
+      "column_samples": {
+        "id_bdq": [
+          "120479673",
+          "109665473",
+          "123008921",
+          "111978755"
+        ],
+        "foco_id": [
+          "414a99e8-5abb-11e8-911c-28924ad12c5c",
+          "40113a2d-5abb-11e8-911c-28924ad12c5c",
+          "86b9e493-5aba-11e8-911c-28924ad12c5c",
+          "86b3aa0f-5aba-11e8-911c-28924ad12c5c"
+        ],
+        "lat": [
+          "-13.721000",
+          "-6.924000",
+          "-4.107000",
+          "-8.199000"
+        ],
+        "lon": [
+          "-46.882000",
+          "-43.295000",
+          "-54.552000",
+          "-46.257000"
+        ],
+        "data_pas": [
+          "2013-10-06 17:28:00",
+          "2013-06-24 16:41:00",
+          "2013-11-13 16:54:00",
+          "2013-07-23 16:10:00"
+        ],
+        "pais": [
+          "Brasil"
+        ],
+        "estado": [
+          "GOIÁS",
+          "PIAUÍ",
+          "PARÁ",
+          "MARANHÃO"
+        ],
+        "municipio": [
+          "NOVA ROMA",
+          "FLORIANO",
+          "PLACAS",
+          "BALSAS"
+        ],
+        "bioma": [
+          "Cerrado",
+          "Caatinga",
+          "Amazônia",
+          "Pantanal"
+        ]
+      }
+    },
+    {
+      "zip_name": "focos_br_ref_2014.zip",
+      "year": 2014,
+      "member_name": "focos_br_ref_2014.csv",
+      "delimiter": ",",
+      "row_count": 175892,
+      "sample_rows_read": 2000,
+      "column_count": 9,
+      "columns": [
+        "id_bdq",
+        "foco_id",
+        "lat",
+        "lon",
+        "data_pas",
+        "pais",
+        "estado",
+        "municipio",
+        "bioma"
+      ],
+      "datetime_column_detected": "data_pas",
+      "state_column_detected": "estado",
+      "column_types": {
+        "id_bdq": "int",
+        "foco_id": "string",
+        "lat": "float",
+        "lon": "float",
+        "data_pas": "datetime",
+        "pais": "categorical",
+        "estado": "string",
+        "municipio": "string",
+        "bioma": "string"
+      },
+      "column_samples": {
+        "id_bdq": [
+          "129395262",
+          "129395261",
+          "129400676",
+          "129400677"
+        ],
+        "foco_id": [
+          "423e9a18-5abb-11e8-911c-28924ad12c5c",
+          "423e9a17-5abb-11e8-911c-28924ad12c5c",
+          "86bb03da-5aba-11e8-911c-28924ad12c5c",
+          "86bb03db-5aba-11e8-911c-28924ad12c5c"
+        ],
+        "lat": [
+          "-10.983000",
+          "-10.934000",
+          "1.662000",
+          "-.068000"
+        ],
+        "lon": [
+          "-37.953000",
+          "-37.731000",
+          "-60.695000",
+          "-66.978000"
+        ],
+        "data_pas": [
+          "2014-02-16 16:09:00",
+          "2014-02-16 17:51:00",
+          "2014-02-16 17:52:00",
+          "2014-01-16 16:51:00"
+        ],
+        "pais": [
+          "Brasil"
+        ],
+        "estado": [
+          "SERGIPE",
+          "RORAIMA",
+          "AMAZONAS",
+          "BAHIA"
+        ],
+        "municipio": [
+          "TOBIAS BARRETO",
+          "LAGARTO",
+          "CARACARAÍ",
+          "SÃO GABRIEL DA CACHOEIRA"
+        ],
+        "bioma": [
+          "Caatinga",
+          "Amazônia",
+          "Cerrado",
+          "Mata Atlântica"
+        ]
+      }
+    },
+    {
+      "zip_name": "focos_br_ref_2015.zip",
+      "year": 2015,
+      "member_name": "focos_br_ref_2015.csv",
+      "delimiter": ",",
+      "row_count": 216778,
+      "sample_rows_read": 2000,
+      "column_count": 9,
+      "columns": [
+        "id_bdq",
+        "foco_id",
+        "lat",
+        "lon",
+        "data_pas",
+        "pais",
+        "estado",
+        "municipio",
+        "bioma"
+      ],
+      "datetime_column_detected": "data_pas",
+      "state_column_detected": "estado",
+      "column_types": {
+        "id_bdq": "int",
+        "foco_id": "string",
+        "lat": "float",
+        "lon": "float",
+        "data_pas": "datetime",
+        "pais": "categorical",
+        "estado": "string",
+        "municipio": "string",
+        "bioma": "string"
+      },
+      "column_samples": {
+        "id_bdq": [
+          "157098753",
+          "157194528",
+          "157194916",
+          "157194529"
+        ],
+        "foco_id": [
+          "57d0e58b-5abb-11e8-911c-28924ad12c5c",
+          "8441c3cd-5aba-11e8-911c-28924ad12c5c",
+          "8441c413-5aba-11e8-911c-28924ad12c5c",
+          "8441c3ce-5aba-11e8-911c-28924ad12c5c"
+        ],
+        "lat": [
+          "-16.291000",
+          "-10.285000",
+          "3.709000",
+          "-11.154000"
+        ],
+        "lon": [
+          "-43.863000",
+          "-59.470000",
+          "-61.079000",
+          "-54.248000"
+        ],
+        "data_pas": [
+          "2015-01-05 16:38:00",
+          "2015-01-06 17:23:00",
+          "2015-01-06 17:27:00",
+          "2015-01-07 16:29:00"
+        ],
+        "pais": [
+          "Brasil"
+        ],
+        "estado": [
+          "MINAS GERAIS",
+          "MATO GROSSO",
+          "RORAIMA",
+          "MARANHÃO"
+        ],
+        "municipio": [
+          "MONTES CLAROS",
+          "ARIPUANÃ",
+          "AMAJARI",
+          "MARCELÂNDIA"
+        ],
+        "bioma": [
+          "Cerrado",
+          "Amazônia",
+          "Pampa",
+          "Caatinga"
+        ]
+      }
+    },
+    {
+      "zip_name": "focos_br_ref_2016.zip",
+      "year": 2016,
+      "member_name": "focos_br_ref_2016.csv",
+      "delimiter": ",",
+      "row_count": 184217,
+      "sample_rows_read": 2000,
+      "column_count": 9,
+      "columns": [
+        "id_bdq",
+        "foco_id",
+        "lat",
+        "lon",
+        "data_pas",
+        "pais",
+        "estado",
+        "municipio",
+        "bioma"
+      ],
+      "datetime_column_detected": "data_pas",
+      "state_column_detected": "estado",
+      "column_types": {
+        "id_bdq": "int",
+        "foco_id": "string",
+        "lat": "float",
+        "lon": "float",
+        "data_pas": "datetime",
+        "pais": "categorical",
+        "estado": "string",
+        "municipio": "string",
+        "bioma": "string"
+      },
+      "column_samples": {
+        "id_bdq": [
+          "191135182",
+          "191216016",
+          "191216017",
+          "191216018"
+        ],
+        "foco_id": [
+          "4b722531-5abb-11e8-911c-28924ad12c5c",
+          "86c9d5d2-5aba-11e8-911c-28924ad12c5c",
+          "86c9d5d3-5aba-11e8-911c-28924ad12c5c",
+          "86c9d5d4-5aba-11e8-911c-28924ad12c5c"
+        ],
+        "lat": [
+          "-19.575000",
+          "3.887000",
+          "3.696000",
+          "3.694000"
+        ],
+        "lon": [
+          "-43.593000",
+          "-60.033000",
+          "-61.048000",
+          "-61.061000"
+        ],
+        "data_pas": [
+          "2016-01-01 16:31:00",
+          "2016-01-02 17:20:00",
+          "2016-01-03 16:23:00",
+          "2016-01-03 16:21:00"
+        ],
+        "pais": [
+          "Brasil"
+        ],
+        "estado": [
+          "MINAS GERAIS",
+          "RORAIMA",
+          "AMAZONAS",
+          "MARANHÃO"
+        ],
+        "municipio": [
+          "TAQUARAÇU DE MINAS",
+          "NORMANDIA",
+          "AMAJARI",
+          "CAROEBE"
+        ],
+        "bioma": [
+          "Cerrado",
+          "Amazônia",
+          "Mata Atlântica",
+          "Caatinga"
+        ]
+      }
+    },
+    {
+      "zip_name": "focos_br_ref_2017.zip",
+      "year": 2017,
+      "member_name": "focos_br_ref_2017.csv",
+      "delimiter": ",",
+      "row_count": 207508,
+      "sample_rows_read": 2000,
+      "column_count": 9,
+      "columns": [
+        "id_bdq",
+        "foco_id",
+        "lat",
+        "lon",
+        "data_pas",
+        "pais",
+        "estado",
+        "municipio",
+        "bioma"
+      ],
+      "datetime_column_detected": "data_pas",
+      "state_column_detected": "estado",
+      "column_types": {
+        "id_bdq": "int",
+        "foco_id": "string",
+        "lat": "float",
+        "lon": "float",
+        "data_pas": "datetime",
+        "pais": "categorical",
+        "estado": "string",
+        "municipio": "string",
+        "bioma": "string"
+      },
+      "column_samples": {
+        "id_bdq": [
+          "224337425",
+          "224337427",
+          "224337431",
+          "224262111"
+        ],
+        "foco_id": [
+          "5a24dc68-5abb-11e8-911c-28924ad12c5c",
+          "5a24dc69-5abb-11e8-911c-28924ad12c5c",
+          "5a2562a5-5abb-11e8-911c-28924ad12c5c",
+          "5a24db95-5abb-11e8-911c-28924ad12c5c"
+        ],
+        "lat": [
+          "-5.147000",
+          "-5.151000",
+          "-4.197000",
+          "-14.503000"
+        ],
+        "lon": [
+          "-43.400000",
+          "-43.392000",
+          "-47.740000",
+          "-40.095000"
+        ],
+        "data_pas": [
+          "2017-01-13 17:11:00",
+          "2017-01-12 16:26:00",
+          "2017-01-13 15:33:00",
+          "2017-01-13 17:09:00"
+        ],
+        "pais": [
+          "Brasil"
+        ],
+        "estado": [
+          "MARANHÃO",
+          "PARÁ",
+          "BAHIA",
+          "RIO GRANDE DO NORTE"
+        ],
+        "municipio": [
+          "CAXIAS",
+          "DOM ELISEU",
+          "BOA NOVA",
+          "JUCURUTU"
+        ],
+        "bioma": [
+          "Cerrado",
+          "Amazônia",
+          "Mata Atlântica",
+          "Caatinga"
+        ]
+      }
+    },
+    {
+      "zip_name": "focos_br_ref_2018.zip",
+      "year": 2018,
+      "member_name": "focos_br_ref_2018.csv",
+      "delimiter": ",",
+      "row_count": 132870,
+      "sample_rows_read": 2000,
+      "column_count": 9,
+      "columns": [
+        "id_bdq",
+        "foco_id",
+        "lat",
+        "lon",
+        "data_pas",
+        "pais",
+        "estado",
+        "municipio",
+        "bioma"
+      ],
+      "datetime_column_detected": "data_pas",
+      "state_column_detected": "estado",
+      "column_types": {
+        "id_bdq": "int",
+        "foco_id": "string",
+        "lat": "float",
+        "lon": "float",
+        "data_pas": "datetime",
+        "pais": "categorical",
+        "estado": "string",
+        "municipio": "string",
+        "bioma": "string"
+      },
+      "column_samples": {
+        "id_bdq": [
+          "293378578",
+          "293378579",
+          "293377267",
+          "293378524"
+        ],
+        "foco_id": [
+          "36554422-91c5-3e0b-b8fc-bd10abd30bb4",
+          "138c9a5d-0f24-3ee1-8519-675256f34cdd",
+          "1d526b3e-1bc2-3b2c-bbc0-fd585ba8e3e7",
+          "8545757b-0f94-3f97-8b19-4e7611451b28"
+        ],
+        "lat": [
+          "3.918000",
+          "3.920000",
+          "-12.635000",
+          "-7.648000"
+        ],
+        "lon": [
+          "-61.420000",
+          "-61.405000",
+          "-38.310000",
+          "-37.427000"
+        ],
+        "data_pas": [
+          "2018-02-02 17:55:00",
+          "2018-02-02 16:10:00",
+          "2018-02-02 16:15:00",
+          "2018-04-20 17:15:00"
+        ],
+        "pais": [
+          "Brasil"
+        ],
+        "estado": [
+          "RORAIMA",
+          "BAHIA",
+          "PERNAMBUCO",
+          "ALAGOAS"
+        ],
+        "municipio": [
+          "AMAJARI",
+          "CAMAÇARI",
+          "TABIRA",
+          "SANTANA DO IPANEMA"
+        ],
+        "bioma": [
+          "Amazônia",
+          "Mata Atlântica",
+          "Caatinga",
+          "Cerrado"
+        ]
+      }
+    },
+    {
+      "zip_name": "focos_br_ref_2019.zip",
+      "year": 2019,
+      "member_name": "focos_br_ref_2019.csv",
+      "delimiter": ",",
+      "row_count": 197632,
+      "sample_rows_read": 2000,
+      "column_count": 9,
+      "columns": [
+        "id_bdq",
+        "foco_id",
+        "lat",
+        "lon",
+        "data_pas",
+        "pais",
+        "estado",
+        "municipio",
+        "bioma"
+      ],
+      "datetime_column_detected": "data_pas",
+      "state_column_detected": "estado",
+      "column_types": {
+        "id_bdq": "int",
+        "foco_id": "string",
+        "lat": "float",
+        "lon": "float",
+        "data_pas": "datetime",
+        "pais": "categorical",
+        "estado": "string",
+        "municipio": "string",
+        "bioma": "string"
+      },
+      "column_samples": {
+        "id_bdq": [
+          "1407449197",
+          "1407449196",
+          "1407449195",
+          "1407449194"
+        ],
+        "foco_id": [
+          "163f85ea-2a1e-3c9b-b2ab-6d8cb5918061",
+          "89b4df9b-89a9-3ec8-8d34-1b005ee91c33",
+          "30f9a863-0b18-39be-ba1f-b0a6ad6903ca",
+          "70436548-1295-39e7-aa70-39b69c445394"
+        ],
+        "lat": [
+          "-3.602000",
+          "-3.630000",
+          "-3.631000",
+          "-3.642000"
+        ],
+        "lon": [
+          "-49.963000",
+          "-52.255000",
+          "-52.264000",
+          "-52.265000"
+        ],
+        "data_pas": [
+          "2019-10-27 17:05:00",
+          "2019-10-28 17:45:00",
+          "2019-10-30 17:30:00",
+          "2019-11-01 15:45:00"
+        ],
+        "pais": [
+          "Brasil"
+        ],
+        "estado": [
+          "PARÁ",
+          "AMAZONAS",
+          "MATO GROSSO",
+          "MATO GROSSO DO SUL"
+        ],
+        "municipio": [
+          "PACAJÁ",
+          "ALTAMIRA",
+          "NOVA OLINDA DO NORTE",
+          "PORTO DE MOZ"
+        ],
+        "bioma": [
+          "Amazônia",
+          "Pantanal",
+          "Cerrado",
+          "Caatinga"
+        ]
+      }
+    },
+    {
+      "zip_name": "focos_br_ref_2020.zip",
+      "year": 2020,
+      "member_name": "focos_br_ref_2020.csv",
+      "delimiter": ",",
+      "row_count": 222797,
+      "sample_rows_read": 2000,
+      "column_count": 9,
+      "columns": [
+        "id_bdq",
+        "foco_id",
+        "lat",
+        "lon",
+        "data_pas",
+        "pais",
+        "estado",
+        "municipio",
+        "bioma"
+      ],
+      "datetime_column_detected": "data_pas",
+      "state_column_detected": "estado",
+      "column_types": {
+        "id_bdq": "int",
+        "foco_id": "string",
+        "lat": "float",
+        "lon": "float",
+        "data_pas": "datetime",
+        "pais": "categorical",
+        "estado": "string",
+        "municipio": "string",
+        "bioma": "string"
+      },
+      "column_samples": {
+        "id_bdq": [
+          "1422833677",
+          "1422833676",
+          "1422833578",
+          "1422833579"
+        ],
+        "foco_id": [
+          "af379e6c-9202-354f-8ef1-d1eec5a371e4",
+          "f3f9fabe-661e-3e2a-a641-34db5339e733",
+          "b47fec02-9489-3696-9f0c-1afd415e080e",
+          "4a7ac6de-0723-395c-88d2-002ad439edb8"
+        ],
+        "lat": [
+          "-3.650000",
+          "-4.128000",
+          "-10.513000",
+          "-10.504000"
+        ],
+        "lon": [
+          "-54.732000",
+          "-47.074000",
+          "-53.483000",
+          "-53.498000"
+        ],
+        "data_pas": [
+          "2020-06-16 17:00:00",
+          "2020-06-16 16:55:00",
+          "2020-06-16 16:50:00",
+          "2020-08-13 17:35:00"
+        ],
+        "pais": [
+          "Brasil"
+        ],
+        "estado": [
+          "PARÁ",
+          "MARANHÃO",
+          "MATO GROSSO",
+          "TOCANTINS"
+        ],
+        "municipio": [
+          "PLACAS",
+          "ITINGA DO MARANHÃO",
+          "PEIXOTO DE AZEVEDO",
+          "MATEIROS"
+        ],
+        "bioma": [
+          "Amazônia",
+          "Cerrado",
+          "Pantanal",
+          "Pampa"
+        ]
+      }
+    },
+    {
+      "zip_name": "focos_br_ref_2021.zip",
+      "year": 2021,
+      "member_name": "focos_br_ref_2021.csv",
+      "delimiter": ",",
+      "row_count": 184081,
+      "sample_rows_read": 2000,
+      "column_count": 9,
+      "columns": [
+        "id_bdq",
+        "foco_id",
+        "lat",
+        "lon",
+        "data_pas",
+        "pais",
+        "estado",
+        "municipio",
+        "bioma"
+      ],
+      "datetime_column_detected": "data_pas",
+      "state_column_detected": "estado",
+      "column_types": {
+        "id_bdq": "int",
+        "foco_id": "string",
+        "lat": "float",
+        "lon": "float",
+        "data_pas": "datetime",
+        "pais": "categorical",
+        "estado": "string",
+        "municipio": "string",
+        "bioma": "string"
+      },
+      "column_samples": {
+        "id_bdq": [
+          "1548112154",
+          "1548112126",
+          "1548112127",
+          "1548112097"
+        ],
+        "foco_id": [
+          "ebe7e710-17e7-3f6a-9bc1-5096efbad8b1",
+          "78ba7a03-99c9-3c78-85f0-f69299c08231",
+          "c6a9390f-6c4b-3588-9a7c-a6aa94e4d037",
+          "21b7bde4-54ba-389d-9817-35f73a25b54e"
+        ],
+        "lat": [
+          "-6.979240",
+          "-9.201770",
+          "-5.583170",
+          "-29.400660"
+        ],
+        "lon": [
+          "-42.379970",
+          "-46.479990",
+          "-43.992220",
+          "-50.416800"
+        ],
+        "data_pas": [
+          "2021-07-30 16:52:00",
+          "2021-07-30 16:54:00",
+          "2021-07-30 16:48:00",
+          "2021-07-30 16:50:00"
+        ],
+        "pais": [
+          "Brasil"
+        ],
+        "estado": [
+          "PIAUÍ",
+          "MARANHÃO",
+          "RIO GRANDE DO SUL",
+          "TOCANTINS"
+        ],
+        "municipio": [
+          "OEIRAS",
+          "ALTO PARNAÍBA",
+          "FORTUNA",
+          "SÃO FRANCISCO DE PAULA"
+        ],
+        "bioma": [
+          "Caatinga",
+          "Cerrado",
+          "Mata Atlântica",
+          "Amazônia"
+        ]
+      }
+    },
+    {
+      "zip_name": "focos_br_ref_2022.zip",
+      "year": 2022,
+      "member_name": "focos_br_ref_2022.csv",
+      "delimiter": ",",
+      "row_count": 200763,
+      "sample_rows_read": 2000,
+      "column_count": 9,
+      "columns": [
+        "id_bdq",
+        "foco_id",
+        "lat",
+        "lon",
+        "data_pas",
+        "pais",
+        "estado",
+        "municipio",
+        "bioma"
+      ],
+      "datetime_column_detected": "data_pas",
+      "state_column_detected": "estado",
+      "column_types": {
+        "id_bdq": "int",
+        "foco_id": "string",
+        "lat": "float",
+        "lon": "float",
+        "data_pas": "datetime",
+        "pais": "categorical",
+        "estado": "string",
+        "municipio": "string",
+        "bioma": "string"
+      },
+      "column_samples": {
+        "id_bdq": [
+          "1573831549",
+          "1573831670",
+          "1573831700",
+          "1573831699"
+        ],
+        "foco_id": [
+          "a051ae23-19a8-32ae-9c5f-420da79f2c45",
+          "56c8bf05-f851-3f3c-b879-a9b4ae9efbf5",
+          "64760840-cbce-3b3f-9091-d41593635774",
+          "9e85bfd3-75cb-3087-9ed1-9f0b900ed792"
+        ],
+        "lat": [
+          "4.228170",
+          "-4.215410",
+          "-2.178040",
+          ".713770"
+        ],
+        "lon": [
+          "-60.184310",
+          "-54.905010",
+          "-53.719710",
+          "-59.814310"
+        ],
+        "data_pas": [
+          "2022-01-11 17:15:00",
+          "2022-01-11 17:13:00",
+          "2022-01-13 16:54:00",
+          "2022-01-14 16:05:00"
+        ],
+        "pais": [
+          "Brasil"
+        ],
+        "estado": [
+          "RORAIMA",
+          "PARÁ",
+          "RIO GRANDE DO SUL",
+          "BAHIA"
+        ],
+        "municipio": [
+          "UIRAMUTÃ",
+          "RURÓPOLIS",
+          "PRAINHA",
+          "SÃO JOÃO DA BALIZA"
+        ],
+        "bioma": [
+          "Amazônia",
+          "Mata Atlântica",
+          "Cerrado",
+          "Caatinga"
+        ]
+      }
+    },
+    {
+      "zip_name": "focos_br_ref_2023.zip",
+      "year": 2023,
+      "member_name": "focos_br_ref_2023.csv",
+      "delimiter": ",",
+      "row_count": 189901,
+      "sample_rows_read": 2000,
+      "column_count": 9,
+      "columns": [
+        "id_bdq",
+        "foco_id",
+        "lat",
+        "lon",
+        "data_pas",
+        "pais",
+        "estado",
+        "municipio",
+        "bioma"
+      ],
+      "datetime_column_detected": "data_pas",
+      "state_column_detected": "estado",
+      "column_types": {
+        "id_bdq": "int",
+        "foco_id": "string",
+        "lat": "float",
+        "lon": "float",
+        "data_pas": "datetime",
+        "pais": "categorical",
+        "estado": "string",
+        "municipio": "string",
+        "bioma": "string"
+      },
+      "column_samples": {
+        "id_bdq": [
+          "1615033233",
+          "1615033235",
+          "1615033238",
+          "1615033240"
+        ],
+        "foco_id": [
+          "9a03983d-e1b3-3df1-b5e6-0a4ca26e3548",
+          "23953122-a8e4-3cd9-ac94-91aa2ad22ff4",
+          "7067c6d1-9165-308c-a2c3-839d0f7c7925",
+          "0b15e261-2a06-3e47-b07c-0fcc0245f305"
+        ],
+        "lat": [
+          "-17.528690",
+          "-17.613730",
+          "-17.615920",
+          "-5.453680"
+        ],
+        "lon": [
+          "-57.661380",
+          "-57.482550",
+          "-57.474930",
+          "-46.835930"
+        ],
+        "data_pas": [
+          "2023-01-02 17:11:00",
+          "2023-01-02 17:13:00",
+          "2023-01-02 17:09:00",
+          "2023-01-02 17:15:00"
+        ],
+        "pais": [
+          "Brasil"
+        ],
+        "estado": [
+          "MATO GROSSO",
+          "MARANHÃO",
+          "TOCANTINS",
+          "BAHIA"
+        ],
+        "municipio": [
+          "CÁCERES",
+          "POCONÉ",
+          "AMARANTE DO MARANHÃO",
+          "TASSO FRAGOSO"
+        ],
+        "bioma": [
+          "Pantanal",
+          "Cerrado",
+          "Amazônia",
+          "Mata Atlântica"
+        ]
+      }
+    },
+    {
+      "zip_name": "focos_br_ref_2024.zip",
+      "year": 2024,
+      "member_name": "focos_br_ref_2024.csv",
+      "delimiter": ",",
+      "row_count": 278299,
+      "sample_rows_read": 2000,
+      "column_count": 9,
+      "columns": [
+        "id_bdq",
+        "foco_id",
+        "lat",
+        "lon",
+        "data_pas",
+        "pais",
+        "estado",
+        "municipio",
+        "bioma"
+      ],
+      "datetime_column_detected": "data_pas",
+      "state_column_detected": "estado",
+      "column_types": {
+        "id_bdq": "int",
+        "foco_id": "string",
+        "lat": "float",
+        "lon": "float",
+        "data_pas": "datetime",
+        "pais": "categorical",
+        "estado": "string",
+        "municipio": "string",
+        "bioma": "string"
+      },
+      "column_samples": {
+        "id_bdq": [
+          "1666218617",
+          "1666218597",
+          "1666218598",
+          "1666218599"
+        ],
+        "foco_id": [
+          "fad5577f-02dc-3339-807e-5828b10f4ef4",
+          "178ca94b-abf3-30d0-893a-4f2263fcbb11",
+          "06bb202f-af6d-34d1-a2e5-8069c4a17c3a",
+          "dcc86463-c1e0-3f88-b1a0-d5fb82575af8"
+        ],
+        "lat": [
+          "-15.895720",
+          "-7.491880",
+          "-6.505640",
+          "-6.504090"
+        ],
+        "lon": [
+          "-38.899570",
+          "-38.883160",
+          "-39.441220",
+          "-39.434220"
+        ],
+        "data_pas": [
+          "2024-01-02 17:04:00",
+          "2024-01-02 17:06:00",
+          "2024-01-02 17:02:00",
+          "2024-01-02 17:09:00"
+        ],
+        "pais": [
+          "Brasil"
+        ],
+        "estado": [
+          "BAHIA",
+          "CEARÁ",
+          "MARANHÃO",
+          "PARANÁ"
+        ],
+        "municipio": [
+          "BELMONTE",
+          "BREJO SANTO",
+          "CARIÚS",
+          "MOMBAÇA"
+        ],
+        "bioma": [
+          "Mata Atlântica",
+          "Caatinga",
+          "Cerrado",
+          "Amazônia"
+        ]
+      }
+    },
+    {
+      "zip_name": "focos_br_ref_2025.zip",
+      "year": 2025,
+      "member_name": "tmp/focos_br_ref_2025.csv",
+      "delimiter": ",",
+      "row_count": 136393,
+      "sample_rows_read": 2000,
+      "column_count": 9,
+      "columns": [
+        "id_bdq",
+        "foco_id",
+        "lat",
+        "lon",
+        "data_pas",
+        "pais",
+        "estado",
+        "municipio",
+        "bioma"
+      ],
+      "datetime_column_detected": "data_pas",
+      "state_column_detected": "estado",
+      "column_types": {
+        "id_bdq": "int",
+        "foco_id": "string",
+        "lat": "float",
+        "lon": "float",
+        "data_pas": "datetime",
+        "pais": "categorical",
+        "estado": "string",
+        "municipio": "string",
+        "bioma": "string"
+      },
+      "column_samples": {
+        "id_bdq": [
+          "1739749356",
+          "1739749363",
+          "1739749366",
+          "1739749371"
+        ],
+        "foco_id": [
+          "16e57d98-133b-3c91-976f-022e899a7d41",
+          "04fffb61-8fb9-3f69-a42f-8aedec5a5d42",
+          "7ab5ccff-e9f1-3988-842c-fdafcc266dd8",
+          "266247de-37a1-3b41-8664-a78199b3bba1"
+        ],
+        "lat": [
+          "-7.599310",
+          "-12.317400",
+          "-4.214200",
+          "-7.281880"
+        ],
+        "lon": [
+          "-37.712270",
+          "-37.891320",
+          "-38.212600",
+          "-34.932120"
+        ],
+        "data_pas": [
+          "2025-01-01 16:52:00",
+          "2025-01-01 16:54:00",
+          "2025-01-01 18:34:00",
+          "2025-01-01 18:30:00"
+        ],
+        "pais": [
+          "Brasil"
+        ],
+        "estado": [
+          "PERNAMBUCO",
+          "BAHIA",
+          "CEARÁ",
+          "PARAÍBA"
+        ],
+        "municipio": [
+          "SOLIDÃO",
+          "ENTRE RIOS",
+          "BEBERIBE",
+          "ALHANDRA"
+        ],
+        "bioma": [
+          "Caatinga",
+          "Mata Atlântica",
+          "Amazônia",
+          "Cerrado"
+        ]
+      }
+    }
+  ],
+  "divergent_files": [],
+  "column_summary": [
+    {
+      "column": "bioma",
+      "present_in_files": 23,
+      "presence_pct": "100,00%",
+      "dominant_types": "string (23)",
+      "sample_values": "Cerrado, Pantanal, Mata Atlântica, Pampa"
+    },
+    {
+      "column": "data_pas",
+      "present_in_files": 23,
+      "presence_pct": "100,00%",
+      "dominant_types": "datetime (23)",
+      "sample_values": "2003-05-15 17:05:00, 2003-05-15 17:04:00, 2003-05-15 17:03:00, 2003-05-15 17:02:00"
+    },
+    {
+      "column": "estado",
+      "present_in_files": 23,
+      "presence_pct": "100,00%",
+      "dominant_types": "string (23)",
+      "sample_values": "MATO GROSSO DO SUL, GOIÁS, MINAS GERAIS, PARANÁ"
+    },
+    {
+      "column": "foco_id",
+      "present_in_files": 23,
+      "presence_pct": "100,00%",
+      "dominant_types": "string (23)",
+      "sample_values": "5e864494-5abb-11e8-911c-28924ad12c5c, 5e864493-5abb-11e8-911c-28924ad12c5c, 5e864492-5abb-11e8-911c-28924ad12c5c, 5e864491-5abb-11e8-911c-28924ad12c5c"
+    },
+    {
+      "column": "id_bdq",
+      "present_in_files": 23,
+      "presence_pct": "100,00%",
+      "dominant_types": "int (23)",
+      "sample_values": "9988885, 9988884, 9988882, 9988881"
+    },
+    {
+      "column": "lat",
+      "present_in_files": 23,
+      "presence_pct": "100,00%",
+      "dominant_types": "float (23)",
+      "sample_values": "-18.518000, -17.542000, -17.612000, -18.386000"
+    },
+    {
+      "column": "lon",
+      "present_in_files": 23,
+      "presence_pct": "100,00%",
+      "dominant_types": "float (23)",
+      "sample_values": "-55.028000, -48.815000, -47.160000, -51.919000"
+    },
+    {
+      "column": "municipio",
+      "present_in_files": 23,
+      "presence_pct": "100,00%",
+      "dominant_types": "string (23)",
+      "sample_values": "RIO VERDE DE MATO GROSSO, PIRACANJUBA, GUARDA-MOR, SERRANÓPOLIS"
+    },
+    {
+      "column": "pais",
+      "present_in_files": 23,
+      "presence_pct": "100,00%",
+      "dominant_types": "categorical (23)",
+      "sample_values": "Brasil"
+    }
+  ]
+}

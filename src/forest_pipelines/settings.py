@@ -28,6 +28,7 @@ class Settings:
     root: Path
     data_dir: Path
     logs_dir: Path
+    docs_dir: Path
     datasets_dir: Path
     reports_dir: Path
     supabase_bucket_open_data: str
@@ -43,6 +44,7 @@ def load_settings(config_path: str) -> Settings:
 
     data_dir = (root / cfg["app"]["data_dir"]).resolve()
     logs_dir = (root / cfg["app"]["logs_dir"]).resolve()
+    docs_dir = (root / cfg["app"].get("docs_dir", "docs")).resolve()
     datasets_dir = (root / cfg["datasets_dir"]).resolve()
     reports_dir = (root / cfg.get("reports_dir", "configs/reports")).resolve()
 
@@ -54,12 +56,14 @@ def load_settings(config_path: str) -> Settings:
 
     data_dir.mkdir(parents=True, exist_ok=True)
     logs_dir.mkdir(parents=True, exist_ok=True)
+    docs_dir.mkdir(parents=True, exist_ok=True)
     reports_dir.mkdir(parents=True, exist_ok=True)
 
     return Settings(
         root=root,
         data_dir=data_dir,
         logs_dir=logs_dir,
+        docs_dir=docs_dir,
         datasets_dir=datasets_dir,
         reports_dir=reports_dir,
         supabase_bucket_open_data=bucket,

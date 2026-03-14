@@ -5,6 +5,7 @@ import json
 
 import typer
 
+from forest_pipelines.audits.registry import get_audit_runner
 from forest_pipelines.logging_ import get_logger
 from forest_pipelines.registry.datasets import get_dataset_runner
 from forest_pipelines.reports.publish.supabase import publish_report_package
@@ -81,6 +82,25 @@ def build_report(
     logger.info("Manifest do report: %s", publication["public_urls"]["manifest"])
     logger.info("Report live: %s", publication["public_urls"]["live_report"])
     logger.info("Build do report concluído com sucesso!")
+
+
+@app.command("audit-dataset")
+def audit_dataset(
+    dataset_id: str = typer.Argument(..., help="ID do dataset para auditoria (ex: inpe_bdqueimadas_focos)"),
+    config_path: str = typer.Option("configs/app.yml", help="Caminho do config principal"),
+) -> None:
+    settings = load_settings(config_path)
+    logger = get_logger(settings.logs_dir, f"audits/{dataset_id}")
+
+    runner = get_audit_runner(dataset_id)
+    result = runner(
+        settings=settings,
+        logger=logger,
+    )
+
+    logger.info("Auditoria concluída.")
+    logger.info("Markdown: %s", result["readme_path"])
+    logger.info("JSON resumo: %s", result["summary_json_path"])
 
 
 if __name__ == "__main__":

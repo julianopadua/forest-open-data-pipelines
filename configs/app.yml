@@ -3,6 +3,7 @@ app:
   name: forest-open-data-pipelines
   data_dir: data
   logs_dir: logs
+  docs_dir: docs
 
 supabase:
   bucket_open_data_env: SUPABASE_BUCKET_OPEN_DATA
