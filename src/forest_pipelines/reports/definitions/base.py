@@ -8,6 +8,50 @@ import yaml
 from pydantic import BaseModel, ConfigDict, Field
 
 
+class LocalizedText(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    pt: str
+    en: str
+
+
+def localized_text_dict(
+    value: str | LocalizedText | None,
+    *,
+    fallback_pt: str | None = None,
+    fallback_en: str | None = None,
+) -> dict[str, str] | None:
+    if value is None:
+        if fallback_pt is None and fallback_en is None:
+            return None
+
+        pt = (fallback_pt or fallback_en or "").strip()
+        en = (fallback_en or fallback_pt or "").strip()
+        return {"pt": pt, "en": en}
+
+    if isinstance(value, LocalizedText):
+        pt = value.pt.strip()
+        en = value.en.strip()
+
+        if not pt and en:
+            pt = en
+        if not en and pt:
+            en = pt
+
+        return {"pt": pt, "en": en}
+
+    text = str(value).strip()
+    pt = (fallback_pt if fallback_pt is not None else text).strip()
+    en = (fallback_en if fallback_en is not None else text).strip()
+
+    if not pt and en:
+        pt = en
+    if not en and pt:
+        en = pt
+
+    return {"pt": pt, "en": en}
+
+
 class ReportDatasetCfg(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -67,10 +111,10 @@ class ReportConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     id: str
-    title: str
+    title: str | LocalizedText
     bucket_prefix: str
-    source_label: str
-    summary: str | None = None
+    source_label: str | LocalizedText
+    summary: str | LocalizedText | None = None
     dataset: ReportDatasetCfg
     columns: ReportColumnsCfg = Field(default_factory=ReportColumnsCfg)
     display: ReportDisplayCfg = Field(default_factory=ReportDisplayCfg)

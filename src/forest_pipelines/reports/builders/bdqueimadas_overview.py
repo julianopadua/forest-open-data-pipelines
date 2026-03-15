@@ -12,7 +12,11 @@ from typing import Any
 import pandas as pd
 import yaml
 
-from forest_pipelines.reports.definitions.base import ReportConfig, load_report_cfg
+from forest_pipelines.reports.definitions.base import (
+    ReportConfig,
+    load_report_cfg,
+    localized_text_dict,
+)
 from forest_pipelines.reports.llm.base import maybe_generate_analysis_blocks
 
 RE_YEAR = re.compile(r"(\d{4})")
@@ -32,6 +36,9 @@ DEFAULT_STATE_CANDIDATES = [
     "estado_sigla",
     "state",
 ]
+
+SUPPORTED_REPORT_LOCALES = ["pt", "en"]
+DEFAULT_REPORT_LOCALE = "pt"
 
 
 def build_package(
@@ -217,11 +224,17 @@ def build_package(
         logger=logger,
     )
 
+    title_i18n = localized_text_dict(cfg.title) or _localized("", "")
+    source_label_i18n = localized_text_dict(cfg.source_label) or _localized("", "")
+    summary_i18n = localized_text_dict(cfg.summary) if cfg.summary is not None else None
+
     generated_report = {
         "report_id": cfg.id,
-        "title": cfg.title,
-        "source_label": cfg.source_label,
-        "summary": cfg.summary,
+        "title": title_i18n,
+        "source_label": source_label_i18n,
+        "summary": summary_i18n,
+        "available_locales": SUPPORTED_REPORT_LOCALES,
+        "default_locale": DEFAULT_REPORT_LOCALE,
         "generated_at": _now_iso(),
         "publication_status": "generated",
         "dataset": {
@@ -242,7 +255,10 @@ def build_package(
             {
                 "id": "monthly_series",
                 "kind": "timeseries",
-                "title": f"Série mensal de focos (últimos {cfg.display.monthly_points} pontos)",
+                "title": _localized(
+                    f"Série mensal de focos (últimos {cfg.display.monthly_points} pontos)",
+                    f"Monthly hotspot series (last {cfg.display.monthly_points} points)",
+                ),
                 "x_key": "period",
                 "y_key": "value",
                 "data": _df_to_records(recent_monthly),
@@ -250,7 +266,10 @@ def build_package(
             {
                 "id": "annual_totals",
                 "kind": "bar",
-                "title": f"Totais anuais de focos (últimos {cfg.display.annual_years} anos)",
+                "title": _localized(
+                    f"Totais anuais de focos (últimos {cfg.display.annual_years} anos)",
+                    f"Annual hotspot totals (last {cfg.display.annual_years} years)",
+                ),
                 "x_key": "year",
                 "y_key": "value",
                 "data": _df_to_records(recent_annual),
@@ -258,31 +277,47 @@ def build_package(
             {
                 "id": "top_states_current_vs_previous",
                 "kind": "table",
-                "title": "Comparação por UF: ano mais recente vs ano anterior",
+                "title": _localized(
+                    "Comparação por UF: ano mais recente vs ano anterior",
+                    "State comparison: most recent year vs previous year",
+                ),
                 "columns": [
-                    {"key": "state", "label": "UF"},
-                    {"key": "current_year_total", "label": f"Focos em {latest_year}"},
-                    {"key": "previous_year_total", "label": f"Focos em {previous_year}" if previous_year else "Ano anterior"},
-                    {"key": "absolute_change", "label": "Variação absoluta"},
-                    {"key": "pct_change", "label": "Variação %"},
+                    {"key": "state", "label": _localized("UF", "State")},
+                    {"key": "current_year_total", "label": _localized(f"Focos em {latest_year}", f"Hotspots in {latest_year}")},
+                    {
+                        "key": "previous_year_total",
+                        "label": _localized(
+                            f"Focos em {previous_year}" if previous_year else "Ano anterior",
+                            f"Hotspots in {previous_year}" if previous_year else "Previous year",
+                        ),
+                    },
+                    {"key": "absolute_change", "label": _localized("Variação absoluta", "Absolute change")},
+                    {"key": "pct_change", "label": _localized("Variação %", "% change")},
                 ],
                 "rows": top_states_table,
             },
         ],
         "analysis_context": analysis_context,
         "methodology": {
-            "source": cfg.source_label,
-            "note": (
+            "source": source_label_i18n,
+            "note": _localized(
                 "Este report usa artefatos agregados e leves para publicação. "
                 "Os dados são processados localmente a partir dos ZIPs anuais do BDQueimadas "
-                "e a página pública consome somente o JSON final do report."
+                "e a página pública consome somente o JSON final do report.",
+                "This report uses lightweight aggregated artifacts for publication. "
+                "Data is processed locally from the annual BDQueimadas ZIP files, "
+                "and the public page consumes only the final report JSON.",
             ),
-            "limitations": (
+            "limitations": _localized(
                 "O ano mais recente pode estar incompleto, dependendo da disponibilidade "
-                "do arquivo anual corrente no momento da atualização."
+                "do arquivo anual corrente no momento da atualização.",
+                "The most recent year may be incomplete, depending on the availability "
+                "of the current annual file at the time of the update.",
             ),
         },
     }
+
+    generated_report = _ensure_bilingual_report(generated_report)
 
     live_report = _build_live_report(
         generated_report=generated_report,
@@ -293,17 +328,19 @@ def build_package(
 
     return {
         "report_id": cfg.id,
-        "title": cfg.title,
+        "title": generated_report["title"],
         "bucket_prefix": cfg.bucket_prefix,
         "generated_report": generated_report,
         "live_report": live_report,
         "meta": {
-            "source_label": cfg.source_label,
+            "source_label": generated_report["source_label"],
             "dataset_id": cfg.dataset.dataset_id,
             "latest_year": latest_year,
             "latest_period": latest_period,
             "llm_enabled": cfg.llm.enabled,
             "publish_generated_as_live": cfg.editorial.publish_generated_as_live,
+            "available_locales": SUPPORTED_REPORT_LOCALES,
+            "default_locale": DEFAULT_REPORT_LOCALE,
         },
     }
 
@@ -606,31 +643,31 @@ def _build_highlights(
     return [
         {
             "id": "current_year_total",
-            "label": f"Focos em {latest_year}",
+            "label": _localized(f"Focos em {latest_year}", f"Hotspots in {latest_year}"),
             "value": current_year_total,
-            "comparison_label": f"vs {previous_year}" if previous_year else None,
+            "comparison_label": _localized(f"vs {previous_year}", f"vs {previous_year}") if previous_year else None,
             "comparison_value": previous_year_total if previous_year else None,
             "pct_change": _safe_pct_change(current_year_total, previous_year_total) if previous_year else None,
         },
         {
             "id": "recent_12m_total",
-            "label": "Últimos 12 meses",
+            "label": _localized("Últimos 12 meses", "Last 12 months"),
             "value": recent_12m_total,
-            "comparison_label": "12 meses anteriores",
+            "comparison_label": _localized("12 meses anteriores", "Previous 12 months"),
             "comparison_value": prior_12m_total,
             "pct_change": _safe_pct_change(recent_12m_total, prior_12m_total),
         },
         {
             "id": "total_rows_processed",
-            "label": "Linhas processadas",
+            "label": _localized("Linhas processadas", "Processed rows"),
             "value": total_rows_processed,
-            "comparison_label": "Arquivos usados",
+            "comparison_label": _localized("Arquivos usados", "Files used"),
             "comparison_value": file_count_used,
             "pct_change": None,
         },
         {
             "id": "latest_period",
-            "label": "Último período disponível",
+            "label": _localized("Último período disponível", "Latest available period"),
             "value": latest_period,
             "comparison_label": None,
             "comparison_value": None,
@@ -649,45 +686,74 @@ def _build_fallback_analysis(
     latest_period: str,
     total_rows_processed: int,
     file_count_used: int,
-) -> dict[str, str]:
+) -> dict[str, dict[str, str]]:
     yoy = _safe_pct_change(current_year_total, previous_year_total)
     recent_12m_change = _safe_pct_change(recent_12m_total, prior_12m_total)
 
     if previous_year is None:
-        headline = (
+        headline_pt = (
             f"O processamento mais recente vai até {latest_period} e agrega "
-            f"{_fmt_int(current_year_total)} focos em {latest_year}."
+            f"{_fmt_int_pt(current_year_total)} focos em {latest_year}."
         )
-        comparison = (
+        comparison_pt = (
             "Ainda não há ano anterior processado no escopo atual para comparação anual direta."
         )
-    else:
-        headline = (
-            f"Em {latest_year}, o conjunto processado registra {_fmt_int(current_year_total)} focos, "
-            f"contra {_fmt_int(previous_year_total)} em {previous_year}."
+
+        headline_en = (
+            f"The latest processed coverage reaches {latest_period} and aggregates "
+            f"{_fmt_int_en(current_year_total)} hotspots in {latest_year}."
         )
-        comparison = (
-            f"A comparação anual indica {_fmt_pct(yoy)} entre {previous_year} e {latest_year}. "
+        comparison_en = (
+            "There is not yet a previous processed year within the current scope for a direct annual comparison."
+        )
+    else:
+        headline_pt = (
+            f"Em {latest_year}, o conjunto processado registra {_fmt_int_pt(current_year_total)} focos, "
+            f"contra {_fmt_int_pt(previous_year_total)} em {previous_year}."
+        )
+        comparison_pt = (
+            f"A comparação anual indica {_fmt_pct_pt(yoy)} entre {previous_year} e {latest_year}. "
             f"O último mês disponível no recorte processado é {latest_period}."
         )
 
-    overview = (
-        f"Foram processadas {_fmt_int(total_rows_processed)} linhas distribuídas em {file_count_used} arquivos anuais. "
-        f"Na janela móvel mais recente de 12 meses, o total agregado soma {_fmt_int(recent_12m_total)} focos, "
-        f"contra {_fmt_int(prior_12m_total)} nos 12 meses imediatamente anteriores, "
-        f"o que corresponde a {_fmt_pct(recent_12m_change)}."
+        headline_en = (
+            f"In {latest_year}, the processed set records {_fmt_int_en(current_year_total)} hotspots, "
+            f"versus {_fmt_int_en(previous_year_total)} in {previous_year}."
+        )
+        comparison_en = (
+            f"The annual comparison indicates {_fmt_pct_en(yoy)} between {previous_year} and {latest_year}. "
+            f"The latest available month in the processed scope is {latest_period}."
+        )
+
+    overview_pt = (
+        f"Foram processadas {_fmt_int_pt(total_rows_processed)} linhas distribuídas em {file_count_used} arquivos anuais. "
+        f"Na janela móvel mais recente de 12 meses, o total agregado soma {_fmt_int_pt(recent_12m_total)} focos, "
+        f"contra {_fmt_int_pt(prior_12m_total)} nos 12 meses imediatamente anteriores, "
+        f"o que corresponde a {_fmt_pct_pt(recent_12m_change)}."
     )
 
-    limitations = (
+    limitations_pt = (
         "O texto é descritivo e não estabelece causalidade. "
         "O ano corrente pode estar incompleto, pois depende do arquivo anual mais recente disponível no BDQueimadas."
     )
 
+    overview_en = (
+        f"{_fmt_int_en(total_rows_processed)} rows were processed across {file_count_used} annual files. "
+        f"In the most recent rolling 12-month window, the aggregate total reaches {_fmt_int_en(recent_12m_total)} hotspots, "
+        f"versus {_fmt_int_en(prior_12m_total)} in the immediately previous 12 months, "
+        f"which corresponds to {_fmt_pct_en(recent_12m_change)}."
+    )
+
+    limitations_en = (
+        "This text is descriptive and does not establish causality. "
+        "The current year may be incomplete, as it depends on the latest annual file available in BDQueimadas."
+    )
+
     return {
-        "headline": headline,
-        "overview": overview,
-        "comparison": comparison,
-        "limitations": limitations,
+        "headline": _localized(headline_pt, headline_en),
+        "overview": _localized(overview_pt, overview_en),
+        "comparison": _localized(comparison_pt, comparison_en),
+        "limitations": _localized(limitations_pt, limitations_en),
     }
 
 
@@ -705,6 +771,7 @@ def _build_live_report(
     if overrides:
         live_report = _deep_merge(live_report, overrides)
 
+    live_report = _ensure_bilingual_report(live_report)
     live_report["publication_status"] = "live"
     live_report["generated_from"] = {
         "report_id": generated_report["report_id"],
@@ -749,6 +816,79 @@ def _deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any
     return merged
 
 
+def _ensure_bilingual_report(report: dict[str, Any]) -> dict[str, Any]:
+    report["available_locales"] = SUPPORTED_REPORT_LOCALES
+    report["default_locale"] = DEFAULT_REPORT_LOCALE
+
+    if "title" in report:
+        report["title"] = _coerce_localized_value(report.get("title"))
+
+    if "source_label" in report:
+        report["source_label"] = _coerce_localized_value(report.get("source_label"))
+
+    if "summary" in report and report.get("summary") is not None:
+        report["summary"] = _coerce_localized_value(report.get("summary"))
+
+    analysis = report.get("analysis")
+    if isinstance(analysis, dict):
+        report["analysis"] = {
+            key: _coerce_localized_value(value)
+            for key, value in analysis.items()
+        }
+
+    highlights = report.get("highlights")
+    if isinstance(highlights, list):
+        for item in highlights:
+            if isinstance(item, dict):
+                if "label" in item:
+                    item["label"] = _coerce_localized_value(item.get("label"))
+                if item.get("comparison_label") is not None:
+                    item["comparison_label"] = _coerce_localized_value(item.get("comparison_label"))
+
+    sections = report.get("sections")
+    if isinstance(sections, list):
+        for section in sections:
+            if not isinstance(section, dict):
+                continue
+
+            if "title" in section:
+                section["title"] = _coerce_localized_value(section.get("title"))
+
+            columns = section.get("columns")
+            if isinstance(columns, list):
+                for column in columns:
+                    if isinstance(column, dict) and "label" in column:
+                        column["label"] = _coerce_localized_value(column.get("label"))
+
+    methodology = report.get("methodology")
+    if isinstance(methodology, dict):
+        for key in ("source", "note", "limitations"):
+            if key in methodology and methodology.get(key) is not None:
+                methodology[key] = _coerce_localized_value(methodology.get(key))
+
+    return report
+
+
+def _coerce_localized_value(value: Any) -> dict[str, str]:
+    if isinstance(value, dict):
+        pt = str(value.get("pt") or value.get("en") or "").strip()
+        en = str(value.get("en") or value.get("pt") or "").strip()
+        return {"pt": pt, "en": en}
+
+    if value is None:
+        return {"pt": "", "en": ""}
+
+    text = str(value).strip()
+    return {"pt": text, "en": text}
+
+
+def _localized(pt: str, en: str) -> dict[str, str]:
+    return {
+        "pt": pt.strip(),
+        "en": en.strip(),
+    }
+
+
 def _df_to_records(df: pd.DataFrame) -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
     for row in df.to_dict(orient="records"):
@@ -772,14 +912,24 @@ def _safe_pct_change(current: int, previous: int) -> float | None:
     return ((current - previous) / previous) * 100.0
 
 
-def _fmt_int(value: int) -> str:
+def _fmt_int_pt(value: int) -> str:
     return f"{value:,}".replace(",", ".")
 
 
-def _fmt_pct(value: float | None) -> str:
+def _fmt_int_en(value: int) -> str:
+    return f"{value:,}"
+
+
+def _fmt_pct_pt(value: float | None) -> str:
     if value is None:
         return "sem base comparável"
     return f"{value:,.2f}%".replace(",", "X").replace(".", ",").replace("X", ".")
+
+
+def _fmt_pct_en(value: float | None) -> str:
+    if value is None:
+        return "no comparable base"
+    return f"{value:,.2f}%"
 
 
 def _now_iso() -> str:
