@@ -81,6 +81,12 @@ class ReportColumnsCfg(BaseModel):
             "state",
         ]
     )
+    biome_candidates: list[str] = Field(
+        default_factory=lambda: [
+            "bioma",
+            "biome",
+        ]
+    )
 
 
 class ReportDisplayCfg(BaseModel):
@@ -107,6 +113,14 @@ class ReportLLMCfg(BaseModel):
     max_chars_per_block: int = 700
 
 
+class ReportAnalysisCfg(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    recent_months: int = 24
+    top_states_context_limit: int = 5
+    top_biomes_context_limit: int = 5
+
+
 class ReportConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -120,6 +134,7 @@ class ReportConfig(BaseModel):
     display: ReportDisplayCfg = Field(default_factory=ReportDisplayCfg)
     editorial: ReportEditorialCfg = Field(default_factory=ReportEditorialCfg)
     llm: ReportLLMCfg = Field(default_factory=ReportLLMCfg)
+    analysis: ReportAnalysisCfg = Field(default_factory=ReportAnalysisCfg)
 
     def resolve_overrides_path(self, root: Path) -> Path | None:
         if not self.editorial.overrides_file:

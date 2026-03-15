@@ -11,7 +11,7 @@ from supabase import create_client
 @dataclass
 class SupabaseStorage:
     supabase_url: str
-    service_role_key: str = field(repr=False)  # <-- NÃO aparece em traceback/locals
+    service_role_key: str = field(repr=False)
     bucket: str = "open-data"
     logger: Any = None
 
@@ -36,7 +36,6 @@ class SupabaseStorage:
 
     @property
     def client(self):
-        # cria client sob demanda; a key fica só no objeto (repr oculto)
         return create_client(self.supabase_url, self.service_role_key)
 
     def upload_file(self, object_path: str, local_path: str, content_type: str, upsert: bool = True) -> None:
@@ -71,6 +70,26 @@ class SupabaseStorage:
 
         if self.logger:
             self.logger.info("Upload bytes: %s (resp=%s)", object_path, str(resp)[:200])
+
+    def download_bytes(self, object_path: str) -> bytes | None:
+        try:
+            data = (
+                self.client.storage
+                .from_(self.bucket)
+                .download(object_path)
+            )
+
+            if self.logger:
+                self.logger.info("Download bytes: %s", object_path)
+
+            if isinstance(data, (bytes, bytearray)):
+                return bytes(data)
+
+            return data if isinstance(data, bytes) else None
+        except Exception as e:  # noqa: BLE001
+            if self.logger:
+                self.logger.info("Download ausente ou indisponível: %s (erro=%s)", object_path, e)
+            return None
 
     def public_url(self, object_path: str) -> str:
         base = self.supabase_url.rstrip("/")
