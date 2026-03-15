@@ -1,11 +1,23 @@
 # configs/reports/bdqueimadas_overview.yml
 id: bdqueimadas_overview
-title: "BDQueimadas - Panorama Sintético de Focos"
+
+title:
+  pt: "BDQueimadas - Panorama Sintético de Focos"
+  en: "BDQueimadas - Synthetic Hotspot Overview"
+
 bucket_prefix: reports/bdqueimadas/overview
-source_label: "INPE - Programa Queimadas"
-summary: >
-  Report leve para publicação web, baseado em agregações do BDQueimadas.
-  O objetivo é expor tendências e comparações descritivas sem enviar a base bruta ao frontend.
+
+source_label:
+  pt: "INPE - Programa Queimadas"
+  en: "INPE - Queimadas Program"
+
+summary:
+  pt: >
+    Report leve para publicação web, baseado em agregações do BDQueimadas.
+    O objetivo é expor tendências e comparações descritivas sem enviar a base bruta ao frontend.
+  en: >
+    Lightweight report for web publication, based on BDQueimadas aggregations.
+    The goal is to expose descriptive trends and comparisons without sending the raw dataset to the frontend.
 
 dataset:
   dataset_id: inpe_bdqueimadas_focos
