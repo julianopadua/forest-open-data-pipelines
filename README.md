@@ -81,6 +81,13 @@ python -m pip install --upgrade pip
 pip install -e .
 ```
 
+Optional test dependencies:
+
+```bash
+pip install -e ".[dev]"
+python -m pytest
+```
+
 The console entry point is `forest-pipelines` (see `pyproject.toml`).
 
 ## Configuration
@@ -153,6 +160,9 @@ The following identifiers are registered in `src/forest_pipelines/registry/datas
 | `inpe_bdqueimadas_focos` |
 | `inpe_area_queimada_focos1km` |
 | `inmet_dados_historicos` |
+| `noticias_agricolas_news` |
+
+The `noticias_agricolas_news` dataset publishes a JSON news feed (not file downloads) under `news/noticias-agricolas/`, including timestamped snapshots. See [docs/datasets/noticias_agricolas_news.md](docs/datasets/noticias_agricolas_news.md) for the contract, validation rules, and limitations. The `--latest-months` flag does not apply to this dataset.
 
 Example:
 

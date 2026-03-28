@@ -1,0 +1,28 @@
+# Feed de notícias (Notícias Agrícolas) para consumo via manifest.json no Storage.
+id: noticias_agricolas_news
+title: "Notícias Agrícolas (feed de notícias)"
+source_dataset_url: "https://www.noticiasagricolas.com.br/"
+bucket_prefix: news/noticias-agricolas
+base_url: "https://www.noticiasagricolas.com.br"
+source_key: noticias_agricolas
+source_name: "Notícias Agrícolas"
+
+items_per_category: 5
+http_timeout_s: 30
+http_max_retries: 4
+request_delay_s: 0.35
+max_workers: 4
+min_items_for_stable_publish: 5
+
+user_agent: "Mozilla/5.0 (compatible; forest-open-data-pipelines/0.1; +news-feed; contact: example.invalid)"
+
+categories:
+  - slug: clima
+    label: "Clima"
+    url: "https://www.noticiasagricolas.com.br/noticias/clima/"
+  - slug: codigo-florestal
+    label: "Código Florestal"
+    url: "https://www.noticiasagricolas.com.br/noticias/codigo-florestal/"
+  - slug: meio-ambiente
+    label: "Meio Ambiente"
+    url: "https://www.noticiasagricolas.com.br/noticias/meio-ambiente/"

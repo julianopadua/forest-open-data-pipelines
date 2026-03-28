@@ -16,6 +16,9 @@ dependencies = [
   "groq",
 ]
 
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
 [project.scripts]
 forest-pipelines = "forest_pipelines.cli:app"
 
@@ -25,3 +28,6 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

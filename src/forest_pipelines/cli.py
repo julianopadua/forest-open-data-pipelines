@@ -39,15 +39,18 @@ def sync(
         latest_months=latest_months,
     )
 
+    skip_cli_manifest = bool(manifest.pop("_cli_skip_manifest_upload", False))
+
     manifest_bytes = json.dumps(manifest, ensure_ascii=False, indent=2).encode("utf-8")
     manifest_path = f"{manifest['bucket_prefix'].rstrip('/')}/manifest.json"
 
-    storage.upload_bytes(
-        object_path=manifest_path,
-        data=manifest_bytes,
-        content_type="application/json",
-        upsert=True,
-    )
+    if not skip_cli_manifest:
+        storage.upload_bytes(
+            object_path=manifest_path,
+            data=manifest_bytes,
+            content_type="application/json",
+            upsert=True,
+        )
 
     logger.info("Manifest publicado: %s", storage.public_url(manifest_path))
     logger.info("Sincronização concluída com sucesso!")
