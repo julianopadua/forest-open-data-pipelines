@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import os
+import time
 from dataclasses import dataclass, field
+from functools import cached_property
 from typing import Any
 
 from supabase import create_client
@@ -27,6 +29,8 @@ class SupabaseStorage:
         if not bucket:
             raise RuntimeError("Bucket inválido. Verifique SUPABASE_BUCKET_OPEN_DATA ou configs/app.yml")
 
+        supabase_url = supabase_url.rstrip("/") + "/"
+
         return cls(
             supabase_url=supabase_url,
             service_role_key=service_role_key,
@@ -34,42 +38,87 @@ class SupabaseStorage:
             logger=logger,
         )
 
-    @property
+    @cached_property
     def client(self):
         return create_client(self.supabase_url, self.service_role_key)
 
     def upload_file(self, object_path: str, local_path: str, content_type: str, upsert: bool = True) -> None:
         upsert_str = "true" if upsert else "false"
+        last_error: Exception | None = None
 
-        with open(local_path, "rb") as f:
-            resp = (
-                self.client.storage
-                .from_(self.bucket)
-                .upload(
-                    file=f,
-                    path=object_path,
-                    file_options={"content-type": content_type, "upsert": upsert_str},
-                )
-            )
+        for attempt in range(1, 4):
+            try:
+                with open(local_path, "rb") as f:
+                    resp = (
+                        self.client.storage
+                        .from_(self.bucket)
+                        .upload(
+                            file=f,
+                            path=object_path,
+                            file_options={"content-type": content_type, "upsert": upsert_str},
+                        )
+                    )
 
-        if self.logger:
-            self.logger.info("Upload: %s -> %s (resp=%s)", local_path, object_path, str(resp)[:200])
+                if self.logger:
+                    self.logger.info(
+                        "Upload: %s -> %s (attempt=%s, resp=%s)",
+                        local_path,
+                        object_path,
+                        attempt,
+                        str(resp)[:200],
+                    )
+                return
+            except Exception as e:  # noqa: BLE001
+                last_error = e
+                if self.logger:
+                    self.logger.warning(
+                        "Falha no upload de arquivo %s (attempt=%s). erro=%s",
+                        object_path,
+                        attempt,
+                        e,
+                    )
+                if attempt < 3:
+                    time.sleep(2 * attempt)
+
+        raise RuntimeError(f"Falha ao subir arquivo para {object_path}") from last_error
 
     def upload_bytes(self, object_path: str, data: bytes, content_type: str, upsert: bool = True) -> None:
         upsert_str = "true" if upsert else "false"
+        last_error: Exception | None = None
 
-        resp = (
-            self.client.storage
-            .from_(self.bucket)
-            .upload(
-                file=data,
-                path=object_path,
-                file_options={"content-type": content_type, "upsert": upsert_str},
-            )
-        )
+        for attempt in range(1, 4):
+            try:
+                resp = (
+                    self.client.storage
+                    .from_(self.bucket)
+                    .upload(
+                        file=data,
+                        path=object_path,
+                        file_options={"content-type": content_type, "upsert": upsert_str},
+                    )
+                )
 
-        if self.logger:
-            self.logger.info("Upload bytes: %s (resp=%s)", object_path, str(resp)[:200])
+                if self.logger:
+                    self.logger.info(
+                        "Upload bytes: %s (attempt=%s, resp=%s)",
+                        object_path,
+                        attempt,
+                        str(resp)[:200],
+                    )
+                return
+            except Exception as e:  # noqa: BLE001
+                last_error = e
+                if self.logger:
+                    self.logger.warning(
+                        "Falha no upload bytes %s (attempt=%s). erro=%s",
+                        object_path,
+                        attempt,
+                        e,
+                    )
+                if attempt < 3:
+                    time.sleep(2 * attempt)
+
+        raise RuntimeError(f"Falha ao subir bytes para {object_path}") from last_error
 
     def download_bytes(self, object_path: str) -> bytes | None:
         try:

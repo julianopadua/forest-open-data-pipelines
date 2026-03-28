@@ -23,7 +23,7 @@ dataset:
   dataset_id: inpe_bdqueimadas_focos
   local_relative_dir: inpe_bdqueimadas
   file_glob: "focos_br_ref_*.zip"
-  recent_years: 10
+  recent_years: null
 
 columns:
   datetime_candidates:
@@ -38,15 +38,23 @@ columns:
     - uf
     - estado_sigla
     - state
+  biome_candidates:
+    - bioma
+    - biome
 
 display:
   monthly_points: 24
   annual_years: 8
   top_states_limit: 10
 
+analysis:
+  recent_months: 24
+  top_states_context_limit: 5
+  top_biomes_context_limit: 5
+
 editorial:
   publish_generated_as_live: true
-  overrides_file: configs/reports/overrides/bdqueimadas_overview.live.yml
+  overrides_file: null
 
 llm:
   enabled: true

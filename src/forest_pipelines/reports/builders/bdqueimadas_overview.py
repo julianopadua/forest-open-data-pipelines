@@ -2,16 +2,21 @@
 from __future__ import annotations
 
 import copy
-import csv
 import json
 import re
-import zipfile
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
 import yaml
 
+from forest_pipelines.reports.builders.bdqueimadas_incremental import (
+    ALL_BIOMES_VALUE,
+    biome_label_i18n,
+    build_incremental_year_caches,
+    combine_all_and_biome_records,
+    consolidate_year_payloads,
+)
 from forest_pipelines.reports.definitions.base import (
     ReportConfig,
     load_report_cfg,
@@ -37,8 +42,14 @@ DEFAULT_STATE_CANDIDATES = [
     "state",
 ]
 
+DEFAULT_BIOME_CANDIDATES = [
+    "bioma",
+    "biome",
+]
+
 SUPPORTED_REPORT_LOCALES = ["pt", "en"]
 DEFAULT_REPORT_LOCALE = "pt"
+REPORT_SCHEMA_VERSION = 2
 
 
 def build_package(
@@ -56,6 +67,10 @@ def build_package(
         cfg.columns.state_candidates,
         DEFAULT_STATE_CANDIDATES,
     )
+    biome_candidates = _merge_candidates(
+        cfg.columns.biome_candidates,
+        DEFAULT_BIOME_CANDIDATES,
+    )
 
     zip_files = _select_zip_files(
         base_dir=settings.data_dir / cfg.dataset.local_relative_dir,
@@ -69,105 +84,78 @@ def build_package(
             f"{(settings.data_dir / cfg.dataset.local_relative_dir).resolve()}"
         )
 
-    monthly_frames: list[pd.DataFrame] = []
-    annual_frames: list[pd.DataFrame] = []
-    state_year_frames: list[pd.DataFrame] = []
-    yearly_file_stats: list[dict[str, Any]] = []
+    cache_prefix = f"{cfg.bucket_prefix.rstrip('/')}/_cache"
 
-    for zip_path in zip_files:
-        logger.info("Processando ZIP do report: %s", zip_path.name)
-        subset, detected_columns = _read_zip_subset(
-            zip_path=zip_path,
-            datetime_candidates=datetime_candidates,
-            state_candidates=state_candidates,
-        )
+    incremental = build_incremental_year_caches(
+        storage=storage,
+        cache_prefix=cache_prefix,
+        zip_files=zip_files,
+        datetime_candidates=datetime_candidates,
+        state_candidates=state_candidates,
+        biome_candidates=biome_candidates,
+        logger=logger,
+    )
 
-        logger.info(
-            "Colunas detectadas em %s -> datetime=%s | state=%s",
-            zip_path.name,
-            detected_columns["datetime"],
-            detected_columns["state"],
-        )
+    consolidated = consolidate_year_payloads(incremental["year_payloads"])
 
-        if subset.empty:
-            logger.warning("Arquivo sem linhas úteis para análise: %s", zip_path.name)
-            continue
+    monthly_all_df = consolidated["monthly_all_df"]
+    monthly_by_biome_df = consolidated["monthly_by_biome_df"]
+    annual_all_df = consolidated["annual_all_df"]
+    annual_by_biome_df = consolidated["annual_by_biome_df"]
+    state_year_all_df = consolidated["state_year_all_df"]
+    state_year_by_biome_df = consolidated["state_year_by_biome_df"]
+    available_biomes = consolidated["available_biomes"]
+    yearly_file_stats = consolidated["yearly_file_stats"]
+    total_rows_processed = consolidated["total_rows_processed"]
 
-        inferred_year = _extract_year_from_name(zip_path.name)
-        yearly_file_stats.append(
-            {
-                "file_name": zip_path.name,
-                "file_size_bytes": int(zip_path.stat().st_size),
-                "inferred_year": inferred_year,
-                "row_count": int(len(subset)),
-                "month_span_min": str(subset["period_month"].min()),
-                "month_span_max": str(subset["period_month"].max()),
-                "detected_datetime_column": detected_columns["datetime"],
-                "detected_state_column": detected_columns["state"],
-            }
-        )
-
-        month_df = (
-            subset.groupby("period_month")
-            .size()
-            .rename("value")
-            .reset_index()
-            .rename(columns={"period_month": "period"})
-        )
-        month_df["period"] = month_df["period"].astype(str)
-        monthly_frames.append(month_df)
-
-        year_df = (
-            subset.groupby("year")
-            .size()
-            .rename("value")
-            .reset_index()
-        )
-        annual_frames.append(year_df)
-
-        state_year_df = (
-            subset.dropna(subset=["state"])
-            .groupby(["year", "state"])
-            .size()
-            .rename("value")
-            .reset_index()
-        )
-        state_year_frames.append(state_year_df)
-
-    monthly_series = _merge_sum_frames(monthly_frames, key_cols=["period"])
-    annual_series = _merge_sum_frames(annual_frames, key_cols=["year"])
-    state_year_series = _merge_sum_frames(state_year_frames, key_cols=["year", "state"])
-
-    if monthly_series.empty or annual_series.empty:
+    if monthly_all_df.empty or annual_all_df.empty:
         raise RuntimeError("Não foi possível montar séries agregadas para o report BDQueimadas.")
 
-    monthly_series = monthly_series.sort_values("period").reset_index(drop=True)
-    annual_series = annual_series.sort_values("year").reset_index(drop=True)
-    state_year_series = state_year_series.sort_values(["year", "state"]).reset_index(drop=True)
+    first_year = int(annual_all_df["year"].min())
+    latest_year = int(annual_all_df["year"].max())
+    previous_year = _find_previous_year(annual_all_df, latest_year)
 
-    latest_year = int(annual_series["year"].max())
-    previous_year = _find_previous_year(annual_series, latest_year)
+    first_period = str(monthly_all_df["period"].iloc[0])
+    latest_period = str(monthly_all_df["period"].iloc[-1])
+    year_range = f"{first_year}-{latest_year}"
 
-    latest_period = str(monthly_series["period"].iloc[-1])
-    recent_monthly = monthly_series.tail(cfg.display.monthly_points).copy()
-    recent_annual = annual_series.tail(cfg.display.annual_years).copy()
+    available_years = [int(y) for y in annual_all_df["year"].tolist()]
+    available_periods = [str(period) for period in monthly_all_df["period"].tolist()]
+
+    default_monthly_window = monthly_all_df.tail(cfg.display.monthly_points).copy()
+    default_annual_window = annual_all_df.tail(cfg.display.annual_years).copy()
+
+    default_monthly_start = str(default_monthly_window["period"].iloc[0])
+    default_monthly_end = str(default_monthly_window["period"].iloc[-1])
+    default_annual_start = int(default_annual_window["year"].iloc[0])
+    default_annual_end = int(default_annual_window["year"].iloc[-1])
 
     current_year_total = int(
-        annual_series.loc[annual_series["year"] == latest_year, "value"].iloc[0]
+        annual_all_df.loc[annual_all_df["year"] == latest_year, "value"].iloc[0]
     )
     previous_year_total = int(
-        annual_series.loc[annual_series["year"] == previous_year, "value"].iloc[0]
+        annual_all_df.loc[annual_all_df["year"] == previous_year, "value"].iloc[0]
     ) if previous_year is not None else 0
 
-    recent_12m_total = int(monthly_series["value"].tail(12).sum())
-    prior_12m_total = int(monthly_series["value"].iloc[-24:-12].sum()) if len(monthly_series) >= 24 else 0
-    total_rows_processed = int(sum(item["row_count"] for item in yearly_file_stats))
+    recent_12m_total = int(monthly_all_df["value"].tail(12).sum())
+    prior_12m_total = int(monthly_all_df["value"].iloc[-24:-12].sum()) if len(monthly_all_df) >= 24 else 0
 
     top_states_table = _build_top_states_table(
-        state_year_series=state_year_series,
+        state_year_series=state_year_all_df,
         latest_year=latest_year,
         previous_year=previous_year,
         limit=cfg.display.top_states_limit,
+    )
+
+    analysis_window_df = monthly_all_df.tail(cfg.analysis.recent_months).copy()
+    analysis_window_start = str(analysis_window_df["period"].iloc[0])
+    analysis_window_end = str(analysis_window_df["period"].iloc[-1])
+
+    top_biomes_context = _build_top_biomes_context(
+        annual_by_biome_df=annual_by_biome_df,
+        latest_year=latest_year,
+        previous_year=previous_year,
+        limit=cfg.analysis.top_biomes_context_limit,
     )
 
     highlights = _build_highlights(
@@ -180,9 +168,18 @@ def build_package(
         latest_period=latest_period,
         total_rows_processed=total_rows_processed,
         file_count_used=len(zip_files),
+        year_range=year_range,
     )
 
     analysis_context = {
+        "coverage_first_year": first_year,
+        "coverage_latest_year": latest_year,
+        "coverage_year_range": year_range,
+        "coverage_first_period": first_period,
+        "coverage_latest_period": latest_period,
+        "analysis_window_months": cfg.analysis.recent_months,
+        "analysis_window_start_period": analysis_window_start,
+        "analysis_window_end_period": analysis_window_end,
         "latest_year": latest_year,
         "previous_year": previous_year,
         "latest_period": latest_period,
@@ -192,18 +189,21 @@ def build_package(
         "prior_12m_total": prior_12m_total,
         "total_rows_processed": total_rows_processed,
         "file_count_used": len(zip_files),
+        "available_biomes": available_biomes,
+        "cache_stats": incremental["cache_stats"],
         "top_states_current_year": [
             {
                 "state": row["state"],
                 "current_year_total": row["current_year_total"],
                 "previous_year_total": row["previous_year_total"],
             }
-            for row in top_states_table[: min(5, len(top_states_table))]
+            for row in top_states_table[: min(cfg.analysis.top_states_context_limit, len(top_states_table))]
         ],
-        "yearly_file_stats": yearly_file_stats[: min(6, len(yearly_file_stats))],
+        "top_biomes_current_year": top_biomes_context,
     }
 
     fallback_analysis = _build_fallback_analysis(
+        first_year=first_year,
         latest_year=latest_year,
         previous_year=previous_year,
         current_year_total=current_year_total,
@@ -213,6 +213,9 @@ def build_package(
         latest_period=latest_period,
         total_rows_processed=total_rows_processed,
         file_count_used=len(zip_files),
+        year_range=year_range,
+        analysis_window_start=analysis_window_start,
+        analysis_window_end=analysis_window_end,
     )
 
     analysis_blocks = maybe_generate_analysis_blocks(
@@ -228,7 +231,24 @@ def build_package(
     source_label_i18n = localized_text_dict(cfg.source_label) or _localized("", "")
     summary_i18n = localized_text_dict(cfg.summary) if cfg.summary is not None else None
 
+    monthly_series_records = combine_all_and_biome_records(
+        all_df=monthly_all_df[["period", "year", "value"]],
+        by_biome_df=monthly_by_biome_df[["period", "year", "biome", "value"]],
+        sort_cols=["period"],
+    )
+    annual_totals_records = combine_all_and_biome_records(
+        all_df=annual_all_df[["year", "value"]],
+        by_biome_df=annual_by_biome_df[["year", "biome", "value"]],
+        sort_cols=["year"],
+    )
+    state_year_records = combine_all_and_biome_records(
+        all_df=state_year_all_df[["year", "state", "value"]],
+        by_biome_df=state_year_by_biome_df[["year", "state", "biome", "value"]],
+        sort_cols=["year", "state"],
+    )
+
     generated_report = {
+        "schema_version": REPORT_SCHEMA_VERSION,
         "report_id": cfg.id,
         "title": title_i18n,
         "source_label": source_label_i18n,
@@ -242,12 +262,62 @@ def build_package(
             "local_relative_dir": cfg.dataset.local_relative_dir,
             "file_count_used": len(zip_files),
             "total_rows_processed": total_rows_processed,
+            "years_loaded": len(available_years),
+            "available_biomes": available_biomes,
+            "cache": incremental["cache_stats"],
         },
         "coverage": {
+            "first_year": first_year,
             "latest_year": latest_year,
             "previous_year": previous_year,
+            "first_period": first_period,
             "latest_period": latest_period,
+            "year_range": year_range,
+            "period_range": {
+                "start": first_period,
+                "end": latest_period,
+            },
             "recent_years_loaded": cfg.dataset.recent_years,
+        },
+        "filters": {
+            "biome": {
+                "kind": "single_select",
+                "label": _localized("Bioma", "Biome"),
+                "default_value": ALL_BIOMES_VALUE,
+                "all_value": ALL_BIOMES_VALUE,
+                "options": [
+                    {
+                        "value": ALL_BIOMES_VALUE,
+                        "label": _localized("Todos os biomas", "All biomes"),
+                    },
+                    *[
+                        {
+                            "value": biome,
+                            "label": biome_label_i18n(biome),
+                        }
+                        for biome in available_biomes
+                    ],
+                ],
+            },
+            "period": {
+                "kind": "range",
+                "label": _localized("Período", "Period"),
+                "granularities": ["year", "month"],
+                "available_years": available_years,
+                "available_periods": available_periods,
+                "bounds": {
+                    "year_start": first_year,
+                    "year_end": latest_year,
+                    "period_start": first_period,
+                    "period_end": latest_period,
+                },
+            },
+        },
+        "analysis_scope": {
+            "recent_months": cfg.analysis.recent_months,
+            "window_start_period": analysis_window_start,
+            "window_end_period": analysis_window_end,
+            "biome_scope": ALL_BIOMES_VALUE,
         },
         "highlights": highlights,
         "analysis": analysis_blocks,
@@ -256,63 +326,93 @@ def build_package(
                 "id": "monthly_series",
                 "kind": "timeseries",
                 "title": _localized(
-                    f"Série mensal de focos (últimos {cfg.display.monthly_points} pontos)",
-                    f"Monthly hotspot series (last {cfg.display.monthly_points} points)",
+                    "Série mensal de focos",
+                    "Monthly hotspot series",
                 ),
                 "x_key": "period",
                 "y_key": "value",
-                "data": _df_to_records(recent_monthly),
+                "biome_key": "biome",
+                "filterable_by": ["period", "biome"],
+                "period_filter_granularity": "month",
+                "default_view": {
+                    "biome": ALL_BIOMES_VALUE,
+                    "start_period": default_monthly_start,
+                    "end_period": default_monthly_end,
+                },
+                "data": monthly_series_records,
             },
             {
                 "id": "annual_totals",
                 "kind": "bar",
                 "title": _localized(
-                    f"Totais anuais de focos (últimos {cfg.display.annual_years} anos)",
-                    f"Annual hotspot totals (last {cfg.display.annual_years} years)",
+                    "Totais anuais de focos",
+                    "Annual hotspot totals",
                 ),
                 "x_key": "year",
                 "y_key": "value",
-                "data": _df_to_records(recent_annual),
+                "biome_key": "biome",
+                "filterable_by": ["period", "biome"],
+                "period_filter_granularity": "year",
+                "default_view": {
+                    "biome": ALL_BIOMES_VALUE,
+                    "start_year": default_annual_start,
+                    "end_year": default_annual_end,
+                },
+                "data": annual_totals_records,
             },
             {
                 "id": "top_states_current_vs_previous",
                 "kind": "table",
                 "title": _localized(
-                    "Comparação por UF: ano mais recente vs ano anterior",
-                    "State comparison: most recent year vs previous year",
+                    "Comparação por UF: ano selecionado vs ano anterior",
+                    "State comparison: selected year vs previous year",
                 ),
+                "filterable_by": ["period", "biome"],
+                "period_filter_granularity": "year",
+                "comparison_strategy": "latest_vs_previous_year_within_filtered_range",
+                "group_key": "state",
+                "year_key": "year",
+                "value_key": "value",
+                "biome_key": "biome",
+                "default_view": {
+                    "biome": ALL_BIOMES_VALUE,
+                    "current_year": latest_year,
+                    "previous_year": previous_year,
+                },
                 "columns": [
                     {"key": "state", "label": _localized("UF", "State")},
-                    {"key": "current_year_total", "label": _localized(f"Focos em {latest_year}", f"Hotspots in {latest_year}")},
-                    {
-                        "key": "previous_year_total",
-                        "label": _localized(
-                            f"Focos em {previous_year}" if previous_year else "Ano anterior",
-                            f"Hotspots in {previous_year}" if previous_year else "Previous year",
-                        ),
-                    },
+                    {"key": "current_year_total", "label": _localized("Ano selecionado", "Selected year")},
+                    {"key": "previous_year_total", "label": _localized("Ano anterior", "Previous year")},
                     {"key": "absolute_change", "label": _localized("Variação absoluta", "Absolute change")},
                     {"key": "pct_change", "label": _localized("Variação %", "% change")},
                 ],
-                "rows": top_states_table,
+                "initial_comparison": {
+                    "current_year": latest_year,
+                    "previous_year": previous_year,
+                    "rows": top_states_table,
+                },
+                "data": state_year_records,
             },
         ],
         "analysis_context": analysis_context,
+        "yearly_file_stats": yearly_file_stats,
         "methodology": {
             "source": source_label_i18n,
             "note": _localized(
-                "Este report usa artefatos agregados e leves para publicação. "
-                "Os dados são processados localmente a partir dos ZIPs anuais do BDQueimadas "
-                "e a página pública consome somente o JSON final do report.",
-                "This report uses lightweight aggregated artifacts for publication. "
-                "Data is processed locally from the annual BDQueimadas ZIP files, "
-                "and the public page consumes only the final report JSON.",
+                "Este report publica agregados históricos completos para visualização e filtros, "
+                "com cache incremental persistido em storage por arquivo anual. "
+                "A análise textual da LLM permanece restrita à janela recente configurada.",
+                "This report publishes complete historical aggregates for visualization and filtering, "
+                "with incremental cache persisted in storage per annual file. "
+                "The LLM text analysis remains restricted to the configured recent window.",
             ),
             "limitations": _localized(
-                "O ano mais recente pode estar incompleto, dependendo da disponibilidade "
-                "do arquivo anual corrente no momento da atualização.",
-                "The most recent year may be incomplete, depending on the availability "
-                "of the current annual file at the time of the update.",
+                "O texto é descritivo e não estabelece causalidade. "
+                "Filtros de bioma dependem da coluna de bioma presente nos arquivos anuais. "
+                "O ano mais recente pode estar incompleto, dependendo da disponibilidade do arquivo anual corrente.",
+                "The text is descriptive and does not establish causality. "
+                "Biome filters depend on the biome column present in the annual files. "
+                "The most recent year may be incomplete, depending on the availability of the current annual file.",
             ),
         },
     }
@@ -333,14 +433,19 @@ def build_package(
         "generated_report": generated_report,
         "live_report": live_report,
         "meta": {
+            "schema_version": REPORT_SCHEMA_VERSION,
             "source_label": generated_report["source_label"],
             "dataset_id": cfg.dataset.dataset_id,
+            "first_year": first_year,
             "latest_year": latest_year,
+            "year_range": year_range,
             "latest_period": latest_period,
             "llm_enabled": cfg.llm.enabled,
             "publish_generated_as_live": cfg.editorial.publish_generated_as_live,
             "available_locales": SUPPORTED_REPORT_LOCALES,
             "default_locale": DEFAULT_REPORT_LOCALE,
+            "available_biomes": available_biomes,
+            "cache": incremental["cache_stats"],
         },
     }
 
@@ -394,183 +499,8 @@ def _extract_year_from_name(filename: str) -> int | None:
     return int(match.group(1))
 
 
-def _read_zip_subset(
-    zip_path: Path,
-    datetime_candidates: list[str],
-    state_candidates: list[str],
-) -> tuple[pd.DataFrame, dict[str, str]]:
-    with zipfile.ZipFile(zip_path) as zf:
-        member = _pick_member(zf)
-        delimiter = _detect_delimiter(zf, member)
-        columns = _detect_columns(
-            zf=zf,
-            member=member,
-            datetime_candidates=datetime_candidates,
-            state_candidates=state_candidates,
-            delimiter=delimiter,
-        )
-
-        dt_col = columns["datetime"]
-        state_col = columns["state"]
-
-        df = _read_member_csv(
-            zf=zf,
-            member=member,
-            delimiter=delimiter,
-            usecols=[dt_col, state_col],
-        )
-
-    df = df.rename(columns={dt_col: "raw_datetime", state_col: "raw_state"}).copy()
-
-    dt = pd.to_datetime(
-        df["raw_datetime"].astype("string").str.strip(),
-        errors="coerce",
-        dayfirst=True,
-        format="mixed",
-    )
-
-    state = (
-        df["raw_state"]
-        .astype("string")
-        .str.strip()
-        .str.upper()
-        .replace({"": pd.NA, "NAN": pd.NA, "NONE": pd.NA})
-    )
-
-    out = pd.DataFrame(
-        {
-            "datetime": dt,
-            "state": state,
-        }
-    ).dropna(subset=["datetime"])
-
-    out["year"] = out["datetime"].dt.year.astype(int)
-    out["period_month"] = out["datetime"].dt.to_period("M").astype(str)
-
-    return out[["datetime", "year", "period_month", "state"]], {
-        "datetime": dt_col,
-        "state": state_col,
-    }
-
-
-def _pick_member(zf: zipfile.ZipFile) -> str:
-    members = [
-        name
-        for name in zf.namelist()
-        if not name.endswith("/") and Path(name).suffix.lower() in {".csv", ".txt"}
-    ]
-    if not members:
-        raise FileNotFoundError("ZIP sem arquivo CSV/TXT legível.")
-    members.sort()
-    return members[0]
-
-
-def _detect_delimiter(zf: zipfile.ZipFile, member: str) -> str:
-    with zf.open(member) as f:
-        sample = f.read(4096).decode("utf-8", errors="ignore")
-
-    try:
-        dialect = csv.Sniffer().sniff(sample, delimiters=";,|\t")
-        return dialect.delimiter
-    except csv.Error:
-        if sample.count(";") >= sample.count(","):
-            return ";"
-        return ","
-
-
-def _detect_columns(
-    zf: zipfile.ZipFile,
-    member: str,
-    datetime_candidates: list[str],
-    state_candidates: list[str],
-    delimiter: str,
-) -> dict[str, str]:
-    header_df = _read_member_csv(
-        zf=zf,
-        member=member,
-        delimiter=delimiter,
-        nrows=0,
-    )
-    available = list(header_df.columns)
-
-    dt_col = _pick_column(available, datetime_candidates)
-    state_col = _pick_column(available, state_candidates)
-
-    if dt_col is None:
-        raise KeyError(
-            f"Não foi possível identificar a coluna temporal. "
-            f"Candidatas testadas: {datetime_candidates}. "
-            f"Colunas disponíveis: {available}"
-        )
-    if state_col is None:
-        raise KeyError(
-            f"Não foi possível identificar a coluna de UF/estado. "
-            f"Candidatas testadas: {state_candidates}. "
-            f"Colunas disponíveis: {available}"
-        )
-
-    return {
-        "datetime": dt_col,
-        "state": state_col,
-    }
-
-
-def _pick_column(available: list[str], candidates: list[str]) -> str | None:
-    normalized_map = {_normalize(col): col for col in available}
-    for candidate in candidates:
-        norm = _normalize(candidate)
-        if norm in normalized_map:
-            return normalized_map[norm]
-    return None
-
-
 def _normalize(text: str) -> str:
     return re.sub(r"[^a-z0-9]", "", text.casefold())
-
-
-def _read_member_csv(
-    zf: zipfile.ZipFile,
-    member: str,
-    delimiter: str,
-    usecols: list[str] | None = None,
-    nrows: int | None = None,
-) -> pd.DataFrame:
-    encodings = ["utf-8", "latin-1", "cp1252"]
-
-    last_error: Exception | None = None
-    for encoding in encodings:
-        try:
-            with zf.open(member) as f:
-                return pd.read_csv(
-                    f,
-                    sep=delimiter,
-                    encoding=encoding,
-                    usecols=usecols,
-                    nrows=nrows,
-                    dtype="string",
-                    low_memory=False,
-                    on_bad_lines="skip",
-                )
-        except Exception as e:  # noqa: BLE001
-            last_error = e
-            continue
-
-    raise RuntimeError(f"Falha ao ler {member} com encodings suportados.") from last_error
-
-
-def _merge_sum_frames(frames: list[pd.DataFrame], key_cols: list[str]) -> pd.DataFrame:
-    if not frames:
-        return pd.DataFrame(columns=[*key_cols, "value"])
-
-    merged = pd.concat(frames, ignore_index=True)
-    merged["value"] = pd.to_numeric(merged["value"], errors="coerce").fillna(0).astype(int)
-
-    return (
-        merged.groupby(key_cols, as_index=False)["value"]
-        .sum()
-        .sort_values(key_cols)
-        .reset_index(drop=True)
-    )
 
 
 def _find_previous_year(annual_series: pd.DataFrame, latest_year: int) -> int | None:
@@ -629,6 +559,56 @@ def _build_top_states_table(
     return rows
 
 
+def _build_top_biomes_context(
+    annual_by_biome_df: pd.DataFrame,
+    latest_year: int,
+    previous_year: int | None,
+    limit: int,
+) -> list[dict[str, Any]]:
+    current_df = (
+        annual_by_biome_df.loc[annual_by_biome_df["year"] == latest_year, ["biome", "value"]]
+        .rename(columns={"value": "current_year_total"})
+        .copy()
+    )
+
+    if previous_year is None:
+        previous_df = pd.DataFrame(columns=["biome", "previous_year_total"])
+    else:
+        previous_df = (
+            annual_by_biome_df.loc[annual_by_biome_df["year"] == previous_year, ["biome", "value"]]
+            .rename(columns={"value": "previous_year_total"})
+            .copy()
+        )
+
+    merged = current_df.merge(previous_df, on="biome", how="outer").fillna(0)
+    merged["current_year_total"] = merged["current_year_total"].astype(int)
+    merged["previous_year_total"] = merged["previous_year_total"].astype(int)
+    merged["absolute_change"] = merged["current_year_total"] - merged["previous_year_total"]
+    merged["pct_change"] = merged.apply(
+        lambda row: _safe_pct_change(row["current_year_total"], row["previous_year_total"]),
+        axis=1,
+    )
+
+    merged = merged.sort_values(
+        by=["current_year_total", "previous_year_total", "biome"],
+        ascending=[False, False, True],
+    ).head(limit)
+
+    rows: list[dict[str, Any]] = []
+    for _, row in merged.iterrows():
+        rows.append(
+            {
+                "biome": str(row["biome"]),
+                "current_year_total": int(row["current_year_total"]),
+                "previous_year_total": int(row["previous_year_total"]),
+                "absolute_change": int(row["absolute_change"]),
+                "pct_change": None if row["pct_change"] is None else round(float(row["pct_change"]), 2),
+            }
+        )
+
+    return rows
+
+
 def _build_highlights(
     latest_year: int,
     previous_year: int | None,
@@ -639,6 +619,7 @@ def _build_highlights(
     latest_period: str,
     total_rows_processed: int,
     file_count_used: int,
+    year_range: str,
 ) -> list[dict[str, Any]]:
     return [
         {
@@ -656,6 +637,14 @@ def _build_highlights(
             "comparison_label": _localized("12 meses anteriores", "Previous 12 months"),
             "comparison_value": prior_12m_total,
             "pct_change": _safe_pct_change(recent_12m_total, prior_12m_total),
+        },
+        {
+            "id": "coverage_year_range",
+            "label": _localized("Cobertura anual", "Annual coverage"),
+            "value": year_range,
+            "comparison_label": None,
+            "comparison_value": None,
+            "pct_change": None,
         },
         {
             "id": "total_rows_processed",
@@ -677,6 +666,7 @@ def _build_highlights(
 
 
 def _build_fallback_analysis(
+    first_year: int,
     latest_year: int,
     previous_year: int | None,
     current_year_total: int,
@@ -686,67 +676,76 @@ def _build_fallback_analysis(
     latest_period: str,
     total_rows_processed: int,
     file_count_used: int,
+    year_range: str,
+    analysis_window_start: str,
+    analysis_window_end: str,
 ) -> dict[str, dict[str, str]]:
     yoy = _safe_pct_change(current_year_total, previous_year_total)
     recent_12m_change = _safe_pct_change(recent_12m_total, prior_12m_total)
 
     if previous_year is None:
         headline_pt = (
-            f"O processamento mais recente vai até {latest_period} e agrega "
-            f"{_fmt_int_pt(current_year_total)} focos em {latest_year}."
+            f"A base processada cobre {year_range} e o período mais recente vai até {latest_period}, "
+            f"com {_fmt_int_pt(current_year_total)} focos em {latest_year}."
         )
         comparison_pt = (
             "Ainda não há ano anterior processado no escopo atual para comparação anual direta."
         )
 
         headline_en = (
-            f"The latest processed coverage reaches {latest_period} and aggregates "
-            f"{_fmt_int_en(current_year_total)} hotspots in {latest_year}."
+            f"The processed dataset covers {year_range} and the most recent period reaches {latest_period}, "
+            f"with {_fmt_int_en(current_year_total)} hotspots in {latest_year}."
         )
         comparison_en = (
             "There is not yet a previous processed year within the current scope for a direct annual comparison."
         )
     else:
         headline_pt = (
-            f"Em {latest_year}, o conjunto processado registra {_fmt_int_pt(current_year_total)} focos, "
+            f"A base processada cobre {first_year} a {latest_year}. "
+            f"Em {latest_year}, o conjunto registra {_fmt_int_pt(current_year_total)} focos, "
             f"contra {_fmt_int_pt(previous_year_total)} em {previous_year}."
         )
         comparison_pt = (
             f"A comparação anual indica {_fmt_pct_pt(yoy)} entre {previous_year} e {latest_year}. "
-            f"O último mês disponível no recorte processado é {latest_period}."
+            f"O último período disponível é {latest_period}."
         )
 
         headline_en = (
-            f"In {latest_year}, the processed set records {_fmt_int_en(current_year_total)} hotspots, "
+            f"The processed dataset covers {first_year} to {latest_year}. "
+            f"In {latest_year}, the set records {_fmt_int_en(current_year_total)} hotspots, "
             f"versus {_fmt_int_en(previous_year_total)} in {previous_year}."
         )
         comparison_en = (
             f"The annual comparison indicates {_fmt_pct_en(yoy)} between {previous_year} and {latest_year}. "
-            f"The latest available month in the processed scope is {latest_period}."
+            f"The latest available period is {latest_period}."
         )
 
     overview_pt = (
         f"Foram processadas {_fmt_int_pt(total_rows_processed)} linhas distribuídas em {file_count_used} arquivos anuais. "
-        f"Na janela móvel mais recente de 12 meses, o total agregado soma {_fmt_int_pt(recent_12m_total)} focos, "
+        f"Na janela editorial recente de {analysis_window_start} a {analysis_window_end}, "
+        f"os 12 meses mais recentes somam {_fmt_int_pt(recent_12m_total)} focos, "
         f"contra {_fmt_int_pt(prior_12m_total)} nos 12 meses imediatamente anteriores, "
         f"o que corresponde a {_fmt_pct_pt(recent_12m_change)}."
     )
 
     limitations_pt = (
         "O texto é descritivo e não estabelece causalidade. "
-        "O ano corrente pode estar incompleto, pois depende do arquivo anual mais recente disponível no BDQueimadas."
+        "A leitura editorial permanece concentrada na janela recente, embora as visualizações publiquem o histórico disponível. "
+        "O ano corrente pode estar incompleto."
     )
 
     overview_en = (
         f"{_fmt_int_en(total_rows_processed)} rows were processed across {file_count_used} annual files. "
-        f"In the most recent rolling 12-month window, the aggregate total reaches {_fmt_int_en(recent_12m_total)} hotspots, "
+        f"In the recent editorial window from {analysis_window_start} to {analysis_window_end}, "
+        f"the latest 12 months total {_fmt_int_en(recent_12m_total)} hotspots, "
         f"versus {_fmt_int_en(prior_12m_total)} in the immediately previous 12 months, "
         f"which corresponds to {_fmt_pct_en(recent_12m_change)}."
     )
 
     limitations_en = (
         "This text is descriptive and does not establish causality. "
-        "The current year may be incomplete, as it depends on the latest annual file available in BDQueimadas."
+        "The editorial reading remains focused on the recent window, although the visualizations publish the available history. "
+        "The current year may be incomplete."
     )
 
     return {
@@ -845,6 +844,19 @@ def _ensure_bilingual_report(report: dict[str, Any]) -> dict[str, Any]:
                 if item.get("comparison_label") is not None:
                     item["comparison_label"] = _coerce_localized_value(item.get("comparison_label"))
 
+    filters = report.get("filters")
+    if isinstance(filters, dict):
+        for filter_def in filters.values():
+            if not isinstance(filter_def, dict):
+                continue
+            if "label" in filter_def:
+                filter_def["label"] = _coerce_localized_value(filter_def.get("label"))
+            options = filter_def.get("options")
+            if isinstance(options, list):
+                for option in options:
+                    if isinstance(option, dict) and "label" in option:
+                        option["label"] = _coerce_localized_value(option.get("label"))
+
     sections = report.get("sections")
     if isinstance(sections, list):
         for section in sections:
@@ -887,23 +899,6 @@ def _localized(pt: str, en: str) -> dict[str, str]:
         "pt": pt.strip(),
         "en": en.strip(),
     }
-
-
-def _df_to_records(df: pd.DataFrame) -> list[dict[str, Any]]:
-    out: list[dict[str, Any]] = []
-    for row in df.to_dict(orient="records"):
-        clean: dict[str, Any] = {}
-        for key, value in row.items():
-            if pd.isna(value):
-                clean[key] = None
-            elif isinstance(value, (pd.Timestamp,)):
-                clean[key] = value.isoformat()
-            elif hasattr(value, "item"):
-                clean[key] = value.item()
-            else:
-                clean[key] = value
-        out.append(clean)
-    return out
 
 
 def _safe_pct_change(current: int, previous: int) -> float | None:
