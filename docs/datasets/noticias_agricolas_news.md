@@ -46,4 +46,4 @@ O manifest inclui `source`, `source_name`, `generated_at`, `item_count`, `catego
 
 - Espelhar imagens no Storage.
 - Incluir mais categorias ou filtros temáticos (incêndios, desmatamento, clima extremo).
-- Integração explícita na sidebar do relatório `bdqueimadas_overview` no `forest-portal`.
+- Integração explícita na sidebar do relatório `bdqueimadas_overview` no `forest-portal` ([forest-portal-bdqueimadas-related-news-prompt.md](../integrations/forest-portal-bdqueimadas-related-news-prompt.md)).
