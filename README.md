@@ -200,7 +200,7 @@ The `forest-portal` application may request the public `manifest.json`, render `
 
 ## Automation
 
-The workflow `.github/workflows/daily_sync.yml` installs the package and runs `forest-pipelines sync cvm_fi_inf_diario --latest-months 12` on a schedule and on manual dispatch. Configure repository secrets `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`, and ensure `SUPABASE_BUCKET_OPEN_DATA` is set in the workflow environment if the bucket name differs from the default.
+The workflow `.github/workflows/weekly_sync.yml` installs the package and runs `forest-pipelines sync cvm_fi_inf_diario --latest-months 12` once per week (Mondays 12:00 UTC) and on manual dispatch. Configure repository secrets `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`, and ensure `SUPABASE_BUCKET_OPEN_DATA` is set in the workflow environment if the bucket name differs from the default.
 
 ## Module documentation (`docs/src`)
 

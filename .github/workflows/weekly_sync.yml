@@ -1,10 +1,12 @@
-# .github/workflows/daily_sync.yml
-name: Daily Open Data Sync
+# Scheduled sync: GitHub Actions cron does not support arbitrary intervals (e.g. "every 10 days").
+# Weekly is the closest simple option; use workflow_dispatch for ad-hoc runs.
+name: Weekly Open Data Sync
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 12 * * *"
+    # Mondays 12:00 UTC (minute hour day-of-month month day-of-week; 1 = Monday)
+    - cron: "0 12 * * 1"
 
 jobs:
   sync:
