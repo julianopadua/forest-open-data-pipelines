@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Template Branco</title>
+  <link rel="stylesheet" href="../src/style.css" />
+  <style>
+    :root {
+      --bg:            #FFFFFF;
+      --bg-secondary:  #F4F9F6;
+      --accent:        #0B7B56;
+      --accent-muted:  #D4EDE4;
+      --text-primary:  #0B1F17;
+      --text-secondary:#2C5F47;
+      --text-muted:    #8ABAAA;
+      --grid-color:    rgba(11, 123, 86, 0.10);
+      --grid-line-w:   1.5px;
+      --canvas-scale:  0.48;
+    }
+  </style>
+</head>
+<body style="background: #e2e8f0;">
+  <div class="canvas-scaler">
+    <div id="card" class="post-canvas grid-cross" style="background-color: var(--bg); border: 1px solid #e2e8f0;">
+
+      <!-- ── Top accent band ─────────────────────────────────── -->
+      <div class="absolute top-0 left-0 right-0 h-2" style="background: var(--accent);"></div>
+
+      <!-- ── Top bar ─────────────────────────────────────────── -->
+      <div class="absolute left-0 right-0 flex items-center justify-between px-12 pt-10" style="top: 8px;">
+        <span class="text-xs tracking-widest uppercase font-semibold" style="color: var(--accent);">
+          <!-- slot: topic_tag -->
+          Agro &amp; Floresta
+        </span>
+        <span class="text-xs font-medium" style="color: var(--text-muted);">
+          <!-- slot: published_at -->
+          Abr 2026
+        </span>
+      </div>
+
+      <!-- ── Large title block (left, upper half) ─────────────── -->
+      <div class="absolute" style="top: 140px; left: 48px; right: 48px;">
+        <p class="text-sm font-semibold mb-5 tracking-widest uppercase" style="color: var(--accent);">
+          <!-- slot: series_label -->
+          Relatório semanal
+        </p>
+        <h1 class="font-black leading-none" style="font-size: 90px; color: var(--text-primary); letter-spacing: -2.5px;">
+          <!-- slot: title -->
+          Alertas de desmatamento em alta no Cerrado
+        </h1>
+      </div>
+
+      <!-- ── Decorative rule ─────────────────────────────────── -->
+      <div class="absolute left-12" style="top: 675px; width: 60px; height: 3px; background: var(--accent);"></div>
+
+      <!-- ── Summary block (lower half) ─────────────────────── -->
+      <div class="absolute" style="top: 720px; left: 48px; right: 48px;">
+        <p class="leading-relaxed mb-8" style="font-size: 36px; color: var(--text-secondary);">
+          <!-- slot: summary -->
+          Novos dados do INPE indicam aumento de 12% em relação ao mesmo período do ano anterior, com Mato Grosso liderando registros.
+        </p>
+        <p class="leading-relaxed" style="font-size: 32px; color: var(--text-muted);">
+          <!-- slot: key_point_1 -->
+          Tendência de alta se mantém por três trimestres consecutivos.
+        </p>
+      </div>
+
+      <!-- ── Footer ──────────────────────────────────────────── -->
+      <div class="absolute bottom-0 left-0 right-0 flex items-end justify-between px-12 pb-10">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-sm" style="background: var(--accent);"></div>
+          <span class="text-sm font-bold tracking-widest uppercase" style="color: var(--text-primary);">
+            <!-- slot: brand_name -->
+            ForestLab
+          </span>
+        </div>
+        <span class="text-sm font-medium tabular-nums" style="color: var(--accent);">
+          <!-- slot: card_number -->
+          01 / 05
+        </span>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    function fitCanvas() {
+      const vw = window.innerWidth;
+      const scale = Math.min((vw - 64) / 1080, 0.85);
+      document.documentElement.style.setProperty("--canvas-scale", scale);
+    }
+    fitCanvas();
+    window.addEventListener("resize", fitCanvas);
+  </script>
+</body>
+</html>

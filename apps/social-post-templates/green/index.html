@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Template Verde</title>
+  <link rel="stylesheet" href="../src/style.css" />
+  <style>
+    :root {
+      --bg:            #0B3D2E;
+      --bg-secondary:  #0E4D39;
+      --accent:        #2ECC9A;
+      --accent-muted:  #1A7A5E;
+      --text-primary:  #F0FFF9;
+      --text-secondary:#A7D7C5;
+      --text-muted:    #5FA88A;
+      --grid-color:    rgba(46, 204, 154, 0.18);
+      --grid-line-w:   1.5px;
+      --canvas-scale:  0.48;
+    }
+  </style>
+</head>
+<body>
+  <div class="canvas-scaler">
+    <div id="card" class="post-canvas grid-cross" style="background-color: var(--bg);">
+
+      <!-- ── Top bar ─────────────────────────────────────────── -->
+      <div class="absolute top-0 left-0 right-0 flex items-center justify-between px-12 pt-10">
+        <span class="text-xs tracking-widest uppercase font-semibold" style="color: var(--accent);">
+          <!-- slot: topic_tag -->
+          Queimadas &amp; Clima
+        </span>
+        <span class="text-xs" style="color: var(--text-muted);">
+          <!-- slot: published_at -->
+          Abr 2026
+        </span>
+      </div>
+
+      <!-- ── Vertical accent stripe ─────────────────────────── -->
+      <div class="absolute top-16 left-12 w-0.5 h-24" style="background: var(--accent); opacity: 0.6;"></div>
+
+      <!-- ── Cover title (upper-right quadrant, right-aligned) ─ -->
+      <div class="absolute flex flex-col items-end text-right"
+           style="top: 220px; right: 48px; width: 520px;">
+        <p class="text-sm font-semibold mb-4 tracking-widest uppercase" style="color: var(--accent);">
+          <!-- slot: series_label -->
+          Análise de dados
+        </p>
+        <h1 class="font-black leading-none" style="font-size: 96px; color: var(--text-primary); letter-spacing: -2px;">
+          <!-- slot: title -->
+          Seca prolonga&shy;da aumenta risco de queima&shy;das
+        </h1>
+      </div>
+
+      <!-- ── Horizontal accent bar (at grid midline) ─────────── -->
+      <div class="absolute left-0 right-0 h-px" style="top: 675px; background: var(--accent-muted);"></div>
+
+      <!-- ── Summary (lower-left quadrant) ──────────────────── -->
+      <div class="absolute" style="bottom: 220px; left: 48px; width: 520px;">
+        <p class="leading-relaxed" style="font-size: 34px; color: var(--text-secondary);">
+          <!-- slot: summary -->
+          Meteorologia indica baixa umidade em várias regiões e alerta para aumento no número de focos ativos no território nacional.
+        </p>
+      </div>
+
+      <!-- ── Footer ──────────────────────────────────────────── -->
+      <div class="absolute bottom-0 left-0 right-0 flex items-end justify-between px-12 pb-10">
+        <!-- Logo area: replace src with /logos/logo.png when available -->
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-sm" style="background: var(--accent);"></div>
+          <span class="text-sm font-bold tracking-widest uppercase" style="color: var(--text-primary);">
+            <!-- slot: brand_name -->
+            ForestLab
+          </span>
+        </div>
+        <span class="text-sm font-medium tabular-nums" style="color: var(--accent);">
+          <!-- slot: card_number -->
+          01 / 05
+        </span>
+      </div>
+
+      <!-- ── Bottom border stripe ────────────────────────────── -->
+      <div class="absolute bottom-0 left-0 right-0 h-1" style="background: var(--accent);"></div>
+
+    </div>
+  </div>
+
+  <script>
+    function fitCanvas() {
+      const vw = window.innerWidth;
+      const scale = Math.min((vw - 64) / 1080, 0.85);
+      document.documentElement.style.setProperty("--canvas-scale", scale);
+    }
+    fitCanvas();
+    window.addEventListener("resize", fitCanvas);
+  </script>
+</body>
+</html>
