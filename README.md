@@ -139,6 +139,18 @@ Runs a registered audit for a dataset identifier and writes outputs under `docs/
 forest-pipelines audit-dataset <dataset_id>
 ```
 
+### `anp-catalog`
+
+Scrapes the public [dados.gov.br](https://dados.gov.br) search API for one organization (default: ANP — `88609f8c-a0ee-46eb-9294-f2175a6b561e`), paginates until all `registros` are consumed (or stop early with `--limit` for smoke tests), and extracts direct download links for resources tagged as CSV in both `resourcesFormatado` and `resourcesAcessoRapido`. Outputs `anp_catalogo_supabase.json` and `anp_catalogo_supabase.csv` under `--output-dir` (default: current working directory).
+
+HTTP requests use browser-like headers and follow redirects to reduce WAF noise. Structured logs use Rich with tags such as `[INIT]`, `[NETWORK]`, `[PARSE]`, `[SUCCESS]`, `[SKIP]`, `[WARN]`, and `[ERROR]`. No Supabase environment variables are required.
+
+```bash
+forest-pipelines anp-catalog [--org-id UUID] [--offset-start N] [--limit N] [--output-dir PATH]
+```
+
+If the portal responds with HTTP 401 or blocks requests, try another network/VPN or confirm on [dados.gov.br](https://dados.gov.br) whether the public API contract or access rules have changed.
+
 ## Registered datasets
 
 The following identifiers are registered in `src/forest_pipelines/registry/datasets.py`.

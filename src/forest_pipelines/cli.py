@@ -16,6 +16,40 @@ from forest_pipelines.storage.supabase_storage import SupabaseStorage
 app = typer.Typer(add_completion=False, no_args_is_help=True)
 
 
+@app.command("anp-catalog")
+def anp_catalog_cmd(
+    org_id: str = typer.Option(
+        "88609f8c-a0ee-46eb-9294-f2175a6b561e",
+        "--org-id",
+        help="UUID da organização (idOrganizacao); padrão: ANP",
+    ),
+    offset_start: int = typer.Option(0, "--offset-start", help="Offset inicial na API"),
+    limit: int | None = typer.Option(
+        None,
+        "--limit",
+        help="Máximo de registros de dataset a processar (útil para testes)",
+    ),
+    output_dir: str | None = typer.Option(
+        None,
+        "--output-dir",
+        help="Diretório para anp_catalogo_supabase.json e .csv (padrão: diretório atual)",
+    ),
+) -> None:
+    """Catálogo CSV do Portal Brasileiro de Dados Abertos (organização ANP por padrão)."""
+    from pathlib import Path
+
+    from forest_pipelines.dados_abertos.anp_catalog import run_anp_catalog
+
+    out = Path(output_dir).resolve() if output_dir else None
+    code = run_anp_catalog(
+        org_id=org_id,
+        offset_start=offset_start,
+        limit=limit,
+        output_dir=out,
+    )
+    raise typer.Exit(code=code)
+
+
 @app.command()
 def sync(
     dataset_id: str = typer.Argument(..., help="ID do dataset (ex: eia_petroleum_weekly)"),
