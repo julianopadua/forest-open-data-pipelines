@@ -12,9 +12,10 @@ from forest_pipelines.dados_abertos.api_client import (
 
 def test_build_buscar_url_query() -> None:
     u = build_buscar_url(offset=10, org_id="abc-def")
-    assert "offset=10" in u
-    assert "idOrganizacao=abc-def" in u
-    assert "dadosAbertos=true" in u
+    assert "start=10" in u
+    assert "organization%3Aabc-def" in u or "organization:abc-def" in u
+    assert "rows=50" in u
+    assert "package_search" in u
 
 
 @patch("forest_pipelines.dados_abertos.api_client.requests.get")
@@ -22,10 +23,10 @@ def test_fetch_json_passes_browser_headers_and_allow_redirects(mock_get: MagicMo
     mock_resp = MagicMock()
     mock_resp.status_code = 200
     mock_resp.url = "https://final.example/api"
-    mock_resp.json.return_value = {"totalRegistros": 1, "registros": []}
+    mock_resp.json.return_value = {"success": True, "result": {"count": 1, "results": []}}
     mock_get.return_value = mock_resp
 
-    fr = fetch_json_with_retries("https://dados.gov.br/api/publico/conjuntos-dados/buscar?x=1")
+    fr = fetch_json_with_retries("https://dados.gov.br/api/3/action/package_search?x=1")
 
     assert fr.payload is not None
     assert fr.error is None

@@ -9,7 +9,9 @@ from urllib.parse import urlencode
 
 import requests
 
-API_BASE_URL = "https://dados.gov.br/api/publico/conjuntos-dados/buscar"
+# CKAN DataStore API (público, sem cookie de sessão)
+API_BASE_URL = "https://dados.gov.br/api/3/action/package_search"
+CKAN_ROWS_PER_PAGE = 50
 
 # Centralized browser-like headers (WAF / bot mitigation)
 BROWSER_HEADERS: dict[str, str] = {
@@ -27,9 +29,9 @@ BROWSER_HEADERS: dict[str, str] = {
 
 def build_buscar_url(*, offset: int, org_id: str) -> str:
     params = {
-        "offset": offset,
-        "idOrganizacao": org_id,
-        "dadosAbertos": "true",
+        "fq": f"organization:{org_id}",
+        "start": offset,
+        "rows": CKAN_ROWS_PER_PAGE,
     }
     return f"{API_BASE_URL}?{urlencode(params)}"
 
@@ -67,7 +69,8 @@ def fetch_json_with_retries(
             final = resp.url
 
             if status >= 400:
-                last_error = f"HTTP {status}"
+                reason = getattr(resp, "reason", None) or ""
+                last_error = f"HTTP {status}" + (f" {reason}" if reason else "")
                 if attempt < max_attempts:
                     time.sleep(2 * attempt)
                 continue

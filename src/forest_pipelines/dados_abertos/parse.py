@@ -22,7 +22,7 @@ def csv_url_extension_mismatch(url: str) -> bool:
 
 def extract_csv_rows_from_record(record: dict[str, Any]) -> list[dict[str, str]]:
     """
-    From one API record, collect CSV resources from resourcesFormatado and resourcesAcessoRapido.
+    From one CKAN package record, collect CSV resources from ``resources``.
     Returns rows: dataset_title, file_name, download_url (deduped within this record by URL).
     """
     title = str(record.get("title") or "").strip() or "(sem título)"
@@ -30,28 +30,28 @@ def extract_csv_rows_from_record(record: dict[str, Any]) -> list[dict[str, str]]
     seen_urls: set[str] = set()
     out: list[dict[str, str]] = []
 
-    for key in ("resourcesFormatado", "resourcesAcessoRapido"):
-        raw = record.get(key)
-        if not isinstance(raw, list):
+    raw = record.get("resources")
+    if not isinstance(raw, list):
+        return out
+
+    for item in raw:
+        if not isinstance(item, dict):
             continue
-        for item in raw:
-            if not isinstance(item, dict):
-                continue
-            if not is_csv_format(item.get("format")):
-                continue
-            name = str(item.get("name") or "").strip() or "(sem nome)"
-            url = str(item.get("url") or "").strip()
-            if not url:
-                continue
-            if url in seen_urls:
-                continue
-            seen_urls.add(url)
-            out.append(
-                {
-                    "dataset_title": title,
-                    "file_name": name,
-                    "download_url": url,
-                }
-            )
+        if not is_csv_format(item.get("format")):
+            continue
+        name = str(item.get("name") or "").strip() or "(sem nome)"
+        url = str(item.get("url") or "").strip()
+        if not url:
+            continue
+        if url in seen_urls:
+            continue
+        seen_urls.add(url)
+        out.append(
+            {
+                "dataset_title": title,
+                "file_name": name,
+                "download_url": url,
+            }
+        )
 
     return out

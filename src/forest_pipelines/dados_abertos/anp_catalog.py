@@ -13,6 +13,7 @@ from rich.table import Table
 
 from forest_pipelines.dados_abertos.api_client import (
     API_BASE_URL,
+    CKAN_ROWS_PER_PAGE,
     build_buscar_url,
     fetch_json_with_retries,
 )
@@ -57,7 +58,7 @@ def run_anp_catalog(
     timeout_s: float = 60.0,
 ) -> int:
     """
-    Paginate dados.gov.br API, extract CSV links, export JSON/CSV, print Rich dashboard.
+    Paginate dados.gov.br CKAN ``package_search``, extract CSV links, export JSON/CSV, print Rich dashboard.
     Returns process exit code (0 success, 1 on hard failure).
     """
     logger = setup_anp_logging()
@@ -84,6 +85,10 @@ def run_anp_catalog(
         timeout_s,
     )
     logger.info("[INIT] API base: %s", API_BASE_URL)
+    logger.info(
+        "[INIT] CKAN package_search: rows=%s, fq=organization:<org_id> (see build_buscar_url)",
+        CKAN_ROWS_PER_PAGE,
+    )
     logger.info("[INIT] Headers: User-Agent browser + Accept/Accept-Language/Connection (see api_client.BROWSER_HEADERS)")
     logger.info("[INIT] Export: %s , %s", json_path.name, csv_path.name)
 
@@ -115,7 +120,7 @@ def run_anp_catalog(
             redirect_note = f" | final_url={final_u}"
 
         logger.info(
-            "[NETWORK] GET status=%s offset=%s page=%s%s | request_url=%s",
+            "[NETWORK] GET status=%s start=%s page=%s%s | request_url=%s",
             fr.status_code,
             offset,
             page_idx,
@@ -123,8 +128,24 @@ def run_anp_catalog(
             url,
         )
 
+        if payload.get("success") is False:
+            network_fail += 1
+            err = payload.get("error")
+            if isinstance(err, dict):
+                err_msg = str(err.get("message") or err.get("__type") or err)
+            else:
+                err_msg = str(err or "success=false sem detalhe")
+            logger.error("[ERROR] CKAN success=false | %s", err_msg)
+            break
+
+        result = payload.get("result")
+        if not isinstance(result, dict):
+            network_fail += 1
+            logger.error("[ERROR] Contrato JSON: 'result' ausente ou não é objeto")
+            break
+
         if total_registros is None:
-            tr = payload.get("totalRegistros")
+            tr = result.get("count")
             if isinstance(tr, int):
                 total_registros = tr
             elif tr is not None:
@@ -133,16 +154,16 @@ def run_anp_catalog(
                 except (TypeError, ValueError):
                     total_registros = None
             if total_registros is not None:
-                logger.info("[INIT] totalRegistros=%s (API)", total_registros)
+                logger.info("[INIT] result.count=%s (API)", total_registros)
 
-        registros = payload.get("registros")
+        registros = result.get("results")
         if not isinstance(registros, list):
             network_fail += 1
-            logger.error("[ERROR] Contrato JSON: 'registros' ausente ou não é array")
+            logger.error("[ERROR] Contrato JSON: 'result.results' ausente ou não é array")
             break
 
         n_page = len(registros)
-        logger.info("[PARSE] Página atual: %s pacotes (registros) lidos", n_page)
+        logger.info("[PARSE] Página atual: %s pacotes (result.results) lidos", n_page)
 
         if n_page == 0:
             logger.info("[INIT] Nenhum registro nesta página; encerrando paginação.")
@@ -160,7 +181,7 @@ def run_anp_catalog(
 
             if not rows:
                 logger.info(
-                    '[SKIP] Dataset sem CSV em resourcesFormatado/resourcesAcessoRapido: "%s"',
+                    '[SKIP] Dataset sem CSV em resources: "%s"',
                     title,
                 )
                 continue

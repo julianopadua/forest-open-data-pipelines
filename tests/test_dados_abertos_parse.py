@@ -20,13 +20,11 @@ def test_csv_url_extension_mismatch() -> None:
     assert not csv_url_extension_mismatch("https://x.com/a.csv")
 
 
-def test_extract_merges_both_resource_lists() -> None:
+def test_extract_dedupes_urls_in_resources() -> None:
     record = {
         "title": "Dataset A",
-        "resourcesFormatado": [
+        "resources": [
             {"format": "CSV", "name": "f1.csv", "url": "https://u1/file.csv"},
-        ],
-        "resourcesAcessoRapido": [
             {"format": "CSV", "name": "f1.csv", "url": "https://u1/file.csv"},
             {"format": "CSV", "name": "f2.csv", "url": "https://u2/file.csv"},
         ],
@@ -40,17 +38,22 @@ def test_extract_merges_both_resource_lists() -> None:
 def test_extract_skip_non_csv() -> None:
     record = {
         "title": "X",
-        "resourcesFormatado": [
+        "resources": [
             {"format": "JSON", "name": "j", "url": "https://j"},
         ],
     }
     assert extract_csv_rows_from_record(record) == []
 
 
+def test_extract_null_or_invalid_resources() -> None:
+    assert extract_csv_rows_from_record({"title": "Z", "resources": None}) == []
+    assert extract_csv_rows_from_record({"title": "Z"}) == []
+
+
 def test_warn_scenario_xlsx_url() -> None:
     record = {
         "title": "Y",
-        "resourcesFormatado": [
+        "resources": [
             {"format": "CSV", "name": "bad", "url": "https://cdn/file.XLSX"},
         ],
     }
