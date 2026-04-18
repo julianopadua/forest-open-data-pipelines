@@ -1,5 +1,5 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "month_labels": [
     "Jan",
     "Fev",
@@ -22,7 +22,7 @@
         4571,
         1867,
         1968,
-        902,
+        null,
         null,
         null,
         null,
@@ -75,10 +75,11 @@
     "previous_year": 2025,
     "avg_window_years_from": 2021,
     "avg_window_years_to": 2025,
-    "ytd_months": 4,
+    "last_closed_month": 3,
+    "reference_date": "2026-04-18",
     "unit": "focos",
     "source": "INPE BDQueimadas (mensal COIDS + agregação ZIP anual; satélite AQUA_M-T)",
-    "published_at_label": "Abr 2026",
+    "published_at_label": "Mar 2026",
     "reference_satellite": "AQUA_M-T"
   }
 }

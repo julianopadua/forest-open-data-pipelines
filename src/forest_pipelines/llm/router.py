@@ -29,6 +29,11 @@ class RoutedTextResult:
 _JSON_FENCE_RE = re.compile(r"```(?:json)?\s*(\{.*?\})\s*```", re.DOTALL)
 
 
+def _validate_non_empty_text(text: str) -> None:
+    if not text.strip():
+        raise ValueError("Resposta do modelo vazia.")
+
+
 def _extract_json_object(text: str) -> dict[str, Any]:
     stripped = text.strip()
 
@@ -171,6 +176,7 @@ async def _generate_text_async(
                 )
 
                 text = (raw_text or "").strip()
+                _validate_non_empty_text(text)
                 return RoutedTextResult(text=text, model=model, raw_text=raw_text)
             except Exception as e:  # noqa: BLE001
                 last_error = e

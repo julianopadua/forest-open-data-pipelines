@@ -12,27 +12,27 @@
       "type": "cover",
       "slots": {
         "topic_tag": "Queimadas & Clima",
-        "published_at": "Abr 2026",
+        "published_at": "Mar 2026",
         "series_label": "Série temporal",
         "title": "Focos de incêndio no Brasil",
-        "summary": "Comparativo mês a mês: 2026 (parcial) vs 2025 e média por mês (2021–2025)."
+        "summary": "Comparativo mês a mês: 2026 (só meses já fechados) vs 2025 e média por mês (2021–2025)."
       }
     },
     {
       "type": "body_chart",
       "slots": {
         "topic_tag": "Queimadas & Clima",
-        "published_at": "Abr 2026",
+        "published_at": "Mar 2026",
         "caption": "Focos por mês (Brasil) · BDQueimadas, publicado pelo INPE",
         "image_url": "/generated/bdqueimadas-chart.png",
-        "body_text": "O gráfico mostra que em abril de 2026 foram registrados 902 focos de queimadas, um valor 45,03 % menor que os 1.641 focos registrados em abril de 2025. Até o fim de abril, o acumulado anual de 9.308 focos representa 3,95 % a mais que os 8.954 focos acumulados no mesmo período de 2025. Em comparação com a soma das médias mensais dos últimos cinco anos (10.635,6 focos), o acumulado de 2026 está 12,48 % abaixo. Os dados são agregados mensalmente pelo BDQueimadas e não incluem contagem diária, portanto as comparações são entre totais mensais ou acumulados já publicados. O período analisado vai até o último mês fechado, abril de 2026, conforme indicado na publicação."
+        "body_text": "Em março de 2026 registramos 1.968 focos de queimadas, 16,5 % a menos que o mesmo mês de 2025, que teve 2.357 focos. No acumulado de janeiro a março, o ano atual atingiu 8.406 focos, 14,95 % a mais que os 7.313 focos de 2025 no mesmo período. Esse total acumulado fica um pouco abaixo da média de cinco anos, que era de 8.480,2 focos, representando uma queda de 0,87 %. Assim, embora o mês de março tenha diminuído em relação ao ano anterior, o acumulado geral do ano já mostra um aumento em comparação ao período do ano passado e permanece próximo da tendência histórica. Essas comparações ajudam a entender se o ano está se aproximando ou se afastando dos padrões de queimadas observados nos últimos cinco anos."
       }
     },
     {
       "type": "cta",
       "slots": {
         "topic_tag": "Queimadas & Clima",
-        "published_at": "Abr 2026",
+        "published_at": "Mar 2026",
         "cta_kicker": "Continua acompanhando",
         "cta_headline": "Mais análises e dados",
         "cta_subline": "Acesse o portal de dados abertos do instituto.",

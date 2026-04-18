@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 
+from forest_pipelines.social.bdqueimadas_monthly_chart import last_closed_month_for_calendar_year
 from forest_pipelines.social.llm.payloads.focos_incendio import (
     build_focos_incendio_llm_payload,
     payload_to_prompt_block,
@@ -12,7 +13,7 @@ from forest_pipelines.social.llm.payloads.focos_incendio import (
 
 def _minimal_spec() -> dict:
     return {
-        "schema_version": 2,
+        "schema_version": 3,
         "month_labels": [
             "Jan",
             "Fev",
@@ -41,38 +42,44 @@ def _minimal_spec() -> dict:
             "previous_year": 2025,
             "avg_window_years_from": 2021,
             "avg_window_years_to": 2025,
-            "ytd_months": 3,
+            "last_closed_month": 3,
             "published_at_label": "Mar 2026",
             "source": "INPE (teste)",
         },
     }
 
 
-def test_ytd_sums_and_mom_vs_mes() -> None:
+def test_last_closed_month_for_calendar_year() -> None:
+    assert last_closed_month_for_calendar_year(date(2026, 4, 18), 2026) == 3
+    assert last_closed_month_for_calendar_year(date(2026, 5, 1), 2026) == 4
+    assert last_closed_month_for_calendar_year(date(2026, 1, 10), 2026) == 0
+    assert last_closed_month_for_calendar_year(date(2027, 1, 5), 2026) == 12
+
+
+def test_acumulado_e_mom_vs_mes() -> None:
     spec = _minimal_spec()
     ref = date(2026, 3, 15)
     p = build_focos_incendio_llm_payload(spec, ref)
-    assert p["metrics"]["ytd_acumulado_ate_mes"]["soma_focos_ano_atual"] == 100 + 110 + 120
-    assert p["metrics"]["ytd_acumulado_ate_mes"]["soma_focos_ano_anterior_mesmo_periodo"] == 90 * 3
-    assert p["metrics"]["mes_vs_mes"]["mes_rotulo"] == "Mar"
-    assert p["metrics"]["mes_vs_mes"]["focos_ano_atual"] == 120
-    assert p["metrics"]["mes_vs_mes"]["focos_ano_anterior"] == 90
+    acc = p["metrics"]["acumulado_desde_jan_ate_ultimo_mes_fechado"]
+    assert acc["soma_focos_ano_atual"] == 100 + 110 + 120
+    assert acc["soma_focos_ano_anterior_mesmo_periodo"] == 90 * 3
+    mom = p["metrics"]["ultimo_mes_fechado_vs_mesmo_mes_ano_anterior"]
+    assert mom["mes_rotulo"] == "Mar"
+    assert mom["focos_ano_atual"] == 120
+    assert mom["focos_ano_anterior"] == 90
 
 
-def test_calendario_a_frente_flag() -> None:
+def test_payload_sem_flags_v2() -> None:
     spec = _minimal_spec()
-    ref = date(2026, 5, 1)
-    p = build_focos_incendio_llm_payload(spec, ref)
-    assert p["flags"]["calendario_a_frente_do_ultimo_mes_fechado"] is True
-
-    ref_ok = date(2026, 3, 20)
-    p2 = build_focos_incendio_llm_payload(spec, ref_ok)
-    assert p2["flags"]["calendario_a_frente_do_ultimo_mes_fechado"] is False
+    p = build_focos_incendio_llm_payload(spec, date(2026, 3, 1))
+    assert p["schema"] == "focos_incendio_br_v2"
+    assert "flags" not in p
+    assert "escopo" in p["metadata"]
 
 
 def test_payload_to_prompt_block_roundtrip() -> None:
     spec = _minimal_spec()
     p = build_focos_incendio_llm_payload(spec, date(2026, 3, 1))
     s = payload_to_prompt_block(p)
-    assert "focos_incendio_br_v1" in s
+    assert "focos_incendio_br_v2" in s
     assert "2026-03-01" in s

@@ -1,4 +1,4 @@
-"""Monthly BDQueimadas chart: ano atual (CSVs mensais INPE) vs série histórica em CSV anual (data_pas)."""
+"""Monthly BDQueimadas chart: ano civil atual (só meses já fechados) vs série em CSV anual (data_pas)."""
 
 from __future__ import annotations
 
@@ -76,10 +76,26 @@ MONTH_LABELS_PT = [
 ]
 
 def format_published_at_pt(month: int, year: int) -> str:
-    """Ex.: Abr 2026 — alinhado ao último mês com dado na série atual."""
+    """Ex.: Abr 2026 — alinhado ao último mês civil já encerrado na série atual."""
     if month < 1 or month > 12:
         return f"{year}"
     return f"{MONTH_LABELS_PT[month - 1]} {year}"
+
+
+def last_closed_month_for_calendar_year(reference_date: date, year: int) -> int:
+    """
+    Último mês civil já encerrado no ano ``year``, na linha do tempo de ``reference_date``.
+
+    Ex.: em 18 de abril de 2026 → 3 (março); em 1º de maio de 2026 → 4 (abril).
+    Em janeiro, antes de fechar o mês anterior no mesmo ano civil, retorna 0.
+    Se ``reference_date.year > year``, o ano do gráfico já terminou → 12.
+    Se ``reference_date.year < year``, o ano do gráfico ainda não começou → 0.
+    """
+    if reference_date.year > year:
+        return 12
+    if reference_date.year < year:
+        return 0
+    return reference_date.month - 1
 
 
 def _trim_payload_monthly_to_inferred_year(payload: dict[str, Any]) -> dict[str, Any]:
@@ -207,6 +223,7 @@ def compute_chart_spec(
     *,
     current_year: int,
     current_year_monthly_counts: dict[int, int],
+    reference_date: date,
     reference_satellite: str | None = None,
 ) -> dict[str, Any]:
     if not current_year_monthly_counts:
@@ -216,7 +233,19 @@ def compute_chart_spec(
         )
 
     previous_year = current_year - 1
-    ytd_month = max(current_year_monthly_counts.keys())
+    last_closed = last_closed_month_for_calendar_year(reference_date, current_year)
+    if last_closed < 1:
+        raise RuntimeError(
+            f"Nenhum mês civil encerrado no ano {current_year} em relação à data "
+            f"{reference_date.isoformat()}. A série do ano atual só inclui meses já fechados "
+            "(ex.: em janeiro use --as-of a partir de fevereiro, ou --current-year no ano anterior)."
+        )
+    for m in range(1, last_closed + 1):
+        if m not in current_year_monthly_counts:
+            raise RuntimeError(
+                f"Falta arquivo mensal para o mês {m} (até o último mês fechado, {last_closed}). "
+                f"Disponíveis: {sorted(current_year_monthly_counts.keys())}."
+            )
 
     df = monthly_all_df.copy()
     df["month"] = pd.to_datetime(df["period"], errors="coerce").dt.month
@@ -234,8 +263,8 @@ def compute_chart_spec(
     y1 = previous_year
 
     for m in range(1, 13):
-        if m <= ytd_month:
-            series_current.append(int(current_year_monthly_counts.get(m, 0)))
+        if m <= last_closed:
+            series_current.append(int(current_year_monthly_counts[m]))
         else:
             series_current.append(None)
 
@@ -249,10 +278,10 @@ def compute_chart_spec(
         ]["value"]
         series_avg_5y.append(float(win.mean()) if len(win) else 0.0)
 
-    published_at_label = format_published_at_pt(ytd_month, current_year)
+    published_at_label = format_published_at_pt(last_closed, current_year)
 
     source = (
-        "INPE BDQueimadas (mensal COIDS + agregação ZIP anual"
+        "INPE BDQueimadas ("
         + (f"; satélite {reference_satellite}" if reference_satellite else "")
         + ")"
     )
@@ -261,7 +290,8 @@ def compute_chart_spec(
         "previous_year": previous_year,
         "avg_window_years_from": y0,
         "avg_window_years_to": y1,
-        "ytd_months": ytd_month,
+        "last_closed_month": last_closed,
+        "reference_date": reference_date.isoformat(),
         "unit": "focos",
         "source": source,
         "published_at_label": published_at_label,
@@ -270,7 +300,7 @@ def compute_chart_spec(
         meta["reference_satellite"] = reference_satellite
 
     return {
-        "schema_version": 2,
+        "schema_version": 3,
         "month_labels": labels,
         "series": {
             "current": {
@@ -521,6 +551,8 @@ def collect_plot_sources_metadata(
     satellite_candidates: list[str],
     reference_satellite: str | None,
     current_year: int,
+    reference_date: date,
+    last_closed_month: int,
     mensal_files: list[tuple[int, Path]],
     chart_spec_path: Path,
 ) -> dict[str, Any]:
@@ -617,6 +649,8 @@ def collect_plot_sources_metadata(
         "reference_satellite_filter": ref,
         "reference_satellite_constant": INPE_REFERENCE_SATELLITE,
         "current_year": current_year,
+        "reference_date": reference_date.isoformat(),
+        "last_closed_month": last_closed_month,
         "data_dir": str(data_dir.resolve()),
         "anual_dir": str(anual_dir.resolve()),
         "csv_anual_glob": csv_glob,
@@ -629,7 +663,9 @@ def collect_plot_sources_metadata(
             "Série anual: CSVs em anual/; datetime = data_pas (ISO YYYY-MM-DD HH:mm:ss) quando "
             "presente; agregação mensal = mesmo critério que COUNT(*) com filtro de mês em SQL. "
             "Sem somar duplicata (period,year) se houver mais de um CSV para o mesmo ano. "
-            "Mensais: satélite conforme reference_satellite_filter quando a coluna existe."
+            "Mensais: satélite conforme reference_satellite_filter quando a coluna existe. "
+            "Linha do ano civil atual: só até o último mês civil já encerrado (last_closed_month), "
+            "não o mês em curso."
         ),
     }
 
@@ -661,12 +697,16 @@ def build_bdqueimadas_social_assets(
     extract_anual_csvs: bool = True,
     anual_extract_dir: Path | None = None,
     run_llm: bool = False,
+    llm_components: tuple[str, ...] | None = None,
     reference_date: date | None = None,
     app_config: Path | None = None,
     out_social_llm: Path | None = None,
     logs_dir: Path | None = None,
     logger: logging.Logger | None = None,
 ) -> dict[str, Any]:
+    cy = current_year if current_year is not None else date.today().year
+    ref_d = reference_date if reference_date is not None else date.today()
+
     log = logger if logger is not None else get_social_bdqueimadas_logger(logs_dir)
     base_logs = logs_dir if logs_dir is not None else REPO_ROOT / "logs"
     log_stage(
@@ -678,14 +718,14 @@ def build_bdqueimadas_social_assets(
             "current_year_arg": current_year,
             "recent_years": recent_years,
             "run_llm": run_llm,
+            "llm_components": list(llm_components) if llm_components is not None else None,
             "extract_anual_csvs": extract_anual_csvs,
             "skip_mensal_download": skip_mensal_download,
+            "reference_date": ref_d.isoformat(),
             "out_png": str(out_png.resolve()),
             "out_json": str(out_json.resolve()),
         },
     )
-
-    cy = current_year if current_year is not None else date.today().year
 
     sat_cands = satellite_candidates if satellite_candidates is not None else list(
         DEFAULT_SATELLITE_CANDIDATES
@@ -776,6 +816,7 @@ def build_bdqueimadas_social_assets(
         monthly,
         current_year=cy,
         current_year_monthly_counts=current_year_monthly_counts,
+        reference_date=ref_d,
         reference_satellite=ref_sat or None,
     )
     meta0 = spec["metadata"]
@@ -784,7 +825,8 @@ def build_bdqueimadas_social_assets(
         "chart_spec_computed",
         {
             "latest_year": meta0.get("latest_year"),
-            "ytd_months": meta0.get("ytd_months"),
+            "last_closed_month": meta0.get("last_closed_month"),
+            "reference_date": meta0.get("reference_date"),
             "published_at_label": meta0.get("published_at_label"),
             "avg_window": [
                 meta0.get("avg_window_years_from"),
@@ -805,11 +847,13 @@ def build_bdqueimadas_social_assets(
     if run_llm:
         cfg = app_config if app_config is not None else DEFAULT_APP_CONFIG
         settings = load_settings(str(cfg))
-        ref_d = reference_date if reference_date is not None else date.today()
         from forest_pipelines.social.llm.registry import (
+            COMPONENT_GRAPHIC_TEXT,
+            DEFAULT_COMPONENTS,
             TOPIC_FOCOS_INCENDIO_BR,
             run_topic_components,
         )
+        requested_components = llm_components if llm_components is not None else DEFAULT_COMPONENTS
 
         log_stage(
             log,
@@ -817,6 +861,7 @@ def build_bdqueimadas_social_assets(
             {
                 "topic": TOPIC_FOCOS_INCENDIO_BR,
                 "reference_date": ref_d.isoformat(),
+                "components": list(requested_components),
                 "app_config": str(cfg.resolve()),
             },
         )
@@ -825,27 +870,28 @@ def build_bdqueimadas_social_assets(
             spec,
             ref_d,
             settings.llm,
+            components=requested_components,
             logger=log,
         )
-        llm_graphic_text = llm_out["graphic_text"]["text"]
+        if COMPONENT_GRAPHIC_TEXT in llm_out:
+            llm_graphic_text = llm_out[COMPONENT_GRAPHIC_TEXT]["text"]
         sidecar = out_social_llm if out_social_llm is not None else DEFAULT_SOCIAL_LLM_JSON
         sidecar.parent.mkdir(parents=True, exist_ok=True)
+        sidecar_payload: dict[str, Any] = {
+            "schema_version": 1,
+            "topic": TOPIC_FOCOS_INCENDIO_BR,
+            "reference_date": ref_d.isoformat(),
+            "components": list(requested_components),
+        }
+        if "post_description" in llm_out:
+            sidecar_payload["post_description"] = llm_out["post_description"]["text"]
+        if "graphic_text" in llm_out:
+            sidecar_payload["graphic_text"] = llm_out["graphic_text"]["text"]
+        sidecar_payload["models"] = {
+            component: data["model"] for component, data in llm_out.items()
+        }
         sidecar.write_text(
-            json.dumps(
-                {
-                    "schema_version": 1,
-                    "topic": TOPIC_FOCOS_INCENDIO_BR,
-                    "reference_date": ref_d.isoformat(),
-                    "post_description": llm_out["post_description"]["text"],
-                    "graphic_text": llm_out["graphic_text"]["text"],
-                    "models": {
-                        "post_description": llm_out["post_description"]["model"],
-                        "graphic_text": llm_out["graphic_text"]["model"],
-                    },
-                },
-                ensure_ascii=False,
-                indent=2,
-            )
+            json.dumps(sidecar_payload, ensure_ascii=False, indent=2)
             + "\n",
             encoding="utf-8",
         )
@@ -881,6 +927,8 @@ def build_bdqueimadas_social_assets(
             satellite_candidates=sat_cands,
             reference_satellite=ref_sat or None,
             current_year=cy,
+            reference_date=ref_d,
+            last_closed_month=int(meta0["last_closed_month"]),
             mensal_files=mensal_files,
             chart_spec_path=out_json,
         ),
@@ -905,7 +953,8 @@ def write_bdqueimadas_manifest(
     py = meta.get("previous_year")
     y0 = meta["avg_window_years_from"]
     y1 = meta["avg_window_years_to"]
-    published_at = meta.get("published_at_label", format_published_at_pt(meta["ytd_months"], ly))
+    lcm = int(meta.get("last_closed_month", meta.get("ytd_months", 1)))
+    published_at = meta.get("published_at_label", format_published_at_pt(lcm, ly))
 
     default_body = (
         "O gráfico resume a série mensal de focos no território nacional. "
@@ -932,7 +981,7 @@ def write_bdqueimadas_manifest(
                     "series_label": "Série temporal",
                     "title": "Focos de incêndio no Brasil",
                     "summary": (
-                        f"Comparativo mês a mês: {ly} (parcial) vs "
+                        f"Comparativo mês a mês: {ly} (só meses já fechados) vs "
                         f"{py if py is not None else '—'} "
                         f"e média por mês ({y0}–{y1})."
                     ),
@@ -1075,10 +1124,22 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         ),
     )
     p.add_argument(
+        "--llm-components",
+        default="post_description,graphic_text",
+        help=(
+            "Componentes LLM separados por vírgula. "
+            "Valores aceitos: post_description,graphic_text "
+            "(default: post_description,graphic_text)."
+        ),
+    )
+    p.add_argument(
         "--as-of",
         default=None,
         metavar="YYYY-MM-DD",
-        help="Data de referência para métricas e prefixo [YYYY-MM-DD] na legenda (default: hoje).",
+        help=(
+            "Data de referência: define o último mês civil fechado na linha do ano atual "
+            "(ex.: abril → até março), além do prefixo [YYYY-MM-DD] na legenda LLM (default: hoje)."
+        ),
     )
     p.add_argument(
         "--app-config",
@@ -1105,6 +1166,9 @@ def main(argv: list[str] | None = None) -> int:
     load_dotenv(REPO_ROOT / ".env")
     load_dotenv()
     args = _parse_args(argv)
+    llm_components = tuple(
+        part.strip() for part in str(args.llm_components).split(",") if part.strip()
+    )
     ref_date: date | None = None
     if args.as_of:
         ref_date = date.fromisoformat(args.as_of)
@@ -1126,6 +1190,7 @@ def main(argv: list[str] | None = None) -> int:
             extract_anual_csvs=not args.no_extract_anual,
             anual_extract_dir=args.anual_dir,
             run_llm=args.llm,
+            llm_components=llm_components,
             reference_date=ref_date,
             app_config=args.app_config,
             out_social_llm=args.out_social_llm,

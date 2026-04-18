@@ -2,10 +2,11 @@
   "schema_version": 1,
   "topic": "focos_incendio_br",
   "reference_date": "2026-04-18",
-  "post_description": "",
-  "graphic_text": "O gráfico mostra que em abril de 2026 foram registrados 902 focos de queimadas, um valor 45,03 % menor que os 1.641 focos registrados em abril de 2025. Até o fim de abril, o acumulado anual de 9.308 focos representa 3,95 % a mais que os 8.954 focos acumulados no mesmo período de 2025. Em comparação com a soma das médias mensais dos últimos cinco anos (10.635,6 focos), o acumulado de 2026 está 12,48 % abaixo. Os dados são agregados mensalmente pelo BDQueimadas e não incluem contagem diária, portanto as comparações são entre totais mensais ou acumulados já publicados. O período analisado vai até o último mês fechado, abril de 2026, conforme indicado na publicação.",
+  "components": [
+    "post_description"
+  ],
+  "post_description": "[2026-04-18]\nAté março de 2026, o Brasil registrou 8.406 focos de incêndio, um aumento de 14,95% em relação ao mesmo período do ano anterior. Em março, houve 1.968 focos, uma redução de 16,5% em comparação com março de 2025. Esses dados são importantes para entender a tendência dos incêndios no país.",
   "models": {
-    "post_description": "openai/gpt-oss-20b",
-    "graphic_text": "openai/gpt-oss-20b"
+    "post_description": "llama-3.3-70b-versatile"
   }
 }

@@ -131,6 +131,8 @@ Na **raiz do repositório** `forest-open-data-pipelines`, com venv ativo e `pip 
 - **ZIPs anuais** `focos_br_ref_*.zip` em `data/inpe_bdqueimadas/` (para o ano anterior e a média de 5 anos por mês, ex. 2021–2025).
 - **Arquivos mensais** do ano civil em curso: baixados automaticamente do [listagem INPE mensal Brasil](https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/mensal/Brasil/) (`focos_mensal_br_YYYYMM.csv` ou `.zip`) para `data/inpe_bdqueimadas/mensal/` (cache reutilizável).
 
+A **linha do ano atual** no gráfico e nas estatísticas usa **apenas meses civis já encerrados**: o último ponto é o mês anterior ao mês civil corrente (ex.: em 18 de abril, até março; em 1º de maio, até abril). Não entra o mês em curso. A data de referência do comando (`--as-of`, default: hoje) define esse recorte.
+
 ```bash
 python -m forest_pipelines.social --data-dir data/inpe_bdqueimadas --emit-manifest
 ```
@@ -163,7 +165,21 @@ Com rede e key válida:
 python -m forest_pipelines.social --data-dir data/inpe_bdqueimadas --emit-manifest --llm
 ```
 
-Opções: `--as-of YYYY-MM-DD` (data de referência e prefixo `[YYYY-MM-DD]` na legenda), `--app-config` (default `<repo>/configs/app.yml`), `--out-social-llm` (default `public/generated/social_llm.json`).
+Opções: `--as-of YYYY-MM-DD` (define o último mês fechado no gráfico — ex. abril → até março — e o prefixo `[YYYY-MM-DD]` na legenda LLM), `--app-config` (default `<repo>/configs/app.yml`), `--out-social-llm` (default `public/generated/social_llm.json`), `--llm-components post_description,graphic_text` (default: ambos).
+
+Para rodar **só a legenda do post**:
+
+```bash
+python -m forest_pipelines.social --data-dir data/inpe_bdqueimadas --llm --llm-components post_description
+```
+
+Para rodar **só o texto do gráfico**:
+
+```bash
+python -m forest_pipelines.social --data-dir data/inpe_bdqueimadas --emit-manifest --llm --llm-components graphic_text
+```
+
+Se você pedir só um componente, o `social_llm.json` salva apenas esse campo de texto e o respectivo modelo em `models`.
 
 Saídas extras:
 
