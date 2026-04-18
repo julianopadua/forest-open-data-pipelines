@@ -351,6 +351,7 @@ def render_chart_png(
         )
 
     valid_idx = np.flatnonzero(~np.isnan(cur))
+    li: int | None = None
     if valid_idx.size > 0:
         li = int(valid_idx[-1])
         ax.scatter(
@@ -364,9 +365,9 @@ def render_chart_png(
         )
 
     ax.set_xticks(x)
-    ax.set_xticklabels(labels, fontsize=8, color=_WHITE, rotation=0, ha="center")
-    ax.set_xlabel("Mês", fontsize=11, color=_WHITE, labelpad=6)
-    ax.set_ylabel("Nº de focos", fontsize=11, color=_WHITE, labelpad=6)
+    ax.set_xticklabels(labels, fontsize=12, color=_WHITE, rotation=0, ha="center")
+    ax.set_xlabel("Mês", fontsize=14, color=_WHITE, labelpad=8)
+    ax.set_ylabel("Nº de focos", fontsize=12, color=_WHITE, labelpad=6)
 
     # Não usar MaxNLocator no eixo X: ele reduz o número de ticks e some rótulos de meses.
     ax.yaxis.set_major_locator(MaxNLocator(integer=True, nbins=9))
@@ -374,7 +375,8 @@ def render_chart_png(
         mticker.FuncFormatter(lambda v, _pos: f"{int(v):,}".replace(",", "."))
     )
 
-    ax.tick_params(axis="both", labelsize=10, colors=_WHITE)
+    ax.tick_params(axis="x", labelsize=12, colors=_WHITE)
+    ax.tick_params(axis="y", labelsize=11, colors=_WHITE)
     ax.grid(False)
     ax.set_axisbelow(True)
     for spine in ("top", "right"):
@@ -406,16 +408,58 @@ def render_chart_png(
             label=avg_legend_label,
         )
     )
+    # Legenda colada ao canto superior direito da área do gráfico (coordenadas do eixo).
     ax.legend(
         handles=legend_handles,
         frameon=True,
         facecolor=(0.1, 0.14, 0.12),
         edgecolor=(0.0, 0.0, 0.0, 0.0),
-        fontsize=9,
+        fontsize=11,
         loc="upper right",
+        bbox_to_anchor=(1.0, 1.0),
+        borderaxespad=0.2,
         labelcolor=_WHITE,
-        framealpha=0.4,
+        framealpha=0.55,
     )
+
+    # Valor no último ponto (mesmo da bolinha): rótulo acima + seta até o marcador.
+    if li is not None:
+        last_val = int(cur[li])
+        val_lbl = f"{last_val:,}".replace(",", ".")
+        ymin, ymax = ax.get_ylim()
+        yspan = ymax - ymin if ymax > ymin else 1.0
+        # Espaço extra no topo para o texto e a seta não serem cortados.
+        headroom = yspan * 0.14
+        ax.set_ylim(ymin, ymax + headroom)
+
+        # Meses finais: desloca o texto um pouco à esquerda para não colidir com a legenda.
+        tx = float(x[li])
+        if li >= 9:
+            tx = max(x[li] - 0.55, -0.2)
+        ty = float(cur[li]) + yspan * 0.11
+
+        ax.annotate(
+            val_lbl,
+            xy=(float(x[li]), float(cur[li])),
+            xytext=(tx, ty),
+            textcoords="data",
+            ha="center",
+            va="bottom",
+            fontsize=12,
+            fontweight="bold",
+            color=_WHITE,
+            zorder=8,
+            clip_on=False,
+            arrowprops={
+                "arrowstyle": "-|>",
+                "color": _CUR,
+                "lw": 1.6,
+                "shrinkA": 0,
+                "shrinkB": 6,
+                "mutation_scale": 12,
+                "connectionstyle": "arc3,rad=0",
+            },
+        )
 
     fig.tight_layout()
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -724,7 +768,7 @@ def write_bdqueimadas_manifest(spec: dict[str, Any], path: Path) -> None:
                     "topic_tag": "Queimadas & Clima",
                     "published_at": published_at,
                     "series_label": "Série temporal",
-                    "title": "Focos de calor no Brasil",
+                    "title": "Focos de incêndio no Brasil",
                     "summary": (
                         f"Comparativo mês a mês: {ly} (parcial) vs "
                         f"{py if py is not None else '—'} "
