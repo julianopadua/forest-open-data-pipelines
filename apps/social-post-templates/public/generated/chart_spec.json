@@ -1,82 +1,51 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "month_labels": [
     "Jan",
     "Fev",
     "Mar",
-    "Abr",
-    "Mai",
-    "Jun",
-    "Jul",
-    "Ago",
-    "Set",
-    "Out",
-    "Nov",
-    "Dez"
+    "Abr"
   ],
   "series": {
     "current": {
       "key": "current",
+      "label": "2026",
+      "values": [
+        86215,
+        43064,
+        43048,
+        14738
+      ]
+    },
+    "previous": {
+      "key": "previous",
       "label": "2025",
       "values": [
         5333,
         7601,
         4499,
-        7430,
-        6475,
-        7637,
-        11578,
-        17590,
-        20374,
-        20617,
-        17441,
-        9818
-      ]
-    },
-    "previous": {
-      "key": "previous",
-      "label": "2024",
-      "values": [
-        13547,
-        13383,
-        12560,
-        12212,
-        11617,
-        18923,
-        25913,
-        58338,
-        45936,
-        26413,
-        23030,
-        16427
+        7430
       ]
     },
     "avg_5y": {
       "key": "avg_5y",
-      "label": "Média 2020–2024 (por mês)",
+      "label": "Média 2021–2025 (por mês)",
       "values": [
-        8903.2,
-        8431.8,
-        8768.6,
-        10047.0,
-        10876.8,
-        13921.0,
-        19292.6,
-        42409.8,
-        39690.2,
-        23742.8,
-        18225.8,
-        10858.6
+        7913.6,
+        8409.2,
+        7778.2,
+        9189.2
       ]
     }
   },
   "metadata": {
-    "latest_year": 2025,
-    "previous_year": 2024,
-    "avg_window_years_from": 2020,
-    "avg_window_years_to": 2024,
-    "ytd_months": 12,
+    "latest_year": 2026,
+    "previous_year": 2025,
+    "avg_window_years_from": 2021,
+    "avg_window_years_to": 2025,
+    "ytd_months": 4,
     "unit": "focos",
-    "source": "INPE BDQueimadas (agregação Brasil)"
+    "source": "INPE BDQueimadas (mensal COIDS + agregação ZIP anual)",
+    "published_at_label": "Abr 2026"
   }
 }

@@ -126,11 +126,16 @@ Saída: `dist-exports/green/<runId>/01-cover.png`, `02-body_image_text.png`, …
 
 ## Pipeline BDQueimadas (gráfico + manifest)
 
-Na **raiz do repositório** `forest-open-data-pipelines`, com venv ativo e dependências instaladas (`pip install -e .`), e com ZIPs `focos_br_ref_*.zip` em `data/inpe_bdqueimadas/`:
+Na **raiz do repositório** `forest-open-data-pipelines`, com venv ativo e `pip install -e .`:
+
+- **ZIPs anuais** `focos_br_ref_*.zip` em `data/inpe_bdqueimadas/` (para o ano anterior e a média de 5 anos por mês, ex. 2021–2025).
+- **Arquivos mensais** do ano civil em curso: baixados automaticamente do [listagem INPE mensal Brasil](https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/mensal/Brasil/) (`focos_mensal_br_YYYYMM.csv` ou `.zip`) para `data/inpe_bdqueimadas/mensal/` (cache reutilizável).
 
 ```bash
 python -m forest_pipelines.social --data-dir data/inpe_bdqueimadas --emit-manifest
 ```
+
+Opções úteis: `--current-year 2026` (default: ano do sistema), `--skip-mensal-download` (só cache já baixado), `--mensal-base-url` e `--mensal-cache-dir`.
 
 Ou:
 
@@ -140,9 +145,9 @@ make bdqueimadas-social-assets
 
 Isso gera:
 
-- `public/generated/bdqueimadas-chart.png` — PNG do gráfico (ano atual YTD, ano anterior, média por mês na janela configurada)
-- `public/generated/chart_spec.json` — séries e metadados para inspeção ou **fase 2 (LLM)** preencher texto automaticamente a partir dos números
-- `examples/bdqueimadas-social.manifest.json` e cópia em `public/examples/` para o preset `?preset=bdqueimadas` no compositor
+- `public/generated/bdqueimadas-chart.png` — linha principal = **soma de focos por mês** do ano atual (CSV mensal); linha tracejada = ano anterior (ZIP); faixa = **média** dos 5 anos que terminam no ano anterior (ex. 2021–2025), com eixos **Mês** / **Nº de focos**.
+- `public/generated/chart_spec.json` — séries e metadados (`published_at_label` estilo `Abr 2026` para o manifest).
+- `examples/bdqueimadas-social.manifest.json` e cópia em `public/examples/` para o preset `?preset=bdqueimadas` no compositor (`published_at` preenchido como nos outros slides).
 
 Depois: `npm run dev` neste app e, em outro terminal, `npm run export:manifest -- examples/bdqueimadas-social.manifest.json`.
 

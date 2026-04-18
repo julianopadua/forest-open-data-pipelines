@@ -493,6 +493,15 @@ def _read_zip_subset(
         }
     ).copy()
 
+    out = _normalized_focos_subset_from_raw_columns(df)
+    return out, {
+        "datetime": dt_col,
+        "state": state_col,
+        "biome": biome_col,
+    }
+
+
+def _normalized_focos_subset_from_raw_columns(df: pd.DataFrame) -> pd.DataFrame:
     dt = pd.to_datetime(
         df["raw_datetime"].astype("string").str.strip(),
         errors="coerce",
@@ -527,11 +536,7 @@ def _read_zip_subset(
     out["year"] = out["datetime"].dt.year.astype(int)
     out["period_month"] = out["datetime"].dt.to_period("M").astype(str)
 
-    return out[["datetime", "year", "period_month", "state", "biome"]], {
-        "datetime": dt_col,
-        "state": state_col,
-        "biome": biome_col,
-    }
+    return out[["datetime", "year", "period_month", "state", "biome"]]
 
 
 def _pick_member(zf: zipfile.ZipFile) -> str:
@@ -559,22 +564,12 @@ def _detect_delimiter(zf: zipfile.ZipFile, member: str) -> str:
         return ","
 
 
-def _detect_columns(
-    zf: zipfile.ZipFile,
-    member: str,
+def detect_columns_from_header(
+    available: list[str],
     datetime_candidates: list[str],
     state_candidates: list[str],
     biome_candidates: list[str],
-    delimiter: str,
 ) -> dict[str, str]:
-    header_df = _read_member_csv(
-        zf=zf,
-        member=member,
-        delimiter=delimiter,
-        nrows=0,
-    )
-    available = list(header_df.columns)
-
     dt_col = _pick_column(available, datetime_candidates)
     state_col = _pick_column(available, state_candidates)
     biome_col = _pick_column(available, biome_candidates)
@@ -605,6 +600,28 @@ def _detect_columns(
         "state": state_col,
         "biome": biome_col,
     }
+
+
+def _detect_columns(
+    zf: zipfile.ZipFile,
+    member: str,
+    datetime_candidates: list[str],
+    state_candidates: list[str],
+    biome_candidates: list[str],
+    delimiter: str,
+) -> dict[str, str]:
+    header_df = _read_member_csv(
+        zf=zf,
+        member=member,
+        delimiter=delimiter,
+        nrows=0,
+    )
+    return detect_columns_from_header(
+        list(header_df.columns),
+        datetime_candidates,
+        state_candidates,
+        biome_candidates,
+    )
 
 
 def _pick_column(available: list[str], candidates: list[str]) -> str | None:
@@ -648,6 +665,119 @@ def _read_member_csv(
             continue
 
     raise RuntimeError(f"Falha ao ler {member} com encodings suportados.") from last_error
+
+
+def _detect_delimiter_path(path: Path) -> str:
+    with open(path, "rb") as f:
+        sample = f.read(4096).decode("utf-8", errors="ignore")
+    try:
+        dialect = csv.Sniffer().sniff(sample, delimiters=";,|\t")
+        return dialect.delimiter
+    except csv.Error:
+        if sample.count(";") >= sample.count(","):
+            return ";"
+        return ","
+
+
+def _read_path_csv(
+    path: Path,
+    delimiter: str,
+    usecols: list[str] | None = None,
+    nrows: int | None = None,
+) -> pd.DataFrame:
+    encodings = ["utf-8", "latin-1", "cp1252"]
+    last_error: Exception | None = None
+    for encoding in encodings:
+        try:
+            return pd.read_csv(
+                path,
+                sep=delimiter,
+                encoding=encoding,
+                usecols=usecols,
+                nrows=nrows,
+                dtype="string",
+                low_memory=False,
+                on_bad_lines="skip",
+            )
+        except Exception as e:  # noqa: BLE001
+            last_error = e
+            continue
+    raise RuntimeError(f"Falha ao ler {path} com encodings suportados.") from last_error
+
+
+def read_focos_subset_brasil_file(
+    path: Path,
+    datetime_candidates: list[str],
+    state_candidates: list[str],
+    biome_candidates: list[str],
+) -> pd.DataFrame:
+    """Lê um CSV (ou ZIP com um CSV interno) no mesmo formato dos focos INPE; retorna subset com datetime válido."""
+    suf = path.suffix.lower()
+    if suf == ".zip":
+        with zipfile.ZipFile(path) as zf:
+            member = _pick_member(zf)
+            delimiter = _detect_delimiter(zf, member)
+            columns = _detect_columns(
+                zf=zf,
+                member=member,
+                datetime_candidates=datetime_candidates,
+                state_candidates=state_candidates,
+                biome_candidates=biome_candidates,
+                delimiter=delimiter,
+            )
+            dt_col = columns["datetime"]
+            state_col = columns["state"]
+            biome_col = columns["biome"]
+            df = _read_member_csv(
+                zf=zf,
+                member=member,
+                delimiter=delimiter,
+                usecols=[dt_col, state_col, biome_col],
+            )
+    elif suf == ".csv":
+        delimiter = _detect_delimiter_path(path)
+        header_df = _read_path_csv(path, delimiter, nrows=0)
+        columns = detect_columns_from_header(
+            list(header_df.columns),
+            datetime_candidates,
+            state_candidates,
+            biome_candidates,
+        )
+        dt_col = columns["datetime"]
+        state_col = columns["state"]
+        biome_col = columns["biome"]
+        df = _read_path_csv(
+            path,
+            delimiter,
+            usecols=[dt_col, state_col, biome_col],
+        )
+    else:
+        raise ValueError(f"Extensão não suportada para focos mensais: {path}")
+
+    df = df.rename(
+        columns={
+            dt_col: "raw_datetime",
+            state_col: "raw_state",
+            biome_col: "raw_biome",
+        }
+    ).copy()
+    return _normalized_focos_subset_from_raw_columns(df)
+
+
+def count_focos_rows_brasil_file(
+    path: Path,
+    datetime_candidates: list[str],
+    state_candidates: list[str],
+    biome_candidates: list[str],
+) -> int:
+    """Número de focos (linhas válidas) alinhado ao agregado nacional do report."""
+    subset = read_focos_subset_brasil_file(
+        path,
+        datetime_candidates,
+        state_candidates,
+        biome_candidates,
+    )
+    return int(len(subset))
 
 
 def _extract_year_from_name(filename: str) -> int | None:
