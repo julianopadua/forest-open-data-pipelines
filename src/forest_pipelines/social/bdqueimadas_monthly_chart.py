@@ -1323,8 +1323,9 @@ def write_bdqueimadas_carousel_manifest(
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p = argparse.ArgumentParser(
         description=(
-            "Gera PNG + chart_spec.json: ano atual (CSV mensal INPE), "
-            "ano anterior e média 5 anos (ZIPs anuais locais)."
+            "Carrossel BDQueimadas: quatro gráficos (Nacional, Amazônia, Cerrado, Pantanal) "
+            "com ano atual (CSV mensal INPE), ano anterior e média de 5 anos (ZIPs anuais). "
+            "Saídas sufixadas em public/generated/; cópias nacionais canônicas bdqueimadas-chart.png e chart_spec.json."
         )
     )
     p.add_argument(
@@ -1367,13 +1368,19 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--out-png",
         type=Path,
         default=DEFAULT_CHART_PNG,
-        help=f"Saída PNG (default: {DEFAULT_CHART_PNG})",
+        help=(
+            "PNG canônico do recorte nacional (cópia do sufixo -nacional; default: "
+            f"{DEFAULT_CHART_PNG})"
+        ),
     )
     p.add_argument(
         "--out-json",
         type=Path,
         default=DEFAULT_CHART_SPEC,
-        help=f"Saída chart_spec.json (default: {DEFAULT_CHART_SPEC})",
+        help=(
+            "chart_spec.json canônico do recorte nacional (default: "
+            f"{DEFAULT_CHART_SPEC})"
+        ),
     )
     p.add_argument(
         "--emit-manifest",
@@ -1382,8 +1389,8 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         const=DEFAULT_MANIFEST_PATH,
         default=None,
         help=(
-            "Grava manifest do compositor (default se a flag for usada sem caminho: "
-            f"{DEFAULT_MANIFEST_PATH})"
+            "Grava manifest do compositor com 6 slides (capa + 4 body_chart + CTA; default se a "
+            f"flag for usada sem caminho: {DEFAULT_MANIFEST_PATH})"
         ),
     )
     p.add_argument(
@@ -1420,7 +1427,8 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--llm",
         action="store_true",
         help=(
-            "Gera textos com Groq (legenda Instagram + texto do gráfico). "
+            "Gera textos com Groq: uma legenda Instagram para o carrossel + quatro textos de slide "
+            "(um por recorte). "
             f"Requer {DEFAULT_APP_CONFIG.name} e GROQ_API_KEY. "
             f"Grava {DEFAULT_SOCIAL_LLM_JSON.name} em public/generated/ (ou --out-social-llm)."
         ),
@@ -1429,9 +1437,9 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--llm-components",
         default="post_description,graphic_text",
         help=(
-            "Componentes LLM separados por vírgula. "
-            "Valores aceitos: post_description,graphic_text "
-            "(default: post_description,graphic_text)."
+            "Componentes LLM separados por vírgula: post_description (legenda única do carrossel), "
+            "graphic_text (quatro chamadas, uma por escopo). "
+            "Valores aceitos: post_description, graphic_text (default: ambos)."
         ),
     )
     p.add_argument(

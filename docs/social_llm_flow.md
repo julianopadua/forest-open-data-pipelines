@@ -1,5 +1,19 @@
 # Fluxo LLM e carrossel BDQueimadas (social)
 
+## Comando fim a fim (gráficos + LLM)
+
+Na raiz do repositório, com `pip install -e .`, dados em `data/inpe_bdqueimadas` e `GROQ_API_KEY` no `.env`:
+
+```bash
+make bdqueimadas-social-full
+```
+
+Equivale a `python -m forest_pipelines.social --data-dir data/inpe_bdqueimadas --emit-manifest --llm`. Alternativa: `scripts/bdqueimadas-social-full.sh` (valida `GROQ_API_KEY` antes de rodar).
+
+Para **só** gráficos e manifest sem chamadas à API (sem key): `make bdqueimadas-social-assets`.
+
+Para ver o compositor no browser: `cd apps/social-post-templates && npm run dev` e abrir o preset BDQueimadas (`/green/composer.html?preset=bdqueimadas`). O pipeline só grava arquivos em `public/`; não sobe servidor HTTP.
+
 ## Visão geral
 
 O comando `python -m forest_pipelines.social` gera **quatro recortes** fixos de série temporal, na ordem:

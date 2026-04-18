@@ -114,6 +114,11 @@ def run_topic_components(
 
     Retorna dict com chaves de componente (ex.: post_description, graphic_text) e,
     por componente, {"text", "model"}.
+
+    Para ``focos_incendio_br``, a legenda usa ``build_post_description_prompts`` (contexto
+    numérico no prompt). O pipeline de carrossel em ``bdqueimadas_monthly_chart`` com ``--llm``
+    usa em vez disso ``generate_carousel_instagram_caption`` + ``generate_graphic_text_for_carousel_scope``
+    (legenda única mínima + quatro textos por escopo). Não misture os dois fluxos no mesmo produto.
     """
     if topic_id == TOPIC_FOCOS_INCENDIO_BR:
         return _run_focos_incendio_br(

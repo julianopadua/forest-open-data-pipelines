@@ -135,6 +135,16 @@ A **linha do ano atual** no gráfico e nas estatísticas usa **apenas meses civi
 
 O pipeline gera **quatro recortes** na ordem fixa: **Nacional**, **Amazônia**, **Cerrado**, **Pantanal**. Para cada um há um PNG e um `chart_spec` com sufixo estável (`bdqueimadas-chart-nacional.png`, `…-amazonia.png`, etc.). Os arquivos **sem sufixo** (`bdqueimadas-chart.png`, `chart_spec.json`) são cópias do recorte **nacional**.
 
+**Fluxo completo** (gráficos + manifest + LLM em um passo, a partir da raiz do monorepo):
+
+```bash
+make bdqueimadas-social-full
+```
+
+Depois, para o preview no compositor: `cd apps/social-post-templates && npm run dev` e abrir `http://localhost:5173/green/composer.html?preset=bdqueimadas`. Equivale a `python -m forest_pipelines.social --data-dir data/inpe_bdqueimadas --emit-manifest --llm`; também existe [`scripts/bdqueimadas-social-full.sh`](../../scripts/bdqueimadas-social-full.sh) com verificação de `GROQ_API_KEY`.
+
+Só dados e artefatos estáticos (sem LLM / sem rede para Groq):
+
 ```bash
 python -m forest_pipelines.social --data-dir data/inpe_bdqueimadas --emit-manifest
 ```
@@ -195,17 +205,16 @@ Saídas extras:
 - `public/generated/social_llm.json` — legenda + entradas por escopo (pt-BR).
 - Com `--emit-manifest`, cada `body_chart` recebe o texto correspondente em `slots.body_text` (ou mensagem de fallback).
 
-Ou:
+Alvos Make na raiz do repositório:
 
-```bash
-make bdqueimadas-social-assets
-```
+- `make bdqueimadas-social-assets` — gráficos + manifest **sem** `--llm` (útil sem `GROQ_API_KEY`).
+- `make bdqueimadas-social-full` — inclui `--llm` (legenda única + quatro textos de slide).
 
 Isso gera:
 
 - `public/generated/bdqueimadas-chart-<slug>.png` e `chart_spec-<slug>.json` para cada recorte; cópias nacionais `bdqueimadas-chart.png` e `chart_spec.json`.
 - `examples/bdqueimadas-social.manifest.json` e cópia em `public/examples/` para o preset `?preset=bdqueimadas` no compositor.
 
-Depois: `npm run dev` neste app e, em outro terminal, `npm run export:manifest -- examples/bdqueimadas-social.manifest.json`.
+Depois: `npm run dev` neste app; export Playwright opcional: `npm run export:manifest -- examples/bdqueimadas-social.manifest.json`.
 
 A legenda para colar no Instagram está em `social_llm.json` → `post_description` quando você roda o pipeline com `--llm` e inclui `post_description` em `--llm-components`.
