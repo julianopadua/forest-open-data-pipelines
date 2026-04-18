@@ -13,14 +13,42 @@ npm run dev
 
 Abrir no browser:
 
-| URL | Template |
-|-----|----------|
+| URL | Descrição |
+|-----|-----------|
 | `http://localhost:5173/` | Seletor de temas |
-| `http://localhost:5173/green/index.html` | Tema Verde (Forest) |
+| `http://localhost:5173/green/index.html` | Hub do tema verde (links para slides + compositor) |
+| `http://localhost:5173/green/composer.html` | Compositor: montar sequência e gerar `manifest.json` |
 | `http://localhost:5173/navy/index.html` | Tema Azul Marinho (Ocean) |
 | `http://localhost:5173/white/index.html` | Tema Branco (Clean) |
 
-O canvas (1080 × 1350) é escalado automaticamente para caber na janela — mas o layout interno está sempre em pixels reais.
+O canvas (1080 × 1350) é escalado automaticamente para caber na janela — o layout interno permanece em pixels reais.
+
+## Tema verde modular
+
+Slides atômicos em `green/slides/`:
+
+| Arquivo | `type` no manifest | Conteúdo |
+|---------|-------------------|----------|
+| `cover.html` | `cover` | Capa (título + resumo) |
+| `body-image-text.html` | `body_image_text` | Imagem + texto; `imageSide`: `left` ou `right` |
+| `body-text.html` | `body_text` | Só texto; `columns`: `1` ou `2` |
+| `cta.html` | `cta` | Encerramento com CTA e URL |
+
+Tokens compartilhados: [`src/green/theme.css`](src/green/theme.css). Preenchimento por query string ou por `window.applySlots` (export).
+
+Exemplo de manifest: [`examples/green-manifest.example.json`](examples/green-manifest.example.json).
+
+### Schema do manifest
+
+- `theme`: `"green"`
+- `runId`: nome da pasta de saída em `dist-exports/green/<runId>/`
+- `slides`: array ordenado; cada item tem:
+  - `type`: `cover` | `body_image_text` | `body_text` | `cta`
+  - `slots`: objeto string → string (conteúdo dos `data-slot`)
+  - `imageSide` (opcional, para `body_image_text`): `"left"` | `"right"`
+  - `columns` (opcional, para `body_text`): `1` | `2`
+
+O campo `card_number` é preenchido automaticamente na exportação (`01 / N`, …).
 
 ## Logo
 
@@ -31,46 +59,59 @@ O arquivo é ignorado pelo git; copie manualmente do diretório `images/logos/` 
 cp ../../images/logos/001-wlogo.png public/logos/logo.png
 ```
 
-## Estrutura dos templates
+## Estrutura geral
 
 ```
-green/index.html   ← tema verde escuro com acento #2ECC9A
-navy/index.html    ← tema azul marinho com acento #4A9EFF
-white/index.html   ← tema branco com acento #0B7B56
-src/style.css      ← estilos compartilhados (canvas, grid, scaler)
+green/index.html          ← hub do verde
+green/composer.html       ← UI do deck + JSON
+green/slides/*.html       ← slides atômicos
+src/green/theme.css       ← tokens do verde
+src/green/slots.js        ← applySlots + query string
+navy/index.html
+white/index.html
+src/style.css             ← Tailwind + canvas / grid
 ```
 
-Cada arquivo HTML tem comentários `<!-- slot: variable_name -->` indicando onde o conteúdo real virá no futuro (preenchido por JSON / LLM).
+Comentários `<!-- slot: name -->` marcam áreas lógicas; elementos editáveis usam `data-slot="name"`.
 
-## Slots disponíveis
+## Slots por slide
 
-| Slot | Descrição |
-|------|-----------|
-| `topic_tag` | Categoria da notícia |
-| `published_at` | Data de publicação |
-| `series_label` | Rótulo da série editorial |
-| `title` | Título principal do card |
-| `summary` | Resumo ou parágrafo de apoio |
-| `key_point_1` | Bullet/destaque 1 |
-| `key_point_2` | Bullet/destaque 2 |
-| `brand_name` | Nome da marca no rodapé |
-| `card_number` | Numeração do card (ex: `01 / 05`) |
+**Capa (`cover`):** `topic_tag`, `published_at`, `series_label`, `title`, `summary`, `brand_name`, `card_number`
 
-## Exportar PNGs (futura fase)
+**Imagem + texto:** `topic_tag`, `published_at`, `caption`, `body_text`, `image_url`, `brand_name`, `card_number`
 
-O script `scripts/export.js` está preparado para usar **Playwright**.  
-Para ativar quando quiser:
+**Só texto:** `topic_tag`, `published_at`, `text_col_1`, `text_col_2`, `brand_name`, `card_number` (com uma coluna, `text_col_2` fica oculto)
+
+**CTA:** `topic_tag`, `published_at`, `cta_kicker`, `cta_headline`, `cta_subline`, `cta_url`, `brand_name`, `card_number`
+
+## Exportar PNGs (Playwright)
+
+Instalação única do Chromium para o Playwright:
 
 ```bash
-npm install --save-dev playwright
 npx playwright install chromium
 ```
 
-Remova o bloco `TODO` no início do script e rode:
+Com o servidor de desenvolvimento em execução (`npm run dev` em outro terminal):
+
+**Legado** — um PNG por tema (`green` usa a capa verde; navy/white usam as páginas principais):
 
 ```bash
-npm run dev &          # servidor deve estar rodando
 npm run export
 ```
 
-Os PNGs aparecem em `dist-exports/{green,navy,white}/card.png` (gitignored).
+Saída: `dist-exports/green/card.png`, `dist-exports/navy/card.png`, `dist-exports/white/card.png`.
+
+**Manifest** — sequência de slides verdes:
+
+```bash
+npm run export:manifest -- examples/green-manifest.example.json
+```
+
+Ou:
+
+```bash
+MANIFEST=examples/green-manifest.example.json npm run export:manifest
+```
+
+Saída: `dist-exports/green/<runId>/01-cover.png`, `02-body_image_text.png`, … (pasta `dist-exports/` está no `.gitignore`).

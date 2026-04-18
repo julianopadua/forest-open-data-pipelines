@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Compositor · Verde</title>
+  <link rel="stylesheet" href="../src/style.css" />
+  <style>
+    :root { --panel: #0f172a; --muted: #94a3b8; --line: #334155; --accent: #2ecc9a; }
+    body { margin: 0; font-family: system-ui, sans-serif; background: #f1f5f9; color: #0f172a; min-height: 100vh; }
+    .layout { display: grid; grid-template-columns: minmax(320px, 1fr) minmax(360px, 1.1fr); gap: 0; min-height: 100vh; }
+    @media (max-width: 960px) { .layout { grid-template-columns: 1fr; } }
+    .panel { background: var(--panel); color: #e2e8f0; padding: 1.25rem 1.5rem; overflow: auto; max-height: 100vh; }
+    .panel h1 { font-size: 1.25rem; font-weight: 800; margin: 0 0 0.5rem; }
+    .panel .sub { font-size: 0.8rem; color: var(--muted); margin-bottom: 1.25rem; line-height: 1.4; }
+    .preview-wrap { display: flex; flex-direction: column; background: #e2e8f0; padding: 1rem; }
+    .preview-wrap h2 { font-size: 0.85rem; font-weight: 700; color: #475569; margin: 0 0 0.5rem; }
+    iframe { flex: 1; width: 100%; min-height: 520px; border: 1px solid #cbd5e1; border-radius: 0.5rem; background: #fff; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+    button, .btn {
+      cursor: pointer; border: none; border-radius: 0.5rem; padding: 0.45rem 0.75rem; font-weight: 600; font-size: 0.8rem;
+      background: #334155; color: #f1f5f9;
+    }
+    button:hover, .btn:hover { background: #475569; }
+    button.primary { background: var(--accent); color: #0b3d2e; }
+    button.primary:hover { filter: brightness(1.05); }
+    button.danger { background: #7f1d1d; }
+    .slide-block {
+      border: 1px solid var(--line); border-radius: 0.5rem; padding: 0.75rem; margin-bottom: 0.75rem; background: rgba(255,255,255,0.04);
+    }
+    .slide-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.5rem; flex-wrap: wrap; }
+    .slide-head strong { font-size: 0.85rem; color: var(--accent); }
+    label { display: block; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-top: 0.5rem; }
+    input, select, textarea {
+      width: 100%; box-sizing: border-box; margin-top: 0.2rem; border-radius: 0.35rem; border: 1px solid var(--line);
+      background: #1e293b; color: #f8fafc; padding: 0.4rem 0.5rem; font-size: 0.85rem;
+    }
+    textarea { min-height: 3rem; resize: vertical; }
+    #manifestOut {
+      width: 100%; min-height: 180px; font-family: ui-monospace, monospace; font-size: 0.75rem;
+      background: #0c1222; color: #cbd5e1; border: 1px solid var(--line); border-radius: 0.5rem; padding: 0.75rem; box-sizing: border-box;
+    }
+    .hint { font-size: 0.75rem; color: var(--muted); margin-top: 0.75rem; line-height: 1.45; }
+    a.back { color: #5eead4; font-size: 0.85rem; text-decoration: none; }
+    a.back:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <div class="panel">
+      <h1>Compositor · tema verde</h1>
+      <p class="sub">Monte a sequência de slides, gere o <code>manifest.json</code> e exporte PNGs com o script (servidor precisa estar rodando).</p>
+      <p><a class="back" href="./index.html">← Hub do tema verde</a></p>
+
+      <div class="toolbar">
+        <button type="button" class="primary" id="btnAddCover">+ Capa</button>
+        <button type="button" id="btnAddImg">+ Imagem + texto</button>
+        <button type="button" id="btnAddTxt">+ Só texto</button>
+        <button type="button" id="btnAddCta">+ CTA</button>
+        <button type="button" id="btnLoadExample">Carregar exemplo</button>
+      </div>
+
+      <div id="slidesRoot"></div>
+
+      <label for="runId">runId (pasta de saída)</label>
+      <input type="text" id="runId" value="my-run" />
+
+      <label for="manifestOut">manifest.json</label>
+      <textarea id="manifestOut" readonly></textarea>
+
+      <div class="toolbar" style="margin-top:0.75rem">
+        <button type="button" class="primary" id="btnDownload">Baixar manifest.json</button>
+        <button type="button" id="btnCopy">Copiar comando de export</button>
+      </div>
+      <p class="hint" id="exportCmd"></p>
+      <p class="hint">Salve o manifest na pasta <code>examples/</code> (ou outro caminho) e rode no terminal do app, com <code>npm run dev</code> ativo em outra aba.</p>
+    </div>
+
+    <div class="preview-wrap">
+      <h2>Pré-visualização (slide selecionado)</h2>
+      <div class="toolbar">
+        <button type="button" id="btnPrev">◀ Slide</button>
+        <button type="button" id="btnNext">Slide ▶</button>
+        <button type="button" class="primary" id="btnRefresh">Atualizar iframe</button>
+      </div>
+      <iframe id="preview" title="preview"></iframe>
+    </div>
+  </div>
+
+  <script>
+    const SLIDE_META = {
+      cover: {
+        label: "Capa",
+        defaults: {
+          topic_tag: "Queimadas & Clima",
+          published_at: "Abr 2026",
+          series_label: "Análise de dados",
+          title: "Seca prolongada aumenta risco de queimadas",
+          summary: "Meteorologia indica baixa umidade em várias regiões.",
+          brand_name: "ForestLab",
+        },
+      },
+      body_image_text: {
+        label: "Imagem + texto",
+        defaults: {
+          topic_tag: "Queimadas & Clima",
+          published_at: "Abr 2026",
+          caption: "Destaque",
+          body_text: "Texto de apoio ao lado da imagem.",
+          brand_name: "ForestLab",
+          image_url: "",
+        },
+        imageSide: "left",
+      },
+      body_text: {
+        label: "Só texto",
+        defaults: {
+          topic_tag: "Queimadas & Clima",
+          published_at: "Abr 2026",
+          text_col_1: "Primeira coluna de texto.",
+          text_col_2: "Segunda coluna de texto.",
+          brand_name: "ForestLab",
+        },
+        columns: 2,
+      },
+      cta: {
+        label: "CTA final",
+        defaults: {
+          topic_tag: "Queimadas & Clima",
+          published_at: "Abr 2026",
+          cta_kicker: "Continua acompanhando",
+          cta_headline: "Gostou do conteúdo?",
+          cta_subline: "Acesse o site do instituto para mais análises e dados abertos.",
+          cta_url: "www.instituto-exemplo.org",
+          brand_name: "ForestLab",
+        },
+      },
+    };
+
+    const PATHS = {
+      cover: "/green/slides/cover.html",
+      body_image_text: "/green/slides/body-image-text.html",
+      body_text: "/green/slides/body-text.html",
+      cta: "/green/slides/cta.html",
+    };
+
+    let state = {
+      theme: "green",
+      runId: "my-run",
+      slides: [],
+    };
+
+    let previewIndex = 0;
+
+    const DEFAULT_EXAMPLE = {"theme":"green","runId":"example-run","slides":[{"type":"cover","slots":{"topic_tag":"Queimadas & Clima","published_at":"Abr 2026","series_label":"Análise de dados","title":"Seca prolongada aumenta risco de queimadas","summary":"Meteorologia indica baixa umidade em várias regiões.","brand_name":"ForestLab"}},{"type":"body_image_text","imageSide":"left","slots":{"topic_tag":"Queimadas & Clima","published_at":"Abr 2026","caption":"Mapa de focos","body_text":"Concentração de alertas por bioma no período analisado.","brand_name":"ForestLab"}},{"type":"body_text","columns":2,"slots":{"topic_tag":"Queimadas & Clima","published_at":"Abr 2026","text_col_1":"Primeira coluna com argumento principal.","text_col_2":"Segunda coluna com contexto complementar.","brand_name":"ForestLab"}},{"type":"cta","slots":{"topic_tag":"Queimadas & Clima","published_at":"Abr 2026","cta_kicker":"Continua acompanhando","cta_headline":"Gostou do conteúdo?","cta_subline":"Acesse o site do instituto para mais análises.","cta_url":"www.instituto-exemplo.org","brand_name":"ForestLab"}}]};
+
+    function pad(n) {
+      return String(n).padStart(2, "0");
+    }
+
+    function cardNumber(i, total) {
+      return `${pad(i + 1)} / ${pad(total)}`;
+    }
+
+    function newSlide(type) {
+      const meta = SLIDE_META[type];
+      const slide = { type, slots: { ...meta.defaults } };
+      if (type === "body_image_text") slide.imageSide = meta.imageSide || "left";
+      if (type === "body_text") slide.columns = meta.columns ?? 2;
+      return slide;
+    }
+
+    function buildManifestObject() {
+      const runId = document.getElementById("runId").value.trim() || "run";
+      return {
+        theme: "green",
+        runId,
+        slides: state.slides.map((s) => {
+          const copy = JSON.parse(JSON.stringify(s));
+          return copy;
+        }),
+      };
+    }
+
+    function syncManifestTextarea() {
+      const el = document.getElementById("manifestOut");
+      el.value = JSON.stringify(buildManifestObject(), null, 2);
+      const path = `examples/${document.getElementById("runId").value.trim() || "manifest"}.json`;
+      const cmd = `MANIFEST=${path} npm run export:manifest`;
+      document.getElementById("exportCmd").textContent = `Comando sugerido (ajuste o caminho do arquivo salvo): ${cmd}`;
+    }
+
+    function previewUrl(index) {
+      const total = state.slides.length;
+      if (total === 0) return "about:blank";
+      const slide = state.slides[Math.min(index, total - 1)];
+      const i = Math.min(index, total - 1);
+      const path = PATHS[slide.type];
+      const slots = { ...slide.slots, card_number: cardNumber(i, total) };
+      const p = new URLSearchParams();
+      Object.entries(slots).forEach(([k, v]) => {
+        if (v != null && v !== "") p.set(k, String(v));
+      });
+      if (slide.type === "body_image_text") p.set("side", slide.imageSide || "left");
+      if (slide.type === "body_text") p.set("cols", String(slide.columns ?? 2));
+      const base = window.location.origin;
+      return `${base}${path}?${p.toString()}`;
+    }
+
+    function refreshPreview() {
+      const iframe = document.getElementById("preview");
+      const url = previewUrl(previewIndex);
+      iframe.src = url;
+    }
+
+    function renderSlides() {
+      const root = document.getElementById("slidesRoot");
+      root.innerHTML = "";
+      state.slides.forEach((slide, idx) => {
+        const block = document.createElement("div");
+        block.className = "slide-block";
+        const head = document.createElement("div");
+        head.className = "slide-head";
+        head.innerHTML = `<strong>${idx + 1}. ${SLIDE_META[slide.type].label}</strong>`;
+        const controls = document.createElement("div");
+        controls.style.display = "flex";
+        controls.style.gap = "0.35rem";
+        [
+          ["Subir"],
+          ["Descer"],
+          ["Ver"],
+          ["Remover"],
+        ].forEach((labels, j) => {
+          const lab = labels[0];
+          const b = document.createElement("button");
+          b.type = "button";
+          b.textContent = lab;
+          if (j === 0) b.onclick = () => moveSlide(idx, -1);
+          if (j === 1) b.onclick = () => moveSlide(idx, 1);
+          if (j === 2) b.onclick = () => { previewIndex = idx; refreshPreview(); };
+          if (j === 3) b.onclick = () => { state.slides.splice(idx, 1); previewIndex = Math.min(previewIndex, state.slides.length - 1); renderAll(); };
+          controls.appendChild(b);
+        });
+        head.appendChild(controls);
+        block.appendChild(head);
+
+        if (slide.type === "body_image_text") {
+          const row = document.createElement("div");
+          row.innerHTML = `<label>Lado da imagem</label>`;
+          const sel = document.createElement("select");
+          ["left", "right"].forEach((v) => {
+            const o = document.createElement("option");
+            o.value = v;
+            o.textContent = v === "left" ? "Imagem à esquerda" : "Imagem à direita";
+            if (slide.imageSide === v) o.selected = true;
+            sel.appendChild(o);
+          });
+          sel.onchange = () => { slide.imageSide = sel.value; syncManifestTextarea(); };
+          row.appendChild(sel);
+          block.appendChild(row);
+        }
+        if (slide.type === "body_text") {
+          const row = document.createElement("div");
+          row.innerHTML = `<label>Colunas</label>`;
+          const sel = document.createElement("select");
+          [
+            [2, "Duas colunas"],
+            [1, "Uma coluna"],
+          ].forEach(([v, lab]) => {
+            const o = document.createElement("option");
+            o.value = String(v);
+            o.textContent = lab;
+            if (Number(slide.columns ?? 2) === v) o.selected = true;
+            sel.appendChild(o);
+          });
+          sel.onchange = () => { slide.columns = Number(sel.value); syncManifestTextarea(); };
+          row.appendChild(sel);
+          block.appendChild(row);
+        }
+
+        Object.keys(slide.slots).forEach((key) => {
+          const lab = document.createElement("label");
+          lab.textContent = key;
+          const input =
+            key === "summary" || key.includes("text_col") || key === "body_text" || key === "cta_subline"
+              ? document.createElement("textarea")
+              : document.createElement("input");
+          if (input.tagName === "INPUT") input.type = "text";
+          input.value = slide.slots[key] ?? "";
+          input.oninput = () => {
+            slide.slots[key] = input.value;
+            syncManifestTextarea();
+          };
+          block.appendChild(lab);
+          block.appendChild(input);
+        });
+
+        root.appendChild(block);
+      });
+      syncManifestTextarea();
+    }
+
+    function moveSlide(idx, delta) {
+      const j = idx + delta;
+      if (j < 0 || j >= state.slides.length) return;
+      const t = state.slides[idx];
+      state.slides[idx] = state.slides[j];
+      state.slides[j] = t;
+      previewIndex = j;
+      renderAll();
+    }
+
+    function renderAll() {
+      renderSlides();
+      refreshPreview();
+    }
+
+    document.getElementById("btnAddCover").onclick = () => {
+      state.slides.push(newSlide("cover"));
+      previewIndex = state.slides.length - 1;
+      renderAll();
+    };
+    document.getElementById("btnAddImg").onclick = () => {
+      state.slides.push(newSlide("body_image_text"));
+      previewIndex = state.slides.length - 1;
+      renderAll();
+    };
+    document.getElementById("btnAddTxt").onclick = () => {
+      state.slides.push(newSlide("body_text"));
+      previewIndex = state.slides.length - 1;
+      renderAll();
+    };
+    document.getElementById("btnAddCta").onclick = () => {
+      state.slides.push(newSlide("cta"));
+      previewIndex = state.slides.length - 1;
+      renderAll();
+    };
+    document.getElementById("btnLoadExample").onclick = () => {
+      state = {
+        theme: DEFAULT_EXAMPLE.theme,
+        runId: DEFAULT_EXAMPLE.runId,
+        slides: JSON.parse(JSON.stringify(DEFAULT_EXAMPLE.slides)),
+      };
+      document.getElementById("runId").value = state.runId;
+      previewIndex = 0;
+      renderAll();
+    };
+    document.getElementById("runId").oninput = () => syncManifestTextarea();
+
+    document.getElementById("btnDownload").onclick = () => {
+      const blob = new Blob([document.getElementById("manifestOut").value], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `${document.getElementById("runId").value.trim() || "manifest"}.json`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    };
+
+    document.getElementById("btnCopy").onclick = async () => {
+      const path = `examples/${document.getElementById("runId").value.trim() || "manifest"}.json`;
+      const text = `MANIFEST=${path} npm run export:manifest`;
+      try {
+        await navigator.clipboard.writeText(text);
+        document.getElementById("exportCmd").textContent = "Copiado: " + text;
+      } catch {
+        document.getElementById("exportCmd").textContent = text;
+      }
+    };
+
+    document.getElementById("btnPrev").onclick = () => {
+      if (state.slides.length === 0) return;
+      previewIndex = (previewIndex - 1 + state.slides.length) % state.slides.length;
+      refreshPreview();
+    };
+    document.getElementById("btnNext").onclick = () => {
+      if (state.slides.length === 0) return;
+      previewIndex = (previewIndex + 1) % state.slides.length;
+      refreshPreview();
+    };
+    document.getElementById("btnRefresh").onclick = () => refreshPreview();
+
+    state = {
+      theme: "green",
+      runId: DEFAULT_EXAMPLE.runId,
+      slides: JSON.parse(JSON.stringify(DEFAULT_EXAMPLE.slides)),
+    };
+    document.getElementById("runId").value = state.runId;
+    previewIndex = 0;
+    renderAll();
+  </script>
+</body>
+</html>

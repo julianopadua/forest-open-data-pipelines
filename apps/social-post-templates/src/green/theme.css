@@ -1,0 +1,69 @@
+/* Forest green theme tokens — shared by all green slides */
+:root {
+  --bg: #0b3d2e;
+  --bg-secondary: #0e4d39;
+  --accent: #2ecc9a;
+  --accent-muted: #1a7a5e;
+  --text-primary: #f0fff9;
+  --text-secondary: #a7d7c5;
+  --text-muted: #5fa88a;
+  --grid-color: rgba(46, 204, 154, 0.18);
+  --grid-line-w: 1.5px;
+  --canvas-scale: 0.48;
+}
+
+/* Body: image + text */
+[data-body-image-text] {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 2rem;
+  height: 100%;
+}
+
+[data-body-image-text][data-side="right"] {
+  flex-direction: row-reverse;
+}
+
+.body-image-frame {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: var(--bg-secondary);
+  border: 1px solid var(--accent-muted);
+}
+
+.body-image-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+[data-body-image-text] .body-text-col {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+/* Body: text only */
+[data-body-text] {
+  display: grid;
+  gap: 2.5rem;
+  align-content: start;
+}
+
+[data-body-text][data-cols="1"] {
+  grid-template-columns: 1fr;
+}
+
+[data-body-text][data-cols="2"] {
+  grid-template-columns: 1fr 1fr;
+}
+
+[data-body-text][data-cols="1"] [data-slot="text_col_2"] {
+  display: none;
+}

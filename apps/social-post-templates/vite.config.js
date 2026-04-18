@@ -6,7 +6,13 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
+        main: "index.html",
         green: "green/index.html",
+        greenComposer: "green/composer.html",
+        greenCover: "green/slides/cover.html",
+        greenBodyImageText: "green/slides/body-image-text.html",
+        greenBodyText: "green/slides/body-text.html",
+        greenCta: "green/slides/cta.html",
         navy: "navy/index.html",
         white: "white/index.html",
       },

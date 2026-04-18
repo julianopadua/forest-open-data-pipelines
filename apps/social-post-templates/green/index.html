@@ -3,96 +3,41 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Template Verde</title>
+  <title>Tema Verde · Slides</title>
   <link rel="stylesheet" href="../src/style.css" />
+  <link rel="stylesheet" href="../src/green/theme.css" />
   <style>
-    :root {
-      --bg:            #0B3D2E;
-      --bg-secondary:  #0E4D39;
-      --accent:        #2ECC9A;
-      --accent-muted:  #1A7A5E;
-      --text-primary:  #F0FFF9;
-      --text-secondary:#A7D7C5;
-      --text-muted:    #5FA88A;
-      --grid-color:    rgba(46, 204, 154, 0.18);
-      --grid-line-w:   1.5px;
-      --canvas-scale:  0.48;
+    body { background: #f1f5f9; min-height: 100vh; font-family: system-ui, sans-serif; color: #0f172a; }
+    .wrap { max-width: 720px; margin: 0 auto; padding: 2.5rem 1.25rem; }
+    h1 { font-size: 1.75rem; font-weight: 900; margin-bottom: 0.5rem; }
+    p.lead { color: #64748b; margin-bottom: 2rem; }
+    ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.75rem; }
+    a.row {
+      display: block; padding: 1rem 1.25rem; border-radius: 0.75rem; text-decoration: none; font-weight: 700;
+      background: var(--bg); color: var(--accent); border: 1px solid var(--accent-muted);
     }
+    a.row:hover { filter: brightness(1.08); }
+    a.composer {
+      display: inline-block; margin-top: 2rem; padding: 0.75rem 1.25rem; border-radius: 0.75rem;
+      background: #0f172a; color: #f8fafc; font-weight: 700; text-decoration: none;
+    }
+    a.composer:hover { background: #1e293b; }
+    .muted { font-size: 0.85rem; color: #94a3b8; margin-top: 2rem; }
   </style>
 </head>
 <body>
-  <div class="canvas-scaler">
-    <div id="card" class="post-canvas grid-cross" style="background-color: var(--bg);">
-
-      <!-- ── Top bar ─────────────────────────────────────────── -->
-      <div class="absolute top-0 left-0 right-0 flex items-center justify-between px-12 pt-10">
-        <span class="text-xs tracking-widest uppercase font-semibold" style="color: var(--accent);">
-          <!-- slot: topic_tag -->
-          Queimadas &amp; Clima
-        </span>
-        <span class="text-xs" style="color: var(--text-muted);">
-          <!-- slot: published_at -->
-          Abr 2026
-        </span>
-      </div>
-
-      <!-- ── Vertical accent stripe ─────────────────────────── -->
-      <div class="absolute top-16 left-12 w-0.5 h-24" style="background: var(--accent); opacity: 0.6;"></div>
-
-      <!-- ── Cover title (upper-right quadrant, right-aligned) ─ -->
-      <div class="absolute flex flex-col items-end text-right"
-           style="top: 220px; right: 48px; width: 520px;">
-        <p class="text-sm font-semibold mb-4 tracking-widest uppercase" style="color: var(--accent);">
-          <!-- slot: series_label -->
-          Análise de dados
-        </p>
-        <h1 class="font-black leading-none" style="font-size: 96px; color: var(--text-primary); letter-spacing: -2px;">
-          <!-- slot: title -->
-          Seca prolonga&shy;da aumenta risco de queima&shy;das
-        </h1>
-      </div>
-
-      <!-- ── Horizontal accent bar (at grid midline) ─────────── -->
-      <div class="absolute left-0 right-0 h-px" style="top: 675px; background: var(--accent-muted);"></div>
-
-      <!-- ── Summary (lower-left quadrant) ──────────────────── -->
-      <div class="absolute" style="bottom: 220px; left: 48px; width: 520px;">
-        <p class="leading-relaxed" style="font-size: 34px; color: var(--text-secondary);">
-          <!-- slot: summary -->
-          Meteorologia indica baixa umidade em várias regiões e alerta para aumento no número de focos ativos no território nacional.
-        </p>
-      </div>
-
-      <!-- ── Footer ──────────────────────────────────────────── -->
-      <div class="absolute bottom-0 left-0 right-0 flex items-end justify-between px-12 pb-10">
-        <!-- Logo area: replace src with /logos/logo.png when available -->
-        <div class="flex items-center gap-3">
-          <div class="w-8 h-8 rounded-sm" style="background: var(--accent);"></div>
-          <span class="text-sm font-bold tracking-widest uppercase" style="color: var(--text-primary);">
-            <!-- slot: brand_name -->
-            ForestLab
-          </span>
-        </div>
-        <span class="text-sm font-medium tabular-nums" style="color: var(--accent);">
-          <!-- slot: card_number -->
-          01 / 05
-        </span>
-      </div>
-
-      <!-- ── Bottom border stripe ────────────────────────────── -->
-      <div class="absolute bottom-0 left-0 right-0 h-1" style="background: var(--accent);"></div>
-
-    </div>
+  <div class="wrap">
+    <h1>Tema Verde</h1>
+    <p class="lead">Slides atômicos 1080 × 1350 px. Use o compositor para montar o deck e exportar PNGs via script.</p>
+    <ul>
+      <li><a class="row" href="./composer.html">Compositor (montar sequência + manifest)</a></li>
+      <li><a class="row" href="./slides/cover.html">Capa</a></li>
+      <li><a class="row" href="./slides/body-image-text.html">Corpo · imagem + texto</a></li>
+      <li><a class="row" href="./slides/body-text.html">Corpo · só texto</a></li>
+      <li><a class="row" href="./slides/cta.html">Encerramento · CTA</a></li>
+    </ul>
+    <a class="composer" href="../index.html">← Voltar aos temas</a>
+    <p class="muted">Canvas fixo 1080 × 1350 · exportação: <code style="color:#64748b">npm run export:manifest</code> com servidor em execução.</p>
   </div>
-
-  <script>
-    function fitCanvas() {
-      const vw = window.innerWidth;
-      const scale = Math.min((vw - 64) / 1080, 0.85);
-      document.documentElement.style.setProperty("--canvas-scale", scale);
-    }
-    fitCanvas();
-    window.addEventListener("resize", fitCanvas);
-  </script>
 </body>
 </html>

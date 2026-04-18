@@ -1,0 +1,51 @@
+{
+  "theme": "green",
+  "runId": "example-run",
+  "slides": [
+    {
+      "type": "cover",
+      "slots": {
+        "topic_tag": "Queimadas & Clima",
+        "published_at": "Abr 2026",
+        "series_label": "Análise de dados",
+        "title": "Seca prolongada aumenta risco de queimadas",
+        "summary": "Meteorologia indica baixa umidade em várias regiões e alerta para aumento no número de focos ativos.",
+        "brand_name": "ForestLab"
+      }
+    },
+    {
+      "type": "body_image_text",
+      "imageSide": "left",
+      "slots": {
+        "topic_tag": "Queimadas & Clima",
+        "published_at": "Abr 2026",
+        "caption": "Mapa de focos",
+        "body_text": "Concentração de alertas por bioma no período analisado, com ênfase no arco de desmatamento.",
+        "brand_name": "ForestLab"
+      }
+    },
+    {
+      "type": "body_text",
+      "columns": 2,
+      "slots": {
+        "topic_tag": "Queimadas & Clima",
+        "published_at": "Abr 2026",
+        "text_col_1": "Primeira coluna com argumento principal e dados de apoio em texto corrido.",
+        "text_col_2": "Segunda coluna com contraponto, contexto ou leitura complementar ao lado.",
+        "brand_name": "ForestLab"
+      }
+    },
+    {
+      "type": "cta",
+      "slots": {
+        "topic_tag": "Queimadas & Clima",
+        "published_at": "Abr 2026",
+        "cta_kicker": "Continua acompanhando",
+        "cta_headline": "Gostou do conteúdo?",
+        "cta_subline": "Acesse o site do instituto para mais análises e dados abertos.",
+        "cta_url": "www.instituto-exemplo.org",
+        "brand_name": "ForestLab"
+      }
+    }
+  ]
+}

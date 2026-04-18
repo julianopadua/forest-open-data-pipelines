@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Verde · Texto</title>
+  <link rel="stylesheet" href="../../src/style.css" />
+  <link rel="stylesheet" href="../../src/green/theme.css" />
+</head>
+<body>
+  <div class="canvas-scaler">
+    <div id="card" class="post-canvas grid-cross" style="background-color: var(--bg);">
+
+      <div class="absolute top-0 left-0 right-0 flex items-center justify-between px-12 pt-10 z-10">
+        <span class="text-xs tracking-widest uppercase font-semibold" style="color: var(--accent);" data-slot="topic_tag">
+          <!-- slot: topic_tag -->
+          Queimadas &amp; Clima
+        </span>
+        <span class="text-xs" style="color: var(--text-muted);" data-slot="published_at">
+          <!-- slot: published_at -->
+          Abr 2026
+        </span>
+      </div>
+
+      <div class="absolute top-28 bottom-28 left-12 right-12" data-body-text data-cols="2">
+        <p class="leading-relaxed" style="font-size: 30px; color: var(--text-secondary);" data-slot="text_col_1">
+          <!-- slot: text_col_1 -->
+          Primeira coluna: argumento, dado ou parágrafo mais longo para leitura em duas vias paralelas no layout editorial.
+        </p>
+        <p class="leading-relaxed" style="font-size: 30px; color: var(--text-muted);" data-slot="text_col_2">
+          <!-- slot: text_col_2 -->
+          Segunda coluna: continuação, contraste ou detalhe complementar ao bloco ao lado.
+        </p>
+      </div>
+
+      <div class="absolute bottom-0 left-0 right-0 flex items-end justify-between px-12 pb-10">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-sm" style="background: var(--accent);"></div>
+          <span class="text-sm font-bold tracking-widest uppercase" style="color: var(--text-primary);" data-slot="brand_name">
+            <!-- slot: brand_name -->
+            ForestLab
+          </span>
+        </div>
+        <span class="text-sm font-medium tabular-nums" style="color: var(--accent);" data-slot="card_number">
+          <!-- slot: card_number -->
+          03 / 05
+        </span>
+      </div>
+
+      <div class="absolute bottom-0 left-0 right-0 h-1" style="background: var(--accent);"></div>
+
+    </div>
+  </div>
+
+  <script type="module">
+    import { initFitCanvas } from "../../src/green/fit-canvas.js";
+    import { applySlotsFromQuery } from "../../src/green/slots.js";
+    initFitCanvas();
+    applySlotsFromQuery();
+  </script>
+</body>
+</html>
