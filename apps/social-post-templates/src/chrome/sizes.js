@@ -5,8 +5,8 @@
 
 export const DEFAULT_CHROME = {
   topicTagPx: 24,
-  datePx: 20,
-  pageNumberPx: 17,
+  datePx: 26,
+  pageNumberPx: 24,
   logoHeightPx: 48,
 };
 

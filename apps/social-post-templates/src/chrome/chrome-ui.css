@@ -1,8 +1,8 @@
 /* Metadados do canto: tamanhos editáveis (--chrome-*). Importar depois do :root do tema. */
 :root {
   --chrome-topic-px: 24px;
-  --chrome-date-px: 20px;
-  --chrome-page-px: 17px;
+  --chrome-date-px: 26px;
+  --chrome-page-px: 24px;
   --chrome-logo-h: 48px;
 }
 
