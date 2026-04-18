@@ -47,6 +47,13 @@ DEFAULT_BIOME_CANDIDATES = [
     "biome",
 ]
 
+# Coluna de satélite nos CSVs INPE (ex.: bases mensais com vários sensores).
+DEFAULT_SATELLITE_CANDIDATES = [
+    "satelite",
+    "satellite",
+    "satélite",
+]
+
 SUPPORTED_REPORT_LOCALES = ["pt", "en"]
 DEFAULT_REPORT_LOCALE = "pt"
 REPORT_SCHEMA_VERSION = 2

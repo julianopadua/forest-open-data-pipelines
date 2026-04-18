@@ -25,9 +25,6 @@
         "published_at": "Abr 2026",
         "caption": "Focos por mês (Brasil)",
         "image_url": "/generated/bdqueimadas-chart.png",
-        "legend_current": "● 2026 (YTD)",
-        "legend_previous": "● 2025 (mesmo período)",
-        "legend_avg": "■ Média 2021–2025 por mês calendário",
         "body_text": "O gráfico resume a série mensal de focos no território nacional. A faixa mais clara representa a média dos anos anteriores por mês; as linhas comparam o ano corrente com o ano anterior."
       }
     },

@@ -32,7 +32,7 @@ Slides atômicos em `green/slides/`:
 |---------|-------------------|----------|
 | `cover.html` | `cover` | Capa (título + resumo) |
 | `body-image-text.html` | `body_image_text` | Imagem + texto; `imageSide`: `left` ou `right` |
-| `body-chart.html` | `body_chart` | Gráfico grande + legenda + texto (`image_url` em `/public/generated/…`) |
+| `body-chart.html` | `body_chart` | Gráfico grande + texto (legenda só no PNG do gráfico; `image_url` em `/public/generated/…`) |
 | `body-text.html` | `body_text` | Só texto; `columns`: `1` ou `2` |
 | `cta.html` | `cta` | Encerramento com CTA e URL |
 
@@ -86,7 +86,7 @@ Comentários `<!-- slot: name -->` marcam áreas lógicas; elementos editáveis 
 
 **Imagem + texto:** `topic_tag`, `published_at`, `caption`, `body_text`, `image_url`, `card_number`
 
-**Gráfico + texto (`body_chart`):** `topic_tag`, `published_at`, `caption`, `image_url`, `legend_current`, `legend_previous`, `legend_avg`, `body_text`, `card_number`
+**Gráfico + texto (`body_chart`):** `topic_tag`, `published_at`, `caption`, `image_url`, `body_text`, `card_number`
 
 **Só texto:** `topic_tag`, `published_at`, `text_col_1`, `text_col_2`, `card_number` (com uma coluna, `text_col_2` fica oculto)
 

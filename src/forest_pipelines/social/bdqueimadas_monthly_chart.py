@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import date
+from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -16,6 +16,7 @@ from forest_pipelines.datasets.inpe.bdqueimadas_mensal_listing import (
     ensure_mensal_files_for_year,
 )
 from forest_pipelines.reports.builders.bdqueimadas_incremental import (
+    INPE_REFERENCE_SATELLITE,
     _build_year_payload,
     consolidate_year_payloads,
     count_focos_rows_brasil_file,
@@ -23,6 +24,7 @@ from forest_pipelines.reports.builders.bdqueimadas_incremental import (
 from forest_pipelines.reports.builders.bdqueimadas_overview import (
     DEFAULT_BIOME_CANDIDATES,
     DEFAULT_DATETIME_CANDIDATES,
+    DEFAULT_SATELLITE_CANDIDATES,
     DEFAULT_STATE_CANDIDATES,
     _select_zip_files,
 )
@@ -30,6 +32,7 @@ from forest_pipelines.reports.builders.bdqueimadas_overview import (
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_DATA_SUBDIR = Path("data") / "inpe_bdqueimadas"
 DEFAULT_MENSAL_CACHE_DIR = DEFAULT_DATA_SUBDIR / "mensal"
+DEFAULT_PLOT_SOURCES_METADATA_NAME = "bdqueimadas_plot_sources.json"
 DEFAULT_OUT_DIR = (
     REPO_ROOT / "apps" / "social-post-templates" / "public" / "generated"
 )
@@ -62,7 +65,6 @@ MONTH_LABELS_PT = [
     "Dez",
 ]
 
-
 def format_published_at_pt(month: int, year: int) -> str:
     """Ex.: Abr 2026 — alinhado ao último mês com dado na série atual."""
     if month < 1 or month > 12:
@@ -75,6 +77,8 @@ def load_monthly_all_df(
     *,
     recent_years: int | None = None,
     file_glob: str = "focos_br_ref_*.zip",
+    satellite_candidates: list[str] | None = None,
+    reference_satellite: str | None = None,
 ) -> pd.DataFrame:
     base = data_dir
     zip_files = _select_zip_files(
@@ -99,6 +103,8 @@ def load_monthly_all_df(
                 datetime_candidates,
                 state_candidates,
                 biome_candidates,
+                satellite_candidates=satellite_candidates,
+                reference_satellite=reference_satellite,
             )
         )
 
@@ -114,6 +120,7 @@ def compute_chart_spec(
     *,
     current_year: int,
     current_year_monthly_counts: dict[int, int],
+    reference_satellite: str | None = None,
 ) -> dict[str, Any]:
     if not current_year_monthly_counts:
         raise RuntimeError(
@@ -122,24 +129,28 @@ def compute_chart_spec(
         )
 
     previous_year = current_year - 1
-    max_month = max(current_year_monthly_counts.keys())
+    ytd_month = max(current_year_monthly_counts.keys())
 
     df = monthly_all_df.copy()
     df["month"] = pd.to_datetime(df["period"], errors="coerce").dt.month
     df = df.dropna(subset=["month"])
     df["month"] = df["month"].astype(int)
 
-    labels = [MONTH_LABELS_PT[m - 1] for m in range(1, max_month + 1)]
+    # Rótulos do eixo X: um por mês (abrev. PT), sem letras duplicadas (J/M).
+    labels = list(MONTH_LABELS_PT)
 
-    series_current: list[int] = []
+    series_current: list[int | None] = []
     series_previous: list[int] = []
     series_avg_5y: list[float] = []
 
     y0 = previous_year - 4
     y1 = previous_year
 
-    for m in range(1, max_month + 1):
-        series_current.append(int(current_year_monthly_counts.get(m, 0)))
+    for m in range(1, 13):
+        if m <= ytd_month:
+            series_current.append(int(current_year_monthly_counts.get(m, 0)))
+        else:
+            series_current.append(None)
 
         pr = df[(df["year"] == previous_year) & (df["month"] == m)]["value"]
         series_previous.append(int(pr.iloc[0]) if len(pr) else 0)
@@ -151,18 +162,25 @@ def compute_chart_spec(
         ]["value"]
         series_avg_5y.append(float(win.mean()) if len(win) else 0.0)
 
-    published_at_label = format_published_at_pt(max_month, current_year)
+    published_at_label = format_published_at_pt(ytd_month, current_year)
 
+    source = (
+        "INPE BDQueimadas (mensal COIDS + agregação ZIP anual"
+        + (f"; satélite {reference_satellite}" if reference_satellite else "")
+        + ")"
+    )
     meta: dict[str, Any] = {
         "latest_year": current_year,
         "previous_year": previous_year,
         "avg_window_years_from": y0,
         "avg_window_years_to": y1,
-        "ytd_months": max_month,
+        "ytd_months": ytd_month,
         "unit": "focos",
-        "source": "INPE BDQueimadas (mensal COIDS + agregação ZIP anual)",
+        "source": source,
         "published_at_label": published_at_label,
     }
+    if reference_satellite:
+        meta["reference_satellite"] = reference_satellite
 
     return {
         "schema_version": 2,
@@ -199,15 +217,28 @@ def render_chart_png(
     import matplotlib.ticker as mticker
     import matplotlib.pyplot as plt
     import numpy as np
+    from matplotlib.lines import Line2D
+    from matplotlib.patches import Patch
     from matplotlib.ticker import MaxNLocator
 
+    _WHITE = "#ffffff"
+    _CUR = "#2ecc9a"
+    _PREV = "#94a3b8"
+    _AVG_FILL = "#1a7a5e"
+
     labels = spec["month_labels"]
-    cur = spec["series"]["current"]["values"]
+    cur_raw = spec["series"]["current"]["values"]
     prev = spec["series"]["previous"]["values"]
     avg = spec["series"]["avg_5y"]["values"]
+    avg_legend_label = spec["series"]["avg_5y"]["label"]
     meta = spec["metadata"]
     ly = meta["latest_year"]
     py = meta.get("previous_year")
+
+    cur = np.array(
+        [np.nan if v is None else float(v) for v in cur_raw],
+        dtype=float,
+    )
 
     x = np.arange(len(labels))
     fig_w = width_px / dpi
@@ -220,53 +251,90 @@ def render_chart_png(
         x,
         0,
         avg,
-        color="#1a7a5e",
+        color=_AVG_FILL,
         alpha=0.35,
         linewidth=0,
-        label=spec["series"]["avg_5y"]["label"],
     )
     ax.plot(
         x,
         cur,
-        color="#2ecc9a",
+        color=_CUR,
         linewidth=2.8,
-        label=str(ly),
     )
     if py is not None:
         ax.plot(
             x,
             prev,
-            color="#94a3b8",
+            color=_PREV,
             linewidth=1.8,
             linestyle="--",
-            label=str(py),
+        )
+
+    valid_idx = np.flatnonzero(~np.isnan(cur))
+    if valid_idx.size > 0:
+        li = int(valid_idx[-1])
+        ax.scatter(
+            [x[li]],
+            [cur[li]],
+            color=_CUR,
+            s=72,
+            zorder=6,
+            edgecolors=_CUR,
+            linewidths=0,
         )
 
     ax.set_xticks(x)
-    ax.set_xticklabels(labels, fontsize=10, color="#334155", rotation=0)
-    ax.set_xlabel("Mês", fontsize=11, color="#475569", labelpad=6)
-    ax.set_ylabel("Nº de focos", fontsize=11, color="#475569", labelpad=6)
+    ax.set_xticklabels(labels, fontsize=8, color=_WHITE, rotation=0, ha="center")
+    ax.set_xlabel("Mês", fontsize=11, color=_WHITE, labelpad=6)
+    ax.set_ylabel("Nº de focos", fontsize=11, color=_WHITE, labelpad=6)
 
-    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+    # Não usar MaxNLocator no eixo X: ele reduz o número de ticks e some rótulos de meses.
     ax.yaxis.set_major_locator(MaxNLocator(integer=True, nbins=9))
     ax.yaxis.set_major_formatter(
         mticker.FuncFormatter(lambda v, _pos: f"{int(v):,}".replace(",", "."))
     )
 
-    ax.tick_params(axis="both", labelsize=10, colors="#334155")
-    ax.grid(axis="y", color="#cbd5e1", linestyle="-", linewidth=0.6, alpha=0.7)
+    ax.tick_params(axis="both", labelsize=10, colors=_WHITE)
+    ax.grid(False)
     ax.set_axisbelow(True)
     for spine in ("top", "right"):
         ax.spines[spine].set_visible(False)
-    ax.spines["left"].set_color("#64748b")
-    ax.spines["bottom"].set_color("#64748b")
+    ax.spines["left"].set_color(_WHITE)
+    ax.spines["bottom"].set_color(_WHITE)
 
+    # Ordem: ano corrente → ano anterior → média 5 anos (matplotlib não garante ordem pelo plot).
+    legend_handles: list = [
+        Line2D([0], [0], color=_CUR, linewidth=2.8, linestyle="-", label=str(ly)),
+    ]
+    if py is not None:
+        legend_handles.append(
+            Line2D(
+                [0],
+                [0],
+                color=_PREV,
+                linewidth=1.8,
+                linestyle="--",
+                label=str(py),
+            )
+        )
+    legend_handles.append(
+        Patch(
+            facecolor=_AVG_FILL,
+            edgecolor="none",
+            linewidth=0,
+            alpha=0.35,
+            label=avg_legend_label,
+        )
+    )
     ax.legend(
+        handles=legend_handles,
         frameon=True,
-        facecolor=(1, 1, 1, 0.92),
-        edgecolor="#e2e8f0",
+        facecolor=(0.1, 0.14, 0.12),
+        edgecolor=(0.0, 0.0, 0.0, 0.0),
         fontsize=9,
-        loc="upper left",
+        loc="upper right",
+        labelcolor=_WHITE,
+        framealpha=0.4,
     )
 
     fig.tight_layout()
@@ -281,6 +349,164 @@ def render_chart_png(
     plt.close(fig)
 
 
+def _period_str_to_month(period: str) -> int:
+    """Ex.: '2025-01' -> 1."""
+    s = str(period).strip()
+    if "-" in s:
+        return int(s.split("-")[-1])
+    return int(s)
+
+
+def _monthly_all_payload_to_by_calendar_month(
+    monthly_all: list[dict[str, Any]],
+    *,
+    data_year: int,
+) -> dict[str, int]:
+    """Mapeia mês civil 1–12 -> focos (só linhas cujo year bate com data_year)."""
+    out: dict[str, int] = {}
+    for row in monthly_all:
+        try:
+            y = int(row.get("year", 0))
+        except (TypeError, ValueError):
+            continue
+        if y != data_year:
+            continue
+        try:
+            m = _period_str_to_month(str(row.get("period", "")))
+        except (TypeError, ValueError):
+            continue
+        if 1 <= m <= 12:
+            out[str(m)] = int(row.get("value", 0))
+    return out
+
+
+def collect_plot_sources_metadata(
+    *,
+    data_dir: Path,
+    recent_years: int | None,
+    file_glob: str,
+    satellite_candidates: list[str],
+    reference_satellite: str | None,
+    current_year: int,
+    mensal_files: list[tuple[int, Path]],
+    chart_spec_path: Path,
+) -> dict[str, Any]:
+    """
+    Metadados das bases usadas no gráfico: ZIPs anuais (contagem por mês) e
+    CSVs mensais do ano corrente (contagem total por arquivo, com e sem filtro de satélite).
+    """
+    dt_c = list(DEFAULT_DATETIME_CANDIDATES)
+    st_c = list(DEFAULT_STATE_CANDIDATES)
+    bio_c = list(DEFAULT_BIOME_CANDIDATES)
+    ref = reference_satellite or None
+
+    zip_files = _select_zip_files(
+        base_dir=data_dir,
+        file_glob=file_glob,
+        recent_years=recent_years,
+    )
+
+    annual_entries: list[dict[str, Any]] = []
+    for zp in sorted(zip_files, key=lambda p: p.name):
+        payload = _build_year_payload(
+            zp,
+            dt_c,
+            st_c,
+            bio_c,
+            satellite_candidates=satellite_candidates,
+            reference_satellite=ref,
+        )
+        inf = payload.get("inferred_year")
+        inf_int = int(inf) if inf is not None else None
+        monthly_all = payload.get("monthly_all") or []
+        by_month: dict[str, int] = {}
+        if inf_int is not None:
+            by_month = _monthly_all_payload_to_by_calendar_month(
+                monthly_all,
+                data_year=inf_int,
+            )
+
+        annual_entries.append(
+            {
+                "path": str(zp.resolve()),
+                "filename": zp.name,
+                "inferred_year": inf_int,
+                "file_size_bytes": payload.get("file_size_bytes"),
+                "row_count_brasil_valid_after_filters": payload.get("row_count"),
+                "month_span_min": payload.get("month_span_min"),
+                "month_span_max": payload.get("month_span_max"),
+                "monthly_focos_by_calendar_month": by_month,
+                "detected_columns": {
+                    "datetime": payload.get("detected_datetime_column"),
+                    "state": payload.get("detected_state_column"),
+                    "biome": payload.get("detected_biome_column"),
+                },
+            }
+        )
+
+    mensal_entries: list[dict[str, Any]] = []
+    for month, path in sorted(mensal_files, key=lambda t: t[0]):
+        n_plot = count_focos_rows_brasil_file(
+            path,
+            dt_c,
+            st_c,
+            bio_c,
+            satellite_candidates=satellite_candidates,
+            reference_satellite=ref,
+        )
+        n_all = count_focos_rows_brasil_file(
+            path,
+            dt_c,
+            st_c,
+            bio_c,
+            satellite_candidates=None,
+            reference_satellite=None,
+        )
+        mensal_entries.append(
+            {
+                "calendar_month": month,
+                "filename": path.name,
+                "path": str(path.resolve()),
+                "focos_count_used_in_chart": n_plot,
+                "focos_count_all_rows_all_satellites": n_all,
+            }
+        )
+
+    try:
+        chart_rel = str(chart_spec_path.resolve().relative_to(REPO_ROOT))
+    except ValueError:
+        chart_rel = str(chart_spec_path.resolve())
+
+    return {
+        "schema_version": 1,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "reference_satellite_filter": ref,
+        "reference_satellite_constant": INPE_REFERENCE_SATELLITE,
+        "current_year": current_year,
+        "data_dir": str(data_dir.resolve()),
+        "annual_zip_glob": file_glob,
+        "recent_years_zip_limit": recent_years,
+        "chart_spec_json": chart_rel,
+        "annual_reference_zips": annual_entries,
+        "mensal_current_year_files": mensal_entries,
+        "notes_pt": (
+            "Contagens do gráfico: linhas com datetime/UF/bioma válidos (Brasil); "
+            "se existir coluna de satélite, aplica-se o filtro do reference_satellite_filter. "
+            "Nos CSVs mensais, focos_count_all_rows_all_satellites é a soma de todas as linhas "
+            "válidas sem filtro de satélite (comparar com o portal pode exigir o mesmo critério "
+            "de satélite e escopo geográfico)."
+        ),
+    }
+
+
+def write_plot_sources_metadata(path: Path, payload: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+
+
 def build_bdqueimadas_social_assets(
     *,
     data_dir: Path,
@@ -292,10 +518,29 @@ def build_bdqueimadas_social_assets(
     current_year: int | None,
     mensal_cache_dir: Path,
     skip_mensal_download: bool,
+    satellite_candidates: list[str] | None = None,
+    reference_satellite: str | None = None,
+    file_glob: str = "focos_br_ref_*.zip",
+    metadata_out: Path | None = None,
 ) -> dict[str, Any]:
     cy = current_year if current_year is not None else date.today().year
 
-    monthly = load_monthly_all_df(data_dir, recent_years=recent_years)
+    sat_cands = satellite_candidates if satellite_candidates is not None else list(
+        DEFAULT_SATELLITE_CANDIDATES
+    )
+    ref_sat = (
+        reference_satellite
+        if reference_satellite is not None
+        else INPE_REFERENCE_SATELLITE
+    )
+
+    monthly = load_monthly_all_df(
+        data_dir,
+        recent_years=recent_years,
+        file_glob=file_glob,
+        satellite_candidates=sat_cands,
+        reference_satellite=ref_sat,
+    )
 
     mensal_files = ensure_mensal_files_for_year(
         base_url=mensal_base_url,
@@ -311,13 +556,19 @@ def build_bdqueimadas_social_assets(
     current_year_monthly_counts: dict[int, int] = {}
     for month, path in mensal_files:
         current_year_monthly_counts[month] = count_focos_rows_brasil_file(
-            path, dt_c, st_c, bio_c
+            path,
+            dt_c,
+            st_c,
+            bio_c,
+            satellite_candidates=sat_cands,
+            reference_satellite=ref_sat,
         )
 
     spec = compute_chart_spec(
         monthly,
         current_year=cy,
         current_year_monthly_counts=current_year_monthly_counts,
+        reference_satellite=ref_sat or None,
     )
     render_chart_png(spec, out_png)
     out_json.parent.mkdir(parents=True, exist_ok=True)
@@ -327,6 +578,25 @@ def build_bdqueimadas_social_assets(
     )
     if emit_manifest is not None:
         write_bdqueimadas_manifest(spec, emit_manifest)
+
+    meta_path = (
+        metadata_out
+        if metadata_out is not None
+        else data_dir / "metadata" / DEFAULT_PLOT_SOURCES_METADATA_NAME
+    )
+    write_plot_sources_metadata(
+        meta_path,
+        collect_plot_sources_metadata(
+            data_dir=data_dir,
+            recent_years=recent_years,
+            file_glob=file_glob,
+            satellite_candidates=sat_cands,
+            reference_satellite=ref_sat or None,
+            current_year=cy,
+            mensal_files=mensal_files,
+            chart_spec_path=out_json,
+        ),
+    )
     return spec
 
 
@@ -369,9 +639,6 @@ def write_bdqueimadas_manifest(spec: dict[str, Any], path: Path) -> None:
                     "published_at": published_at,
                     "caption": "Focos por mês (Brasil)",
                     "image_url": "/generated/bdqueimadas-chart.png",
-                    "legend_current": f"● {ly} (YTD)",
-                    "legend_previous": f"● {py} (mesmo período)" if py is not None else "—",
-                    "legend_avg": f"■ Média {y0}–{y1} por mês calendário",
                     "body_text": (
                         "O gráfico resume a série mensal de focos no território nacional. "
                         "A faixa mais clara representa a média dos anos anteriores por mês; "
@@ -466,6 +733,20 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
             f"{DEFAULT_MANIFEST_PATH})"
         ),
     )
+    p.add_argument(
+        "--metadata-out",
+        type=Path,
+        default=None,
+        help=(
+            "JSON com metadados das bases usadas no gráfico (default: "
+            "<--data-dir>/metadata/bdqueimadas_plot_sources.json)."
+        ),
+    )
+    p.add_argument(
+        "--file-glob",
+        default="focos_br_ref_*.zip",
+        help="Glob dos ZIPs anuais em --data-dir (default: focos_br_ref_*.zip).",
+    )
     return p.parse_args(argv)
 
 
@@ -482,6 +763,8 @@ def main(argv: list[str] | None = None) -> int:
             current_year=args.current_year,
             mensal_cache_dir=args.mensal_cache_dir,
             skip_mensal_download=args.skip_mensal_download,
+            file_glob=args.file_glob,
+            metadata_out=args.metadata_out,
         )
     except Exception as e:  # noqa: BLE001
         print(f"Erro: {e}", file=sys.stderr)
@@ -495,6 +778,12 @@ def main(argv: list[str] | None = None) -> int:
     )
     if args.emit_manifest:
         print(f"Manifest: {args.emit_manifest}")
+    meta_out = (
+        args.metadata_out
+        if args.metadata_out is not None
+        else args.data_dir / "metadata" / DEFAULT_PLOT_SOURCES_METADATA_NAME
+    )
+    print(f"Metadados das bases: {meta_out.resolve()}")
     return 0
 
 

@@ -102,20 +102,6 @@
   display: block;
 }
 
-.body-chart-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem 1.25rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.35rem;
-  background: rgba(11, 61, 46, 0.72);
-  border: 1px solid rgba(46, 204, 154, 0.25);
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  color: var(--text-secondary);
-}
-
 .body-chart-copy {
   flex: 1 1 auto;
   min-height: 0;

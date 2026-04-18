@@ -13,6 +13,9 @@ import pandas as pd
 
 RE_YEAR = re.compile(r"(\d{4})")
 
+# Satélite de referência INPE para séries comparáveis (ex.: com anos vindos de ZIP ref).
+INPE_REFERENCE_SATELLITE = "AQUA_M-T"
+
 CACHE_SCHEMA_VERSION = 2
 ALL_BIOMES_VALUE = "__all__"
 
@@ -348,12 +351,17 @@ def _build_year_payload(
     datetime_candidates: list[str],
     state_candidates: list[str],
     biome_candidates: list[str],
+    *,
+    satellite_candidates: list[str] | None = None,
+    reference_satellite: str | None = None,
 ) -> dict[str, Any]:
     subset, detected_columns = _read_zip_subset(
         zip_path=zip_path,
         datetime_candidates=datetime_candidates,
         state_candidates=state_candidates,
         biome_candidates=biome_candidates,
+        satellite_candidates=satellite_candidates,
+        reference_satellite=reference_satellite,
     )
 
     if subset.empty:
@@ -461,29 +469,48 @@ def _read_zip_subset(
     datetime_candidates: list[str],
     state_candidates: list[str],
     biome_candidates: list[str],
+    *,
+    satellite_candidates: list[str] | None = None,
+    reference_satellite: str | None = None,
 ) -> tuple[pd.DataFrame, dict[str, str]]:
     with zipfile.ZipFile(zip_path) as zf:
         member = _pick_member(zf)
         delimiter = _detect_delimiter(zf, member)
-        columns = _detect_columns(
+        header_df = _read_member_csv(
             zf=zf,
             member=member,
-            datetime_candidates=datetime_candidates,
-            state_candidates=state_candidates,
-            biome_candidates=biome_candidates,
             delimiter=delimiter,
+            nrows=0,
+        )
+        header_cols = list(header_df.columns)
+        columns = detect_columns_from_header(
+            header_cols,
+            datetime_candidates,
+            state_candidates,
+            biome_candidates,
         )
 
         dt_col = columns["datetime"]
         state_col = columns["state"]
         biome_col = columns["biome"]
 
+        usecols = [dt_col, state_col, biome_col]
+        sat_col: str | None = None
+        if reference_satellite and satellite_candidates:
+            sat_col = _pick_column(header_cols, satellite_candidates)
+        if sat_col:
+            usecols.append(sat_col)
+
         df = _read_member_csv(
             zf=zf,
             member=member,
             delimiter=delimiter,
-            usecols=[dt_col, state_col, biome_col],
+            usecols=usecols,
         )
+
+    if sat_col and reference_satellite:
+        df = _filter_df_by_reference_satellite(df, sat_col, reference_satellite)
+        df = df[[dt_col, state_col, biome_col]]
 
     df = df.rename(
         columns={
@@ -637,6 +664,22 @@ def _normalize(text: str) -> str:
     return re.sub(r"[^a-z0-9]", "", text.casefold())
 
 
+def _normalize_satellite_token(value: str) -> str:
+    return re.sub(r"[^a-z0-9]", "", str(value).casefold())
+
+
+def _filter_df_by_reference_satellite(
+    df: pd.DataFrame,
+    sat_col: str,
+    reference: str,
+) -> pd.DataFrame:
+    ref = _normalize_satellite_token(reference)
+    norm = df[sat_col].map(
+        lambda x: _normalize_satellite_token(str(x)) if pd.notna(x) else ""
+    )
+    return df.loc[norm == ref].copy()
+
+
 def _read_member_csv(
     zf: zipfile.ZipFile,
     member: str,
@@ -710,35 +753,29 @@ def read_focos_subset_brasil_file(
     datetime_candidates: list[str],
     state_candidates: list[str],
     biome_candidates: list[str],
+    *,
+    satellite_candidates: list[str] | None = None,
+    reference_satellite: str | None = None,
 ) -> pd.DataFrame:
     """Lê um CSV (ou ZIP com um CSV interno) no mesmo formato dos focos INPE; retorna subset com datetime válido."""
     suf = path.suffix.lower()
     if suf == ".zip":
-        with zipfile.ZipFile(path) as zf:
-            member = _pick_member(zf)
-            delimiter = _detect_delimiter(zf, member)
-            columns = _detect_columns(
-                zf=zf,
-                member=member,
-                datetime_candidates=datetime_candidates,
-                state_candidates=state_candidates,
-                biome_candidates=biome_candidates,
-                delimiter=delimiter,
-            )
-            dt_col = columns["datetime"]
-            state_col = columns["state"]
-            biome_col = columns["biome"]
-            df = _read_member_csv(
-                zf=zf,
-                member=member,
-                delimiter=delimiter,
-                usecols=[dt_col, state_col, biome_col],
-            )
-    elif suf == ".csv":
+        out, _ = _read_zip_subset(
+            path,
+            datetime_candidates,
+            state_candidates,
+            biome_candidates,
+            satellite_candidates=satellite_candidates,
+            reference_satellite=reference_satellite,
+        )
+        return out
+
+    if suf == ".csv":
         delimiter = _detect_delimiter_path(path)
         header_df = _read_path_csv(path, delimiter, nrows=0)
+        header_cols = list(header_df.columns)
         columns = detect_columns_from_header(
-            list(header_df.columns),
+            header_cols,
             datetime_candidates,
             state_candidates,
             biome_candidates,
@@ -746,11 +783,20 @@ def read_focos_subset_brasil_file(
         dt_col = columns["datetime"]
         state_col = columns["state"]
         biome_col = columns["biome"]
+        usecols = [dt_col, state_col, biome_col]
+        sat_col: str | None = None
+        if reference_satellite and satellite_candidates:
+            sat_col = _pick_column(header_cols, satellite_candidates)
+        if sat_col:
+            usecols.append(sat_col)
         df = _read_path_csv(
             path,
             delimiter,
-            usecols=[dt_col, state_col, biome_col],
+            usecols=usecols,
         )
+        if sat_col and reference_satellite:
+            df = _filter_df_by_reference_satellite(df, sat_col, reference_satellite)
+            df = df[[dt_col, state_col, biome_col]]
     else:
         raise ValueError(f"Extensão não suportada para focos mensais: {path}")
 
@@ -769,6 +815,9 @@ def count_focos_rows_brasil_file(
     datetime_candidates: list[str],
     state_candidates: list[str],
     biome_candidates: list[str],
+    *,
+    satellite_candidates: list[str] | None = None,
+    reference_satellite: str | None = None,
 ) -> int:
     """Número de focos (linhas válidas) alinhado ao agregado nacional do report."""
     subset = read_focos_subset_brasil_file(
@@ -776,6 +825,8 @@ def count_focos_rows_brasil_file(
         datetime_candidates,
         state_candidates,
         biome_candidates,
+        satellite_candidates=satellite_candidates,
+        reference_satellite=reference_satellite,
     )
     return int(len(subset))
 
