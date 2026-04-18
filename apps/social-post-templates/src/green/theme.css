@@ -105,4 +105,18 @@
 .body-chart-copy {
   flex: 1 1 auto;
   min-height: 0;
+  width: 100%;
+  max-width: 100%;
+  align-self: stretch;
+  box-sizing: border-box;
+}
+
+/* Mesma largura útil do gráfico (.body-chart-frame); texto corrido justificado */
+.body-chart-copy [data-slot="body_text"] {
+  width: 100%;
+  max-width: 100%;
+  text-align: justify;
+  text-justify: inter-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
 }

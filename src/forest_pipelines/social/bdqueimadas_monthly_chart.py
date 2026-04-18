@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 import shutil
 import sys
 import zipfile
@@ -12,6 +13,10 @@ from pathlib import Path
 from typing import Any
 
 import pandas as pd
+from dotenv import load_dotenv
+
+from forest_pipelines.settings import load_settings
+from forest_pipelines.social.logging import get_social_bdqueimadas_logger, log_stage
 
 from forest_pipelines.datasets.inpe.bdqueimadas_mensal_listing import (
     DEFAULT_MENSAL_BASE_URL,
@@ -41,6 +46,8 @@ DEFAULT_OUT_DIR = (
 )
 DEFAULT_CHART_PNG = DEFAULT_OUT_DIR / "bdqueimadas-chart.png"
 DEFAULT_CHART_SPEC = DEFAULT_OUT_DIR / "chart_spec.json"
+DEFAULT_SOCIAL_LLM_JSON = DEFAULT_OUT_DIR / "social_llm.json"
+DEFAULT_APP_CONFIG = REPO_ROOT / "configs" / "app.yml"
 DEFAULT_MANIFEST_PATH = (
     REPO_ROOT / "apps" / "social-post-templates" / "examples" / "bdqueimadas-social.manifest.json"
 )
@@ -653,7 +660,31 @@ def build_bdqueimadas_social_assets(
     metadata_out: Path | None = None,
     extract_anual_csvs: bool = True,
     anual_extract_dir: Path | None = None,
+    run_llm: bool = False,
+    reference_date: date | None = None,
+    app_config: Path | None = None,
+    out_social_llm: Path | None = None,
+    logs_dir: Path | None = None,
+    logger: logging.Logger | None = None,
 ) -> dict[str, Any]:
+    log = logger if logger is not None else get_social_bdqueimadas_logger(logs_dir)
+    base_logs = logs_dir if logs_dir is not None else REPO_ROOT / "logs"
+    log_stage(
+        log,
+        "pipeline_start",
+        {
+            "logs_dir": str(base_logs.resolve()),
+            "data_dir": str(data_dir.resolve()),
+            "current_year_arg": current_year,
+            "recent_years": recent_years,
+            "run_llm": run_llm,
+            "extract_anual_csvs": extract_anual_csvs,
+            "skip_mensal_download": skip_mensal_download,
+            "out_png": str(out_png.resolve()),
+            "out_json": str(out_json.resolve()),
+        },
+    )
+
     cy = current_year if current_year is not None else date.today().year
 
     sat_cands = satellite_candidates if satellite_candidates is not None else list(
@@ -668,12 +699,23 @@ def build_bdqueimadas_social_assets(
     anual_dir = anual_extract_dir if anual_extract_dir is not None else data_dir / "anual"
 
     if extract_anual_csvs:
-        extract_annual_reference_csvs(
+        written = extract_annual_reference_csvs(
             data_dir,
             file_glob=file_glob,
             recent_years=recent_years,
             out_dir=anual_dir,
         )
+        log_stage(
+            log,
+            "extract_anual_done",
+            {
+                "anual_dir": str(anual_dir.resolve()),
+                "zip_count": len(written),
+                "zips": sorted(written.keys()),
+            },
+        )
+    else:
+        log_stage(log, "extract_anual_skipped", {"anual_dir": str(anual_dir.resolve())})
 
     monthly = load_monthly_all_df(
         data_dir,
@@ -683,12 +725,28 @@ def build_bdqueimadas_social_assets(
         satellite_candidates=sat_cands,
         reference_satellite=ref_sat,
     )
+    log_stage(
+        log,
+        "load_monthly_all_df_done",
+        {"rows": int(len(monthly)), "columns": list(monthly.columns)},
+    )
 
     mensal_files = ensure_mensal_files_for_year(
         base_url=mensal_base_url,
         year=cy,
         cache_dir=mensal_cache_dir,
         skip_download=skip_mensal_download,
+    )
+    log_stage(
+        log,
+        "mensal_files_ready",
+        {
+            "year": cy,
+            "mensal_cache_dir": str(mensal_cache_dir.resolve()),
+            "files": [
+                {"month": m, "path": str(p.resolve())} for m, p in mensal_files
+            ],
+        },
     )
 
     dt_c = list(DEFAULT_DATETIME_CANDIDATES)
@@ -705,6 +763,14 @@ def build_bdqueimadas_social_assets(
             satellite_candidates=sat_cands,
             reference_satellite=ref_sat,
         )
+    log_stage(
+        log,
+        "current_year_monthly_counts_done",
+        {
+            "months": sorted(current_year_monthly_counts.keys()),
+            "counts_by_month": current_year_monthly_counts,
+        },
+    )
 
     spec = compute_chart_spec(
         monthly,
@@ -712,14 +778,92 @@ def build_bdqueimadas_social_assets(
         current_year_monthly_counts=current_year_monthly_counts,
         reference_satellite=ref_sat or None,
     )
+    meta0 = spec["metadata"]
+    log_stage(
+        log,
+        "chart_spec_computed",
+        {
+            "latest_year": meta0.get("latest_year"),
+            "ytd_months": meta0.get("ytd_months"),
+            "published_at_label": meta0.get("published_at_label"),
+            "avg_window": [
+                meta0.get("avg_window_years_from"),
+                meta0.get("avg_window_years_to"),
+            ],
+        },
+    )
     render_chart_png(spec, out_png)
+    log_stage(log, "render_chart_png_done", {"path": str(out_png.resolve())})
     out_json.parent.mkdir(parents=True, exist_ok=True)
     out_json.write_text(
         json.dumps(spec, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
+    log_stage(log, "chart_spec_json_written", {"path": str(out_json.resolve())})
+
+    llm_graphic_text: str | None = None
+    if run_llm:
+        cfg = app_config if app_config is not None else DEFAULT_APP_CONFIG
+        settings = load_settings(str(cfg))
+        ref_d = reference_date if reference_date is not None else date.today()
+        from forest_pipelines.social.llm.registry import (
+            TOPIC_FOCOS_INCENDIO_BR,
+            run_topic_components,
+        )
+
+        log_stage(
+            log,
+            "llm_run_start",
+            {
+                "topic": TOPIC_FOCOS_INCENDIO_BR,
+                "reference_date": ref_d.isoformat(),
+                "app_config": str(cfg.resolve()),
+            },
+        )
+        llm_out = run_topic_components(
+            TOPIC_FOCOS_INCENDIO_BR,
+            spec,
+            ref_d,
+            settings.llm,
+            logger=log,
+        )
+        llm_graphic_text = llm_out["graphic_text"]["text"]
+        sidecar = out_social_llm if out_social_llm is not None else DEFAULT_SOCIAL_LLM_JSON
+        sidecar.parent.mkdir(parents=True, exist_ok=True)
+        sidecar.write_text(
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "topic": TOPIC_FOCOS_INCENDIO_BR,
+                    "reference_date": ref_d.isoformat(),
+                    "post_description": llm_out["post_description"]["text"],
+                    "graphic_text": llm_out["graphic_text"]["text"],
+                    "models": {
+                        "post_description": llm_out["post_description"]["model"],
+                        "graphic_text": llm_out["graphic_text"]["model"],
+                    },
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        log_stage(
+            log,
+            "social_llm_json_written",
+            {"path": str(sidecar.resolve())},
+        )
+
     if emit_manifest is not None:
-        write_bdqueimadas_manifest(spec, emit_manifest)
+        write_bdqueimadas_manifest(spec, emit_manifest, llm_graphic_text=llm_graphic_text)
+        log_stage(
+            log,
+            "manifest_written",
+            {"path": str(emit_manifest.resolve()), "used_llm_body": llm_graphic_text is not None},
+        )
+    else:
+        log_stage(log, "manifest_skipped", {})
 
     meta_path = (
         metadata_out
@@ -741,16 +885,34 @@ def build_bdqueimadas_social_assets(
             chart_spec_path=out_json,
         ),
     )
+    log_stage(
+        log,
+        "plot_sources_metadata_written",
+        {"path": str(meta_path.resolve())},
+    )
+    log_stage(log, "pipeline_done", {"ok": True})
     return spec
 
 
-def write_bdqueimadas_manifest(spec: dict[str, Any], path: Path) -> None:
+def write_bdqueimadas_manifest(
+    spec: dict[str, Any],
+    path: Path,
+    *,
+    llm_graphic_text: str | None = None,
+) -> None:
     meta = spec["metadata"]
     ly = meta["latest_year"]
     py = meta.get("previous_year")
     y0 = meta["avg_window_years_from"]
     y1 = meta["avg_window_years_to"]
     published_at = meta.get("published_at_label", format_published_at_pt(meta["ytd_months"], ly))
+
+    default_body = (
+        "O gráfico resume a série mensal de focos no território nacional. "
+        "A faixa mais clara representa a média dos anos anteriores por mês; "
+        "as linhas comparam o ano corrente com o ano anterior."
+    )
+    body_chart_text = default_body if llm_graphic_text is None else llm_graphic_text
 
     manifest = {
         "theme": "green",
@@ -783,11 +945,7 @@ def write_bdqueimadas_manifest(spec: dict[str, Any], path: Path) -> None:
                     "published_at": published_at,
                     "caption": "Focos por mês (Brasil) · BDQueimadas, publicado pelo INPE",
                     "image_url": "/generated/bdqueimadas-chart.png",
-                    "body_text": (
-                        "O gráfico resume a série mensal de focos no território nacional. "
-                        "A faixa mais clara representa a média dos anos anteriores por mês; "
-                        "as linhas comparam o ano corrente com o ano anterior."
-                    ),
+                    "body_text": body_chart_text,
                 },
             },
             {
@@ -907,11 +1065,50 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default=None,
         help="Pasta para CSVs extraídos dos ZIPs (default: <data-dir>/anual).",
     )
+    p.add_argument(
+        "--llm",
+        action="store_true",
+        help=(
+            "Gera textos com Groq (legenda Instagram + texto do gráfico). "
+            f"Requer {DEFAULT_APP_CONFIG.name} e GROQ_API_KEY. "
+            f"Grava {DEFAULT_SOCIAL_LLM_JSON.name} em public/generated/ (ou --out-social-llm)."
+        ),
+    )
+    p.add_argument(
+        "--as-of",
+        default=None,
+        metavar="YYYY-MM-DD",
+        help="Data de referência para métricas e prefixo [YYYY-MM-DD] na legenda (default: hoje).",
+    )
+    p.add_argument(
+        "--app-config",
+        type=Path,
+        default=None,
+        help=f"Caminho para app.yml (default: <repo>/configs/app.yml). Usado com --llm.",
+    )
+    p.add_argument(
+        "--out-social-llm",
+        type=Path,
+        default=None,
+        help=f"Saída JSON com textos LLM (default: {DEFAULT_SOCIAL_LLM_JSON}).",
+    )
+    p.add_argument(
+        "--logs-dir",
+        type=Path,
+        default=REPO_ROOT / "logs",
+        help="Pasta base para logs (default: <repo>/logs).",
+    )
     return p.parse_args(argv)
 
 
 def main(argv: list[str] | None = None) -> int:
+    load_dotenv(REPO_ROOT / ".env")
+    load_dotenv()
     args = _parse_args(argv)
+    ref_date: date | None = None
+    if args.as_of:
+        ref_date = date.fromisoformat(args.as_of)
+    run_logger = get_social_bdqueimadas_logger(args.logs_dir)
     try:
         spec = build_bdqueimadas_social_assets(
             data_dir=args.data_dir,
@@ -928,8 +1125,15 @@ def main(argv: list[str] | None = None) -> int:
             metadata_out=args.metadata_out,
             extract_anual_csvs=not args.no_extract_anual,
             anual_extract_dir=args.anual_dir,
+            run_llm=args.llm,
+            reference_date=ref_date,
+            app_config=args.app_config,
+            out_social_llm=args.out_social_llm,
+            logs_dir=args.logs_dir,
+            logger=run_logger,
         )
     except Exception as e:  # noqa: BLE001
+        run_logger.exception("pipeline_failed")
         print(f"Erro: {e}", file=sys.stderr)
         return 1
 
@@ -941,12 +1145,20 @@ def main(argv: list[str] | None = None) -> int:
     )
     if args.emit_manifest:
         print(f"Manifest: {args.emit_manifest}")
+    if args.llm:
+        p_llm = args.out_social_llm if args.out_social_llm is not None else DEFAULT_SOCIAL_LLM_JSON
+        print(f"Textos LLM (Groq): {p_llm.resolve()}")
     meta_out = (
         args.metadata_out
         if args.metadata_out is not None
         else args.data_dir / "metadata" / DEFAULT_PLOT_SOURCES_METADATA_NAME
     )
     print(f"Metadados das bases: {meta_out.resolve()}")
+    print(
+        "Log do pipeline: "
+        f"{(args.logs_dir / 'social' / 'bdqueimadas').resolve()}/"
+        "<ano>/<mês>/<YYYY-MM-DD>.log"
+    )
     if not args.no_extract_anual:
         an_dir = args.anual_dir if args.anual_dir is not None else args.data_dir / "anual"
         print(f"CSV anual extraído em: {an_dir.resolve()}")

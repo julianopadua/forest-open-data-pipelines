@@ -137,6 +137,39 @@ python -m forest_pipelines.social --data-dir data/inpe_bdqueimadas --emit-manife
 
 Opções úteis: `--current-year 2026` (default: ano do sistema), `--skip-mensal-download` (só cache já baixado), `--mensal-base-url` e `--mensal-cache-dir`.
 
+### Logs (`python -m forest_pipelines.social`)
+
+Cada execução grava em disco (pasta **`logs/` na raiz do repositório** por padrão, alinhada a `configs/app.yml` → `app.logs_dir`) um arquivo por dia:
+
+- Caminho: `logs/social/bdqueimadas/<ano>/<mês>/<YYYY-MM-DD>.log`
+- O mesmo fluxo também aparece no **stdout** (console).
+
+Formato: linhas de texto com um **objeto JSON** por evento:
+
+| `event` | Conteúdo |
+|--------|----------|
+| `stage` | Etapas do pipeline (`pipeline_start`, `extract_anual_done` ou `extract_anual_skipped`, `load_monthly_all_df_done`, `mensal_files_ready`, `current_year_monthly_counts_done`, `chart_spec_computed`, `render_chart_png_done`, `chart_spec_json_written`, `llm_run_start` + estágios LLM, `social_llm_json_written`, `manifest_written` / `manifest_skipped`, `plot_sources_metadata_written`, `pipeline_done`). |
+| `llm_roundtrip` | Só com `--llm`: para cada componente (`post_description`, `graphic_text`), o **prompt completo** (`request.system`, `request.user`) e a **resposta** (`response.model`, `response.text`, `response.raw_text`). |
+
+Opção de CLI: `--logs-dir <pasta>` altera só o diretório base (o subcaminho `social/bdqueimadas/<ano>/<mês>/` continua igual).
+
+### Textos com LLM (Groq)
+
+Na **raiz do repositório**, configure `GROQ_API_KEY` no arquivo **`.env`** (variável lida via `configs/app.yml` → `llm.api_key_env`). O comando `python -m forest_pipelines.social` carrega esse `.env` automaticamente.
+
+Com rede e key válida:
+
+```bash
+python -m forest_pipelines.social --data-dir data/inpe_bdqueimadas --emit-manifest --llm
+```
+
+Opções: `--as-of YYYY-MM-DD` (data de referência e prefixo `[YYYY-MM-DD]` na legenda), `--app-config` (default `<repo>/configs/app.yml`), `--out-social-llm` (default `public/generated/social_llm.json`).
+
+Saídas extras:
+
+- `public/generated/social_llm.json` — `post_description` (legenda Instagram começando com `[YYYY-MM-DD]`) e `graphic_text` (análise para o slide do gráfico), em pt-BR.
+- Com `--emit-manifest`, o campo `body_text` do slide `body_chart` no manifest passa a usar o texto gerado para o gráfico.
+
 Ou:
 
 ```bash
@@ -151,4 +184,4 @@ Isso gera:
 
 Depois: `npm run dev` neste app e, em outro terminal, `npm run export:manifest -- examples/bdqueimadas-social.manifest.json`.
 
-**Fase 2 (fora do escopo atual):** um passo de LLM pode ler `chart_spec.json` (e totais) e preencher `body_text` / título da capa, no mesmo espírito de `maybe_generate_analysis_blocks` nos reports.
+A legenda para colar no Instagram está em `social_llm.json` → `post_description` quando você roda o pipeline com `--llm`.
