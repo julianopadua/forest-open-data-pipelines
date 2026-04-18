@@ -346,45 +346,14 @@ def _is_valid_year_payload(
     return all(key in payload for key in required_keys)
 
 
-def _build_year_payload(
-    zip_path: Path,
-    datetime_candidates: list[str],
-    state_candidates: list[str],
-    biome_candidates: list[str],
+def _finish_year_payload_from_subset(
     *,
-    satellite_candidates: list[str] | None = None,
-    reference_satellite: str | None = None,
+    subset: pd.DataFrame,
+    detected_columns: dict[str, str],
+    file_name: str,
+    file_size_bytes: int,
+    inferred_year: int | None,
 ) -> dict[str, Any]:
-    subset, detected_columns = _read_zip_subset(
-        zip_path=zip_path,
-        datetime_candidates=datetime_candidates,
-        state_candidates=state_candidates,
-        biome_candidates=biome_candidates,
-        satellite_candidates=satellite_candidates,
-        reference_satellite=reference_satellite,
-    )
-
-    if subset.empty:
-        return {
-            "file_name": zip_path.name,
-            "file_size_bytes": int(zip_path.stat().st_size),
-            "inferred_year": _extract_year_from_name(zip_path.name),
-            "row_count": 0,
-            "month_span_min": None,
-            "month_span_max": None,
-            "detected_datetime_column": detected_columns["datetime"],
-            "detected_state_column": detected_columns["state"],
-            "detected_biome_column": detected_columns["biome"],
-            "available_biomes": [],
-            "monthly_all": [],
-            "monthly_by_biome": [],
-            "annual_all": [],
-            "annual_by_biome": [],
-            "state_year_all": [],
-            "state_year_by_biome": [],
-            "processed_at": _now_iso(),
-        }
-
     monthly_all = (
         subset.groupby(["period_month", "year"])
         .size()
@@ -444,9 +413,9 @@ def _build_year_payload(
     )
 
     return {
-        "file_name": zip_path.name,
-        "file_size_bytes": int(zip_path.stat().st_size),
-        "inferred_year": _extract_year_from_name(zip_path.name),
+        "file_name": file_name,
+        "file_size_bytes": file_size_bytes,
+        "inferred_year": inferred_year,
         "row_count": int(len(subset)),
         "month_span_min": str(subset["period_month"].min()),
         "month_span_max": str(subset["period_month"].max()),
@@ -462,6 +431,153 @@ def _build_year_payload(
         "state_year_by_biome": _df_to_records(state_year_by_biome),
         "processed_at": _now_iso(),
     }
+
+
+def _read_csv_path_subset(
+    path: Path,
+    datetime_candidates: list[str],
+    state_candidates: list[str],
+    biome_candidates: list[str],
+    *,
+    satellite_candidates: list[str] | None = None,
+    reference_satellite: str | None = None,
+) -> tuple[pd.DataFrame, dict[str, str]]:
+    delimiter = _detect_delimiter_path(path)
+    header_df = _read_path_csv(path, delimiter, nrows=0)
+    header_cols = list(header_df.columns)
+    columns = detect_columns_from_header(
+        header_cols,
+        datetime_candidates,
+        state_candidates,
+        biome_candidates,
+    )
+    dt_col = columns["datetime"]
+    state_col = columns["state"]
+    biome_col = columns["biome"]
+    usecols = [dt_col, state_col, biome_col]
+    sat_col: str | None = None
+    if reference_satellite and satellite_candidates:
+        sat_col = _pick_column(header_cols, satellite_candidates)
+    if sat_col:
+        usecols.append(sat_col)
+    df = _read_path_csv(path, delimiter, usecols=usecols)
+    if sat_col and reference_satellite:
+        df = _filter_df_by_reference_satellite(df, sat_col, reference_satellite)
+        df = df[[dt_col, state_col, biome_col]]
+    df = df.rename(
+        columns={
+            dt_col: "raw_datetime",
+            state_col: "raw_state",
+            biome_col: "raw_biome",
+        }
+    ).copy()
+    dayfirst = _datetime_dayfirst_for_column(dt_col)
+    out = _normalized_focos_subset_from_raw_columns(df, dayfirst=dayfirst)
+    return out, {
+        "datetime": dt_col,
+        "state": state_col,
+        "biome": biome_col,
+    }
+
+
+def build_year_payload_from_csv(
+    csv_path: Path,
+    datetime_candidates: list[str],
+    state_candidates: list[str],
+    biome_candidates: list[str],
+    *,
+    satellite_candidates: list[str] | None = None,
+    reference_satellite: str | None = None,
+) -> dict[str, Any]:
+    """
+    Mesmo agregado que _build_year_payload, lendo CSV em disco (ex.: data/inpe_bdqueimadas/anual/).
+    Usa data_pas em ISO (YYYY-MM-DD HH:mm:ss) quando presente — alinhado a contagens SQL no arquivo.
+    """
+    subset, detected_columns = _read_csv_path_subset(
+        csv_path,
+        datetime_candidates,
+        state_candidates,
+        biome_candidates,
+        satellite_candidates=satellite_candidates,
+        reference_satellite=reference_satellite,
+    )
+
+    if subset.empty:
+        return {
+            "file_name": csv_path.name,
+            "file_size_bytes": int(csv_path.stat().st_size),
+            "inferred_year": _extract_year_from_name(csv_path.name),
+            "row_count": 0,
+            "month_span_min": None,
+            "month_span_max": None,
+            "detected_datetime_column": detected_columns["datetime"],
+            "detected_state_column": detected_columns["state"],
+            "detected_biome_column": detected_columns["biome"],
+            "available_biomes": [],
+            "monthly_all": [],
+            "monthly_by_biome": [],
+            "annual_all": [],
+            "annual_by_biome": [],
+            "state_year_all": [],
+            "state_year_by_biome": [],
+            "processed_at": _now_iso(),
+        }
+
+    return _finish_year_payload_from_subset(
+        subset=subset,
+        detected_columns=detected_columns,
+        file_name=csv_path.name,
+        file_size_bytes=int(csv_path.stat().st_size),
+        inferred_year=_extract_year_from_name(csv_path.name),
+    )
+
+
+def _build_year_payload(
+    zip_path: Path,
+    datetime_candidates: list[str],
+    state_candidates: list[str],
+    biome_candidates: list[str],
+    *,
+    satellite_candidates: list[str] | None = None,
+    reference_satellite: str | None = None,
+) -> dict[str, Any]:
+    subset, detected_columns = _read_zip_subset(
+        zip_path=zip_path,
+        datetime_candidates=datetime_candidates,
+        state_candidates=state_candidates,
+        biome_candidates=biome_candidates,
+        satellite_candidates=satellite_candidates,
+        reference_satellite=reference_satellite,
+    )
+
+    if subset.empty:
+        return {
+            "file_name": zip_path.name,
+            "file_size_bytes": int(zip_path.stat().st_size),
+            "inferred_year": _extract_year_from_name(zip_path.name),
+            "row_count": 0,
+            "month_span_min": None,
+            "month_span_max": None,
+            "detected_datetime_column": detected_columns["datetime"],
+            "detected_state_column": detected_columns["state"],
+            "detected_biome_column": detected_columns["biome"],
+            "available_biomes": [],
+            "monthly_all": [],
+            "monthly_by_biome": [],
+            "annual_all": [],
+            "annual_by_biome": [],
+            "state_year_all": [],
+            "state_year_by_biome": [],
+            "processed_at": _now_iso(),
+        }
+
+    return _finish_year_payload_from_subset(
+        subset=subset,
+        detected_columns=detected_columns,
+        file_name=zip_path.name,
+        file_size_bytes=int(zip_path.stat().st_size),
+        inferred_year=_extract_year_from_name(zip_path.name),
+    )
 
 
 def _read_zip_subset(
@@ -520,7 +636,8 @@ def _read_zip_subset(
         }
     ).copy()
 
-    out = _normalized_focos_subset_from_raw_columns(df)
+    dayfirst = _datetime_dayfirst_for_column(dt_col)
+    out = _normalized_focos_subset_from_raw_columns(df, dayfirst=dayfirst)
     return out, {
         "datetime": dt_col,
         "state": state_col,
@@ -528,11 +645,21 @@ def _read_zip_subset(
     }
 
 
-def _normalized_focos_subset_from_raw_columns(df: pd.DataFrame) -> pd.DataFrame:
+def _datetime_dayfirst_for_column(dt_col: str) -> bool:
+    """data_pas / data_hora_gmt nos dumps INPE vêm em ISO (YYYY-MM-DD HH:mm:ss)."""
+    norm = _normalize(dt_col)
+    return norm not in {"datapas", "datahoragmt"}
+
+
+def _normalized_focos_subset_from_raw_columns(
+    df: pd.DataFrame,
+    *,
+    dayfirst: bool = True,
+) -> pd.DataFrame:
     dt = pd.to_datetime(
         df["raw_datetime"].astype("string").str.strip(),
         errors="coerce",
-        dayfirst=True,
+        dayfirst=dayfirst,
         format="mixed",
     )
 
@@ -597,7 +724,13 @@ def detect_columns_from_header(
     state_candidates: list[str],
     biome_candidates: list[str],
 ) -> dict[str, str]:
-    dt_col = _pick_column(available, datetime_candidates)
+    # Preferir data_pas (horário PAS / referência INPE nos ZIPs focos_br_ref_*), alinhado ao portal.
+    normalized_map = {_normalize(col): col for col in available}
+    dt_col: str | None = None
+    if "datapas" in normalized_map:
+        dt_col = normalized_map["datapas"]
+    if dt_col is None:
+        dt_col = _pick_column(available, datetime_candidates)
     state_col = _pick_column(available, state_candidates)
     biome_col = _pick_column(available, biome_candidates)
 
@@ -807,7 +940,8 @@ def read_focos_subset_brasil_file(
             biome_col: "raw_biome",
         }
     ).copy()
-    return _normalized_focos_subset_from_raw_columns(df)
+    dayfirst = _datetime_dayfirst_for_column(dt_col)
+    return _normalized_focos_subset_from_raw_columns(df, dayfirst=dayfirst)
 
 
 def count_focos_rows_brasil_file(

@@ -1,10 +1,12 @@
-"""Monthly BDQueimadas comparison chart (YTD ano atual via mensal INPE vs ano anterior ZIP vs média 5 anos)."""
+"""Monthly BDQueimadas chart: ano atual (CSVs mensais INPE) vs série histórica em CSV anual (data_pas)."""
 
 from __future__ import annotations
 
 import argparse
 import json
+import shutil
 import sys
+import zipfile
 from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -17,8 +19,8 @@ from forest_pipelines.datasets.inpe.bdqueimadas_mensal_listing import (
 )
 from forest_pipelines.reports.builders.bdqueimadas_incremental import (
     INPE_REFERENCE_SATELLITE,
-    _build_year_payload,
-    consolidate_year_payloads,
+    _pick_member,
+    build_year_payload_from_csv,
     count_focos_rows_brasil_file,
 )
 from forest_pipelines.reports.builders.bdqueimadas_overview import (
@@ -26,6 +28,7 @@ from forest_pipelines.reports.builders.bdqueimadas_overview import (
     DEFAULT_DATETIME_CANDIDATES,
     DEFAULT_SATELLITE_CANDIDATES,
     DEFAULT_STATE_CANDIDATES,
+    _select_annual_reference_csv_files,
     _select_zip_files,
 )
 
@@ -72,23 +75,99 @@ def format_published_at_pt(month: int, year: int) -> str:
     return f"{MONTH_LABELS_PT[month - 1]} {year}"
 
 
+def _trim_payload_monthly_to_inferred_year(payload: dict[str, Any]) -> dict[str, Any]:
+    """Descarta meses cujo ano civil do agregado não bate com o ano do arquivo (nome)."""
+    inf = payload.get("inferred_year")
+    if inf is None:
+        return payload
+    inf_int = int(inf)
+    monthly: list[dict[str, Any]] = []
+    for row in payload.get("monthly_all", []):
+        try:
+            if int(row.get("year", 0)) == inf_int:
+                monthly.append(row)
+        except (TypeError, ValueError):
+            continue
+    return {**payload, "monthly_all": monthly}
+
+
+def _monthly_all_payloads_to_df_dedupe(
+    payloads: list[dict[str, Any]],
+) -> pd.DataFrame:
+    """
+    Junta séries mensais de vários ZIPs sem somar duplicatas (period, year).
+
+    Dois arquivos para o mesmo ano civil (ex.: cópias de focos_br_ref_2025.zip)
+    geravam contagem ~2x; mantém a primeira ocorrência (ordem de _select_zip_files).
+    """
+    rows: list[dict[str, Any]] = []
+    for item in payloads:
+        for row in item.get("monthly_all", []):
+            rows.append(dict(row))
+    if not rows:
+        return pd.DataFrame(columns=["period", "year", "value"])
+    df = pd.DataFrame(rows)
+    df["value"] = pd.to_numeric(df["value"], errors="coerce").fillna(0).astype(int)
+    df["year"] = pd.to_numeric(df["year"], errors="coerce").astype(int)
+    df["period"] = df["period"].astype(str)
+    df = df.drop_duplicates(subset=["period", "year"], keep="first")
+    return df.sort_values(["period"]).reset_index(drop=True)
+
+
+def extract_annual_reference_csvs(
+    data_dir: Path,
+    *,
+    file_glob: str,
+    recent_years: int | None,
+    out_dir: Path | None = None,
+) -> dict[str, Path]:
+    """
+    Extrai o CSV principal de cada ZIP focos_br_ref_*.zip para data_dir/anual/*.csv
+    (inspeção manual e conferência com o portal).
+    """
+    base_out = out_dir if out_dir is not None else data_dir / "anual"
+    base_out.mkdir(parents=True, exist_ok=True)
+    zip_files = _select_zip_files(
+        base_dir=data_dir,
+        file_glob=file_glob,
+        recent_years=recent_years,
+    )
+    written: dict[str, Path] = {}
+    for zp in zip_files:
+        with zipfile.ZipFile(zp) as zf:
+            member = _pick_member(zf)
+            target = base_out / f"{zp.stem}.csv"
+            with zf.open(member) as src, open(target, "wb") as dst:
+                shutil.copyfileobj(src, dst)
+        written[zp.name] = target.resolve()
+    return written
+
+
 def load_monthly_all_df(
     data_dir: Path,
     *,
     recent_years: int | None = None,
-    file_glob: str = "focos_br_ref_*.zip",
+    anual_dir: Path | None = None,
+    anual_subdir: str = "anual",
+    csv_glob: str = "focos_br_ref_*.csv",
     satellite_candidates: list[str] | None = None,
     reference_satellite: str | None = None,
 ) -> pd.DataFrame:
-    base = data_dir
-    zip_files = _select_zip_files(
-        base_dir=base,
-        file_glob=file_glob,
+    """
+    Série histórica lida dos CSV em ``anual/`` (extraídos do ZIP ou copiados):
+    contagens mensais por ``data_pas`` (ISO), alinhadas a SQL/DuckDB no mesmo arquivo.
+    """
+    base_anual = anual_dir if anual_dir is not None else (data_dir / anual_subdir)
+    csv_files = _select_annual_reference_csv_files(
+        base_anual,
+        csv_glob=csv_glob,
         recent_years=recent_years,
     )
-    if not zip_files:
+    if not csv_files:
         raise FileNotFoundError(
-            f"Nenhum ZIP encontrado em {base.resolve()} com glob {file_glob!r}."
+            f"Nenhum CSV em {base_anual.resolve()} com glob {csv_glob!r}. "
+            "Extraia os ZIPs (make bdqueimadas-social-assets gera <data-dir>/anual/*.csv) "
+            "ou copie focos_br_ref_YYYY.csv para essa pasta."
         )
 
     datetime_candidates = list(DEFAULT_DATETIME_CANDIDATES)
@@ -96,22 +175,23 @@ def load_monthly_all_df(
     biome_candidates = list(DEFAULT_BIOME_CANDIDATES)
 
     payloads: list[dict[str, Any]] = []
-    for zp in zip_files:
+    for csv_path in csv_files:
         payloads.append(
-            _build_year_payload(
-                zp,
-                datetime_candidates,
-                state_candidates,
-                biome_candidates,
-                satellite_candidates=satellite_candidates,
-                reference_satellite=reference_satellite,
+            _trim_payload_monthly_to_inferred_year(
+                build_year_payload_from_csv(
+                    csv_path,
+                    datetime_candidates,
+                    state_candidates,
+                    biome_candidates,
+                    satellite_candidates=satellite_candidates,
+                    reference_satellite=reference_satellite,
+                )
             )
         )
 
-    consolidated = consolidate_year_payloads(payloads)
-    monthly_all_df = consolidated["monthly_all_df"]
+    monthly_all_df = _monthly_all_payloads_to_df_dedupe(payloads)
     if monthly_all_df.empty:
-        raise RuntimeError("Agregação mensal vazia após leitura dos ZIPs.")
+        raise RuntimeError("Agregação mensal vazia após leitura dos CSVs em anual/.")
     return monthly_all_df
 
 
@@ -384,7 +464,9 @@ def collect_plot_sources_metadata(
     *,
     data_dir: Path,
     recent_years: int | None,
-    file_glob: str,
+    anual_dir: Path,
+    csv_glob: str,
+    zip_glob_for_extract: str,
     satellite_candidates: list[str],
     reference_satellite: str | None,
     current_year: int,
@@ -392,29 +474,30 @@ def collect_plot_sources_metadata(
     chart_spec_path: Path,
 ) -> dict[str, Any]:
     """
-    Metadados das bases usadas no gráfico: ZIPs anuais (contagem por mês) e
-    CSVs mensais do ano corrente (contagem total por arquivo, com e sem filtro de satélite).
+    Metadados: CSVs anuais em anual/ (contagem por mês, data_pas) e mensais do ano corrente.
     """
     dt_c = list(DEFAULT_DATETIME_CANDIDATES)
     st_c = list(DEFAULT_STATE_CANDIDATES)
     bio_c = list(DEFAULT_BIOME_CANDIDATES)
     ref = reference_satellite or None
 
-    zip_files = _select_zip_files(
-        base_dir=data_dir,
-        file_glob=file_glob,
+    csv_files = _select_annual_reference_csv_files(
+        anual_dir,
+        csv_glob=csv_glob,
         recent_years=recent_years,
     )
 
     annual_entries: list[dict[str, Any]] = []
-    for zp in sorted(zip_files, key=lambda p: p.name):
-        payload = _build_year_payload(
-            zp,
-            dt_c,
-            st_c,
-            bio_c,
-            satellite_candidates=satellite_candidates,
-            reference_satellite=ref,
+    for csv_path in sorted(csv_files, key=lambda p: p.name):
+        payload = _trim_payload_monthly_to_inferred_year(
+            build_year_payload_from_csv(
+                csv_path,
+                dt_c,
+                st_c,
+                bio_c,
+                satellite_candidates=satellite_candidates,
+                reference_satellite=ref,
+            )
         )
         inf = payload.get("inferred_year")
         inf_int = int(inf) if inf is not None else None
@@ -428,8 +511,8 @@ def collect_plot_sources_metadata(
 
         annual_entries.append(
             {
-                "path": str(zp.resolve()),
-                "filename": zp.name,
+                "path": str(csv_path.resolve()),
+                "filename": csv_path.name,
                 "inferred_year": inf_int,
                 "file_size_bytes": payload.get("file_size_bytes"),
                 "row_count_brasil_valid_after_filters": payload.get("row_count"),
@@ -478,23 +561,24 @@ def collect_plot_sources_metadata(
         chart_rel = str(chart_spec_path.resolve())
 
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "reference_satellite_filter": ref,
         "reference_satellite_constant": INPE_REFERENCE_SATELLITE,
         "current_year": current_year,
         "data_dir": str(data_dir.resolve()),
-        "annual_zip_glob": file_glob,
-        "recent_years_zip_limit": recent_years,
+        "anual_dir": str(anual_dir.resolve()),
+        "csv_anual_glob": csv_glob,
+        "zip_glob_for_extract": zip_glob_for_extract,
+        "recent_years_limit": recent_years,
         "chart_spec_json": chart_rel,
-        "annual_reference_zips": annual_entries,
+        "annual_reference_csvs": annual_entries,
         "mensal_current_year_files": mensal_entries,
         "notes_pt": (
-            "Contagens do gráfico: linhas com datetime/UF/bioma válidos (Brasil); "
-            "se existir coluna de satélite, aplica-se o filtro do reference_satellite_filter. "
-            "Nos CSVs mensais, focos_count_all_rows_all_satellites é a soma de todas as linhas "
-            "válidas sem filtro de satélite (comparar com o portal pode exigir o mesmo critério "
-            "de satélite e escopo geográfico)."
+            "Série anual: CSVs em anual/; datetime = data_pas (ISO YYYY-MM-DD HH:mm:ss) quando "
+            "presente; agregação mensal = mesmo critério que COUNT(*) com filtro de mês em SQL. "
+            "Sem somar duplicata (period,year) se houver mais de um CSV para o mesmo ano. "
+            "Mensais: satélite conforme reference_satellite_filter quando a coluna existe."
         ),
     }
 
@@ -521,7 +605,10 @@ def build_bdqueimadas_social_assets(
     satellite_candidates: list[str] | None = None,
     reference_satellite: str | None = None,
     file_glob: str = "focos_br_ref_*.zip",
+    csv_glob: str = "focos_br_ref_*.csv",
     metadata_out: Path | None = None,
+    extract_anual_csvs: bool = True,
+    anual_extract_dir: Path | None = None,
 ) -> dict[str, Any]:
     cy = current_year if current_year is not None else date.today().year
 
@@ -534,10 +621,21 @@ def build_bdqueimadas_social_assets(
         else INPE_REFERENCE_SATELLITE
     )
 
+    anual_dir = anual_extract_dir if anual_extract_dir is not None else data_dir / "anual"
+
+    if extract_anual_csvs:
+        extract_annual_reference_csvs(
+            data_dir,
+            file_glob=file_glob,
+            recent_years=recent_years,
+            out_dir=anual_dir,
+        )
+
     monthly = load_monthly_all_df(
         data_dir,
         recent_years=recent_years,
-        file_glob=file_glob,
+        anual_dir=anual_dir,
+        csv_glob=csv_glob,
         satellite_candidates=sat_cands,
         reference_satellite=ref_sat,
     )
@@ -589,7 +687,9 @@ def build_bdqueimadas_social_assets(
         collect_plot_sources_metadata(
             data_dir=data_dir,
             recent_years=recent_years,
-            file_glob=file_glob,
+            anual_dir=anual_dir,
+            csv_glob=csv_glob,
+            zip_glob_for_extract=file_glob,
             satellite_candidates=sat_cands,
             reference_satellite=ref_sat or None,
             current_year=cy,
@@ -747,6 +847,22 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default="focos_br_ref_*.zip",
         help="Glob dos ZIPs anuais em --data-dir (default: focos_br_ref_*.zip).",
     )
+    p.add_argument(
+        "--csv-glob",
+        default="focos_br_ref_*.csv",
+        help="Glob dos CSVs em --anual-dir para a série histórica (default: focos_br_ref_*.csv).",
+    )
+    p.add_argument(
+        "--no-extract-anual",
+        action="store_true",
+        help="Não extrair CSV de cada ZIP para <data-dir>/anual/.",
+    )
+    p.add_argument(
+        "--anual-dir",
+        type=Path,
+        default=None,
+        help="Pasta para CSVs extraídos dos ZIPs (default: <data-dir>/anual).",
+    )
     return p.parse_args(argv)
 
 
@@ -764,7 +880,10 @@ def main(argv: list[str] | None = None) -> int:
             mensal_cache_dir=args.mensal_cache_dir,
             skip_mensal_download=args.skip_mensal_download,
             file_glob=args.file_glob,
+            csv_glob=args.csv_glob,
             metadata_out=args.metadata_out,
+            extract_anual_csvs=not args.no_extract_anual,
+            anual_extract_dir=args.anual_dir,
         )
     except Exception as e:  # noqa: BLE001
         print(f"Erro: {e}", file=sys.stderr)
@@ -784,6 +903,9 @@ def main(argv: list[str] | None = None) -> int:
         else args.data_dir / "metadata" / DEFAULT_PLOT_SOURCES_METADATA_NAME
     )
     print(f"Metadados das bases: {meta_out.resolve()}")
+    if not args.no_extract_anual:
+        an_dir = args.anual_dir if args.anual_dir is not None else args.data_dir / "anual"
+        print(f"CSV anual extraído em: {an_dir.resolve()}")
     return 0
 
 

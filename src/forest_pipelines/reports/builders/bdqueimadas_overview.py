@@ -499,6 +499,39 @@ def _select_zip_files(base_dir: Path, file_glob: str, recent_years: int | None) 
     return selected
 
 
+def _select_annual_reference_csv_files(
+    anual_dir: Path,
+    *,
+    csv_glob: str = "focos_br_ref_*.csv",
+    recent_years: int | None = None,
+) -> list[Path]:
+    """CSV extraídos em anual/ (focos_br_ref_YYYY.csv), mesma lógica de recência que os ZIPs."""
+    if not anual_dir.is_dir():
+        return []
+    candidates = sorted(anual_dir.glob(csv_glob))
+    if not candidates:
+        return []
+
+    with_years: list[tuple[int, Path]] = []
+    without_years: list[Path] = []
+
+    for path in candidates:
+        year = _extract_year_from_name(path.name)
+        if year is None:
+            without_years.append(path)
+            continue
+        with_years.append((year, path))
+
+    with_years.sort(key=lambda x: x[0], reverse=True)
+
+    if recent_years is not None:
+        with_years = with_years[:recent_years]
+
+    selected = [path for _, path in with_years] + without_years
+    selected.sort()
+    return selected
+
+
 def _extract_year_from_name(filename: str) -> int | None:
     match = RE_YEAR.search(filename)
     if not match:

@@ -17,6 +17,7 @@ sync-cvm:
 	forest-pipelines sync cvm_fi_inf_diario --latest-months 12
 
 # Gera PNG + chart_spec.json + manifest BDQueimadas para apps/social-post-templates (ZIPs em data/inpe_bdqueimadas).
+# Grava também data/inpe_bdqueimadas/metadata/bdqueimadas_plot_sources.json e extrai CSV em data/inpe_bdqueimadas/anual/.
 bdqueimadas-social-assets:
 	$(PYTHON) -m forest_pipelines.social --data-dir data/inpe_bdqueimadas --emit-manifest
 
