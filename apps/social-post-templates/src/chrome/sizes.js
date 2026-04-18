@@ -7,7 +7,7 @@ export const DEFAULT_CHROME = {
   topicTagPx: 24,
   datePx: 26,
   pageNumberPx: 24,
-  logoHeightPx: 48,
+  logoHeightPx: 54,
 };
 
 function n(v, fallback) {

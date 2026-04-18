@@ -5,7 +5,7 @@
     "topicTagPx": 24,
     "datePx": 26,
     "pageNumberPx": 24,
-    "logoHeightPx": 48
+    "logoHeightPx": 54
   },
   "slides": [
     {
@@ -24,7 +24,7 @@
       "slots": {
         "topic_tag": "Queimadas & Clima",
         "published_at": "Abr 2026",
-        "caption": "Mapa de focos",
+        "caption": "Mapa de focos · BDQueimadas, publicado pelo INPE",
         "body_text": "Concentração de alertas por bioma no período analisado, com ênfase no arco de desmatamento."
       }
     },

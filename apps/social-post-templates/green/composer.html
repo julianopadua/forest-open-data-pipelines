@@ -49,7 +49,7 @@
   <div class="layout">
     <div class="panel">
       <h1>Compositor · tema verde</h1>
-      <p class="sub">Monte a sequência de slides, gere o <code>manifest.json</code> e exporte PNGs com o script (servidor precisa estar rodando).</p>
+      <p class="sub">Monte a sequência de slides, gere o <code>manifest.json</code> e baixe um <strong>ZIP com as imagens</strong> (PNG 1080×1350) direto no browser — ou use o script Playwright para PNGs idênticos ao servidor de preview.</p>
       <p><a class="back" href="./index.html">← Hub do tema verde</a></p>
 
       <div class="toolbar">
@@ -79,7 +79,7 @@
           </div>
           <div>
             <label for="chromeLogo">Logo altura (px)</label>
-            <input type="number" id="chromeLogo" min="24" max="96" step="1" value="48" />
+            <input type="number" id="chromeLogo" min="24" max="96" step="1" value="54" />
           </div>
         </div>
       </div>
@@ -93,11 +93,13 @@
       <textarea id="manifestOut" readonly></textarea>
 
       <div class="toolbar" style="margin-top:0.75rem">
+        <button type="button" class="primary" id="btnZipImages">Baixar ZIP (imagens)</button>
         <button type="button" class="primary" id="btnDownload">Baixar manifest.json</button>
         <button type="button" id="btnCopy">Copiar comando de export</button>
       </div>
+      <p class="hint" id="zipHint" style="margin-top:0.5rem"></p>
       <p class="hint" id="exportCmd"></p>
-      <p class="hint">Salve o manifest na pasta <code>examples/</code> (ou outro caminho) e rode no terminal do app, com <code>npm run dev</code> ativo em outra aba.</p>
+      <p class="hint">ZIP: <code>img01.png</code>, <code>img02.png</code>, … (sem terminal). Playwright opcional: salve o manifest em <code>examples/</code> e rode <code>npm run export:manifest</code> com <code>npm run dev</code> em outra aba.</p>
     </div>
 
     <div class="preview-wrap">
@@ -128,7 +130,7 @@
         defaults: {
           topic_tag: "Queimadas & Clima",
           published_at: "Abr 2026",
-          caption: "Destaque",
+          caption: "Destaque · BDQueimadas, publicado pelo INPE",
           body_text: "Texto de apoio ao lado da imagem.",
           image_url: "",
         },
@@ -139,7 +141,7 @@
         defaults: {
           topic_tag: "Queimadas & Clima",
           published_at: "Abr 2026",
-          caption: "Série temporal",
+          caption: "Focos por mês (Brasil) · BDQueimadas, publicado pelo INPE",
           image_url: "/generated/bdqueimadas-chart.png",
           body_text: "Texto de contexto sobre o gráfico.",
         },
@@ -171,7 +173,7 @@
       topicTagPx: 24,
       datePx: 26,
       pageNumberPx: 24,
-      logoHeightPx: 48,
+      logoHeightPx: 54,
     };
 
     const PATHS = {
@@ -194,7 +196,7 @@
     const DEFAULT_EXAMPLE = {
       theme: "green",
       runId: "example-run",
-      sizes: { topicTagPx: 24, datePx: 26, pageNumberPx: 24, logoHeightPx: 48 },
+      sizes: { topicTagPx: 24, datePx: 26, pageNumberPx: 24, logoHeightPx: 54 },
       slides: [
         {
           type: "cover",
@@ -212,7 +214,7 @@
           slots: {
             topic_tag: "Queimadas & Clima",
             published_at: "Abr 2026",
-            caption: "Mapa de focos",
+            caption: "Mapa de focos · BDQueimadas, publicado pelo INPE",
             body_text: "Concentração de alertas por bioma no período analisado.",
           },
         },
@@ -502,6 +504,15 @@
     };
     document.getElementById("btnRefresh").onclick = () => refreshPreview();
 
+    window.__composerZip = {
+      getSlideUrls() {
+        return state.slides.map((_, i) => previewUrl(i));
+      },
+      getRunId() {
+        return document.getElementById("runId").value.trim() || "post";
+      },
+    };
+
     (async function bootstrapComposer() {
       let runId = DEFAULT_EXAMPLE.runId;
       let slides = JSON.parse(JSON.stringify(DEFAULT_EXAMPLE.slides));
@@ -530,6 +541,39 @@
       previewIndex = 0;
       renderAll();
     })();
+  </script>
+  <script type="module">
+    import { downloadCarouselZip } from "/src/green/composerZipExport.js";
+
+    const zipBtn = document.getElementById("btnZipImages");
+    const zipHint = document.getElementById("zipHint");
+
+    zipBtn.addEventListener("click", async () => {
+      const api = window.__composerZip;
+      if (!api?.getSlideUrls) return;
+      const urls = api.getSlideUrls();
+      if (!urls.length) {
+        zipHint.textContent = "Adicione pelo menos um slide.";
+        return;
+      }
+      zipBtn.disabled = true;
+      zipHint.textContent = "";
+      try {
+        await downloadCarouselZip({
+          getSlideUrls: () => api.getSlideUrls(),
+          getRunId: () => api.getRunId(),
+          onProgress: (done, total) => {
+            zipHint.textContent = `Gerando imagens… ${done}/${total}`;
+          },
+        });
+        zipHint.textContent = "Download iniciado: ZIP com img01.png, img02.png, …";
+      } catch (e) {
+        console.error(e);
+        zipHint.textContent = e instanceof Error ? e.message : String(e);
+      } finally {
+        zipBtn.disabled = false;
+      }
+    });
   </script>
 </body>
 </html>

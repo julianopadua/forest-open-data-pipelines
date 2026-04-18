@@ -715,7 +715,7 @@ def write_bdqueimadas_manifest(spec: dict[str, Any], path: Path) -> None:
             "topicTagPx": 24,
             "datePx": 26,
             "pageNumberPx": 24,
-            "logoHeightPx": 48,
+            "logoHeightPx": 54,
         },
         "slides": [
             {
@@ -737,7 +737,7 @@ def write_bdqueimadas_manifest(spec: dict[str, Any], path: Path) -> None:
                 "slots": {
                     "topic_tag": "Queimadas & Clima",
                     "published_at": published_at,
-                    "caption": "Focos por mês (Brasil)",
+                    "caption": "Focos por mês (Brasil) · BDQueimadas, publicado pelo INPE",
                     "image_url": "/generated/bdqueimadas-chart.png",
                     "body_text": (
                         "O gráfico resume a série mensal de focos no território nacional. "
