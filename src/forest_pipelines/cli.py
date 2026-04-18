@@ -9,6 +9,7 @@ from forest_pipelines.audits.registry import get_audit_runner
 from forest_pipelines.cli_help import (
     ANP_CATALOG_DOC,
     ANP_COMPACT_DOC,
+    ANP_PUBLISH_DOC,
     AUDIT_DATASET_DOC,
     BUILD_REPORT_DOC,
     SYNC_DOC,
@@ -19,6 +20,7 @@ from forest_pipelines.logging_ import get_logger
 from forest_pipelines.registry.datasets import get_dataset_runner
 from forest_pipelines.reports.publish.supabase import publish_report_package
 from forest_pipelines.reports.registry.reports import get_report_runner
+from forest_pipelines.dados_abertos.publish_anp_catalog import DEFAULT_ANP_CATALOG_PREFIX
 from forest_pipelines.settings import load_settings
 from forest_pipelines.storage.supabase_storage import SupabaseStorage
 
@@ -115,6 +117,65 @@ def anp_compact_cmd(
     if validate:
         validate_compact_envelope(envelope)
     typer.echo(f"Escrito: {out}")
+
+
+@app.command(
+    "anp-publish",
+    rich_help_panel="Dados abertos",
+    help=ANP_PUBLISH_DOC,
+    short_help=short_command_summary(ANP_PUBLISH_DOC),
+)
+def anp_publish_cmd(
+    compact_json: str = typer.Argument(
+        ...,
+        help="Arquivo JSON do envelope compacto (schema_version, generated_at, datasets).",
+    ),
+    config_path: str = typer.Option(
+        "configs/app.yml",
+        "--config-path",
+        help="YAML principal (bucket Supabase via supabase.bucket_open_data_env).",
+    ),
+    bucket_prefix: str = typer.Option(
+        DEFAULT_ANP_CATALOG_PREFIX,
+        "--bucket-prefix",
+        help="Prefixo dentro do bucket (sem barra final); padrão: anp/catalog.",
+    ),
+    validate: bool = typer.Option(
+        True,
+        "--validate/--no-validate",
+        help="Validar envelope com JSON Schema v1 antes do upload.",
+    ),
+) -> None:
+    from pathlib import Path
+
+    from forest_pipelines.dados_abertos.anp_catalog_compact import validate_compact_envelope
+    from forest_pipelines.dados_abertos.publish_anp_catalog import publish_anp_catalog_compact
+
+    path = Path(compact_json).resolve()
+    if not path.is_file():
+        raise typer.BadParameter(f"Arquivo não encontrado: {path}")
+
+    envelope = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(envelope, dict):
+        raise typer.BadParameter("JSON raiz deve ser um objeto")
+    if validate:
+        validate_compact_envelope(envelope)
+
+    settings = load_settings(config_path)
+    logger = get_logger(settings.logs_dir, "anp/publish")
+
+    storage = SupabaseStorage.from_env(
+        logger=logger,
+        bucket_open_data=settings.supabase_bucket_open_data,
+    )
+
+    manifest = publish_anp_catalog_compact(
+        storage,
+        envelope,
+        logger,
+        bucket_prefix=bucket_prefix,
+    )
+    typer.echo(manifest["public_urls"]["catalog"])
 
 
 @app.command(

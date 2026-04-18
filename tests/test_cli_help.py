@@ -23,6 +23,7 @@ def test_root_help_lists_commands_and_dataset_ids() -> None:
     out = _run_help(["--help"])
     assert "anp-catalog" in out
     assert "anp-compact" in out
+    assert "anp-publish" in out
     assert "sync" in out
     assert "build-report" in out
     assert "audit-dataset" in out

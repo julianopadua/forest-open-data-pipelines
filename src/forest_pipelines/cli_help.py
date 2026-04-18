@@ -33,7 +33,8 @@ Requisitos comuns
   • Variáveis de ambiente (sync, build-report): SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY (obrigatórias).
     O nome do bucket vem da env cujo nome está em app.yml em supabase.bucket_open_data_env
     (ex.: SUPABASE_BUCKET_OPEN_DATA); se ausente, o default é o bucket "open-data".
-  • sync e build-report publicam no Storage do Supabase; anp-catalog e anp-compact só geram arquivos locais.
+  • sync, build-report e anp-publish publicam no Storage do Supabase (mesmas envs);
+    anp-catalog e anp-compact podem só gerar arquivos locais.
 
 IDs registrados — sync (dataset_id)
 {_bullet_list(datasets)}
@@ -71,6 +72,18 @@ Saída padrão: anp_catalog_compact.json (UTF-8, acentos literais). Validação 
 Exemplos:
   forest-pipelines anp-compact src/forest_pipelines/dados_abertos/anp.json -o compact.json
   forest-pipelines anp-compact ./anp.json --no-validate
+"""
+
+
+ANP_PUBLISH_DOC = """\
+Envia o JSON compacto do catálogo ANP para o bucket Storage open-data (prefixo padrão anp/catalog):
+anp_catalog_compact.json e manifest.json com URLs públicas.
+
+Requer as mesmas variáveis que sync/build-report (SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, bucket via app.yml).
+
+Exemplos:
+  forest-pipelines anp-publish ./anp_catalog_compact.json
+  forest-pipelines anp-publish ./compact.json --bucket-prefix anp/catalog/v1
 """
 
 
