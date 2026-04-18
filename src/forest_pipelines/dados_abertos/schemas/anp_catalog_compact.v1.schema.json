@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://forest.local/schemas/anp_catalog_compact.v1.schema.json",
+  "title": "ANP compact catalog",
+  "type": "object",
+  "required": ["schema_version", "generated_at", "datasets"],
+  "additionalProperties": true,
+  "properties": {
+    "schema_version": { "const": "1" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "source_total_registros": { "type": ["integer", "null"] },
+    "datasets": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/dataset" }
+    }
+  },
+  "$defs": {
+    "dataset": {
+      "type": "object",
+      "required": ["package_id", "slug", "title", "resources"],
+      "additionalProperties": true,
+      "properties": {
+        "package_id": { "type": "string", "minLength": 1 },
+        "slug": { "type": "string", "minLength": 1 },
+        "title": { "type": "string", "minLength": 1 },
+        "notes_plain": { "type": ["string", "null"] },
+        "description_html": { "type": ["string", "null"] },
+        "organization_id": { "type": ["string", "null"] },
+        "organization_slug": { "type": ["string", "null"] },
+        "organization_esfera": { "type": ["string", "null"] },
+        "organization_uf": { "type": ["string", "null"] },
+        "organization_municipio": { "type": ["string", "null"] },
+        "maintainer": { "type": ["string", "null"] },
+        "maintainer_email": { "type": ["string", "null"] },
+        "license_code": { "type": ["string", "null"] },
+        "license_title": { "type": ["string", "null"] },
+        "version": { "type": ["string", "null"] },
+        "metadata_created": { "type": ["string", "null"] },
+        "themes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "extra_fields": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "is_open_data": { "type": ["boolean", "null"] },
+        "visibility": { "type": ["string", "null"] },
+        "private": { "type": ["boolean", "null"] },
+        "has_dcat_badge": { "type": ["boolean", "null"] },
+        "source_exported_at": { "type": ["string", "null"] },
+        "resources": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/resource" }
+        }
+      }
+    },
+    "resource": {
+      "type": "object",
+      "required": ["url", "format", "name", "kind", "sources"],
+      "additionalProperties": true,
+      "properties": {
+        "resource_id": { "type": ["string", "null"] },
+        "url": { "type": "string", "minLength": 1, "format": "uri" },
+        "format": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": ["string", "null"] },
+        "kind": {
+          "type": "string",
+          "enum": ["data", "documentation", "other"]
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["acesso_rapido", "formatado"]
+          },
+          "minItems": 1
+        }
+      }
+    }
+  }
+}
