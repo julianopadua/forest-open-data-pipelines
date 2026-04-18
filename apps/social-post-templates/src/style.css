@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+/* ─── Canvas ──────────────────────────────────────────────── */
+.post-canvas {
+  width: 1080px;
+  height: 1350px;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+/* ─── Viewport scale helper ───────────────────────────────── */
+.canvas-scaler {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 2rem;
+  background: #f1f5f9;
+  min-height: 100vh;
+}
+
+.canvas-scaler .post-canvas {
+  transform-origin: top center;
+  transform: scale(var(--canvas-scale, 0.5));
+}
+
+/* ─── Grid dividers ───────────────────────────────────────── */
+.grid-v::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: var(--grid-line-w, 1px);
+  height: 100%;
+  background: var(--grid-color);
+  pointer-events: none;
+}
+
+.grid-h::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: var(--grid-line-w, 1px);
+  background: var(--grid-color);
+  pointer-events: none;
+}
+
+/* Combined vertical + horizontal */
+.grid-cross {
+  position: relative;
+}
+
+.grid-cross::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: var(--grid-line-w, 1px);
+  height: 100%;
+  background: var(--grid-color);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.grid-cross::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: var(--grid-line-w, 1px);
+  background: var(--grid-color);
+  pointer-events: none;
+  z-index: 1;
+}
