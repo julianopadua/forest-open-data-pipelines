@@ -21,9 +21,14 @@ def _pct_delta(new: float, old: float) -> float | None:
 def build_focos_incendio_llm_payload(
     spec: dict[str, Any],
     reference_date: date,
+    *,
+    biome: str | None = None,
 ) -> dict[str, Any]:
     """
     Monta um dict JSON-serializável com métricas comparativas para prompts LLM.
+
+    ``biome``: rótulo do recorte (ex. \"Amazônia\"). Se None, usa ``metadata.biome_label_pt``
+    do spec ou \"Brasil (Nacional)\".
 
     - Mês vs mês: compara o **último mês civil fechado** (``last_closed_month``) —
       ano atual vs ano anterior naquele mês.
@@ -35,6 +40,8 @@ def build_focos_incendio_llm_payload(
     last_m = int(meta.get("last_closed_month", meta.get("ytd_months", 0)))
     if last_m < 1 or last_m > 12:
         raise ValueError(f"last_closed_month inválido: {last_m}")
+
+    bioma_display = biome if biome is not None else meta.get("biome_label_pt", "Brasil (Nacional)")
 
     month_labels: list[str] = list(spec["month_labels"])
     cur = spec["series"]["current"]["values"]
@@ -57,7 +64,7 @@ def build_focos_incendio_llm_payload(
     mom_prev = int(prev[idx_last])
 
     return {
-        "schema": "focos_incendio_br_v2",
+        "schema": "focos_incendio_br_v3",
         "reference_date": reference_date.isoformat(),
         "metadata": {
             "latest_year": ly,
@@ -67,6 +74,7 @@ def build_focos_incendio_llm_payload(
             "last_closed_month": last_m,
             "published_at_label": meta.get("published_at_label"),
             "source": meta.get("source"),
+            "bioma": bioma_display,
             "escopo": (
                 "Somente meses civis já encerrados; comparações mês a mês e acumulado "
                 "no mesmo recorte (sem o mês civil em curso)."

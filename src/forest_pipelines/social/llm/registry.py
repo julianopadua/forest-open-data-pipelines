@@ -12,6 +12,9 @@ from forest_pipelines.social.llm.payloads.focos_incendio import (
     build_focos_incendio_llm_payload,
     payload_to_prompt_block,
 )
+from forest_pipelines.social.llm.prompts.focos_incendio_br.carousel_post_description import (
+    build_carousel_post_description_prompts,
+)
 from forest_pipelines.social.llm.prompts.focos_incendio_br.graphic_text import (
     build_graphic_text_prompts,
 )
@@ -24,6 +27,77 @@ TOPIC_FOCOS_INCENDIO_BR = "focos_incendio_br"
 COMPONENT_POST_DESCRIPTION = "post_description"
 COMPONENT_GRAPHIC_TEXT = "graphic_text"
 DEFAULT_COMPONENTS = (COMPONENT_POST_DESCRIPTION, COMPONENT_GRAPHIC_TEXT)
+
+
+def generate_carousel_instagram_caption(
+    reference_date: date,
+    llm_settings: LLMSettings,
+    *,
+    topic_id: str = TOPIC_FOCOS_INCENDIO_BR,
+    logger: logging.Logger | None = None,
+) -> dict[str, str]:
+    """Uma única legenda para o carrossel (contexto mínimo)."""
+    sys_u, usr = build_carousel_post_description_prompts(reference_date=reference_date)
+    r = generate_text(llm_settings, sys_u, usr)
+    if logger:
+        log_llm_roundtrip(
+            logger,
+            topic_id=topic_id,
+            component="carousel_post_description",
+            system_prompt=sys_u,
+            user_prompt=usr,
+            result=r,
+            scope="carousel",
+        )
+    return {"text": r.text, "model": r.model}
+
+
+def generate_graphic_text_for_carousel_scope(
+    spec: dict[str, Any],
+    reference_date: date,
+    llm_settings: LLMSettings,
+    *,
+    biome_label_pt: str,
+    escopo_nacional: bool,
+    scope_slug: str,
+    topic_id: str = TOPIC_FOCOS_INCENDIO_BR,
+    logger: logging.Logger | None = None,
+) -> dict[str, str]:
+    """Texto do slide (body_chart) para um recorte do carrossel."""
+    payload = build_focos_incendio_llm_payload(
+        spec, reference_date, biome=biome_label_pt
+    )
+    block = payload_to_prompt_block(payload)
+    if logger:
+        log_stage(
+            logger,
+            "llm_payload_ready",
+            {
+                "topic": topic_id,
+                "reference_date": reference_date.isoformat(),
+                "scope": scope_slug,
+                "payload_keys": sorted(payload.keys()),
+                "context_json_chars": len(block),
+            },
+        )
+
+    sys2, usr2 = build_graphic_text_prompts(
+        contexto_payload_json=block,
+        biome_label_pt=biome_label_pt,
+        escopo_nacional=escopo_nacional,
+    )
+    r2: RoutedTextResult = generate_text(llm_settings, sys2, usr2)
+    if logger:
+        log_llm_roundtrip(
+            logger,
+            topic_id=topic_id,
+            component=COMPONENT_GRAPHIC_TEXT,
+            system_prompt=sys2,
+            user_prompt=usr2,
+            result=r2,
+            scope=scope_slug,
+        )
+    return {"text": r2.text, "model": r2.model}
 
 
 def run_topic_components(
@@ -68,7 +142,13 @@ def _run_focos_incendio_br(
     if invalid:
         raise ValueError(f"Componentes LLM desconhecidos: {invalid}")
 
-    payload = build_focos_incendio_llm_payload(spec, reference_date)
+    meta = spec.get("metadata") or {}
+    biome_label = str(meta.get("biome_label_pt", "Brasil (Nacional)"))
+    escopo_nacional = meta.get("biome_scope") == "nacional"
+
+    payload = build_focos_incendio_llm_payload(
+        spec, reference_date, biome=biome_label
+    )
     block = payload_to_prompt_block(payload)
     if logger:
         log_stage(
@@ -103,7 +183,11 @@ def _run_focos_incendio_br(
         out[COMPONENT_POST_DESCRIPTION] = {"text": r1.text, "model": r1.model}
 
     if COMPONENT_GRAPHIC_TEXT in requested:
-        sys2, usr2 = build_graphic_text_prompts(contexto_payload_json=block)
+        sys2, usr2 = build_graphic_text_prompts(
+            contexto_payload_json=block,
+            biome_label_pt=biome_label,
+            escopo_nacional=escopo_nacional,
+        )
         r2: RoutedTextResult = generate_text(llm_settings, sys2, usr2)
         if logger:
             log_llm_roundtrip(

@@ -14,9 +14,26 @@ Evite jargão excessivo; não use markdown nem emojis.
 """
 
 
-def build_graphic_text_prompts(*, contexto_payload_json: str) -> tuple[str, str]:
-    """Retorna (system_prompt, user_prompt)."""
-    user = f"""Dados para análise (JSON):
+def build_graphic_text_prompts(
+    *,
+    contexto_payload_json: str,
+    biome_label_pt: str,
+    escopo_nacional: bool,
+) -> tuple[str, str]:
+    """Retorna (system_prompt, user_prompt) com tom País vs regional conforme o recorte."""
+    if escopo_nacional:
+        tom = (
+            f"Recorte: {biome_label_pt}. Tom: visão do País (território nacional). "
+            "Não compare nem mencione outros biomas ou a ausência de outros recortes."
+        )
+    else:
+        tom = (
+            f"Recorte regional: {biome_label_pt}. Tom: leitura regional desse bioma. "
+            "Não mencione ausência de dados de outros biomas ou do território nacional."
+        )
+    user = f"""{tom}
+
+Dados para análise (JSON):
 {contexto_payload_json}
 
 Tarefa: escreva o texto explicativo do gráfico conforme as regras do sistema.

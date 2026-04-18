@@ -124,7 +124,7 @@ MANIFEST=examples/green-manifest.example.json npm run export:manifest
 
 Saída: `dist-exports/green/<runId>/01-cover.png`, `02-body_image_text.png`, … (pasta `dist-exports/` está no `.gitignore`).
 
-## Pipeline BDQueimadas (gráfico + manifest)
+## Pipeline BDQueimadas (carrossel 6 slides + biomas)
 
 Na **raiz do repositório** `forest-open-data-pipelines`, com venv ativo e `pip install -e .`:
 
@@ -133,11 +133,17 @@ Na **raiz do repositório** `forest-open-data-pipelines`, com venv ativo e `pip 
 
 A **linha do ano atual** no gráfico e nas estatísticas usa **apenas meses civis já encerrados**: o último ponto é o mês anterior ao mês civil corrente (ex.: em 18 de abril, até março; em 1º de maio, até abril). Não entra o mês em curso. A data de referência do comando (`--as-of`, default: hoje) define esse recorte.
 
+O pipeline gera **quatro recortes** na ordem fixa: **Nacional**, **Amazônia**, **Cerrado**, **Pantanal**. Para cada um há um PNG e um `chart_spec` com sufixo estável (`bdqueimadas-chart-nacional.png`, `…-amazonia.png`, etc.). Os arquivos **sem sufixo** (`bdqueimadas-chart.png`, `chart_spec.json`) são cópias do recorte **nacional**.
+
 ```bash
 python -m forest_pipelines.social --data-dir data/inpe_bdqueimadas --emit-manifest
 ```
 
 Opções úteis: `--current-year 2026` (default: ano do sistema), `--skip-mensal-download` (só cache já baixado), `--mensal-base-url` e `--mensal-cache-dir`.
+
+Com `--emit-manifest`, o JSON inclui **6 slides**: capa, quatro `body_chart` (um por recorte), CTA. Cada `body_chart` pode trazer `generation: { ok, error }` se dados ou LLM falharem para aquele escopo (o pipeline continua). Opcionalmente `instagram_caption_draft` e `generation_errors` no topo.
+
+Descrição do fluxo (escopos, LLM, manifest): [`docs/social_llm_flow.md`](../../docs/social_llm_flow.md) na raiz do repositório.
 
 ### Logs (`python -m forest_pipelines.social`)
 
@@ -150,8 +156,8 @@ Formato: linhas de texto com um **objeto JSON** por evento:
 
 | `event` | Conteúdo |
 |--------|----------|
-| `stage` | Etapas do pipeline (`pipeline_start`, `extract_anual_done` ou `extract_anual_skipped`, `load_monthly_all_df_done`, `mensal_files_ready`, `current_year_monthly_counts_done`, `chart_spec_computed`, `render_chart_png_done`, `chart_spec_json_written`, `llm_run_start` + estágios LLM, `social_llm_json_written`, `manifest_written` / `manifest_skipped`, `plot_sources_metadata_written`, `pipeline_done`). |
-| `llm_roundtrip` | Só com `--llm`: para cada componente (`post_description`, `graphic_text`), o **prompt completo** (`request.system`, `request.user`) e a **resposta** (`response.model`, `response.text`, `response.raw_text`). |
+| `stage` | Etapas do pipeline (`pipeline_start`, `extract_anual_*`, `load_monthly_all_df_done`, `mensal_files_ready`, iteração por escopo com `carousel_scope_start` / `carousel_scope_ok` / `carousel_scope_failed`, `chart_spec_computed`, `render_chart_png_done`, `chart_spec_json_written`, `llm_run_start` e estágios LLM, `social_llm_json_written`, `manifest_written` / `manifest_skipped`, `plot_sources_metadata_written`, `pipeline_done`). |
+| `llm_roundtrip` | Só com `--llm`: prompt/resposta; a legenda única do carrossel usa `component` `carousel_post_description` e `scope` `carousel`; cada texto de slide usa `graphic_text` e `scope` com o slug do recorte (`nacional`, `amazonia`, …). |
 
 Opção de CLI: `--logs-dir <pasta>` altera só o diretório base (o subcaminho `social/bdqueimadas/<ano>/<mês>/` continua igual).
 
@@ -165,26 +171,29 @@ Com rede e key válida:
 python -m forest_pipelines.social --data-dir data/inpe_bdqueimadas --emit-manifest --llm
 ```
 
+- **`post_description`** — uma única legenda Instagram para o carrossel inteiro (prompt dedicado; não detalha números por slide).
+- **`graphic_text`** — quatro chamadas, uma por recorte, com payload analítico já filtrado (`focos_incendio_br_v3`).
+
 Opções: `--as-of YYYY-MM-DD` (define o último mês fechado no gráfico — ex. abril → até março — e o prefixo `[YYYY-MM-DD]` na legenda LLM), `--app-config` (default `<repo>/configs/app.yml`), `--out-social-llm` (default `public/generated/social_llm.json`), `--llm-components post_description,graphic_text` (default: ambos).
 
-Para rodar **só a legenda do post**:
+Para rodar **só a legenda do carrossel**:
 
 ```bash
 python -m forest_pipelines.social --data-dir data/inpe_bdqueimadas --llm --llm-components post_description
 ```
 
-Para rodar **só o texto do gráfico**:
+Para rodar **só os textos dos slides** (quatro escopos):
 
 ```bash
 python -m forest_pipelines.social --data-dir data/inpe_bdqueimadas --emit-manifest --llm --llm-components graphic_text
 ```
 
-Se você pedir só um componente, o `social_llm.json` salva apenas esse campo de texto e o respectivo modelo em `models`.
+O arquivo `social_llm.json` usa **`schema_version: 2`**: `post_description`, `post_description_model`, lista `scopes` (paths, `graphic_text`, modelos, erros por slug). Versões antigas podem ter `schema_version: 1` com um único par legenda + texto.
 
 Saídas extras:
 
-- `public/generated/social_llm.json` — `post_description` (legenda Instagram começando com `[YYYY-MM-DD]`) e `graphic_text` (análise para o slide do gráfico), em pt-BR.
-- Com `--emit-manifest`, o campo `body_text` do slide `body_chart` no manifest passa a usar o texto gerado para o gráfico.
+- `public/generated/social_llm.json` — legenda + entradas por escopo (pt-BR).
+- Com `--emit-manifest`, cada `body_chart` recebe o texto correspondente em `slots.body_text` (ou mensagem de fallback).
 
 Ou:
 
@@ -194,10 +203,9 @@ make bdqueimadas-social-assets
 
 Isso gera:
 
-- `public/generated/bdqueimadas-chart.png` — linha principal = **soma de focos por mês** do ano atual (CSV mensal); linha tracejada = ano anterior (ZIP); faixa = **média** dos 5 anos que terminam no ano anterior (ex. 2021–2025), com eixos **Mês** / **Nº de focos**.
-- `public/generated/chart_spec.json` — séries e metadados (`published_at_label` estilo `Abr 2026` para o manifest).
-- `examples/bdqueimadas-social.manifest.json` e cópia em `public/examples/` para o preset `?preset=bdqueimadas` no compositor (`published_at` preenchido como nos outros slides).
+- `public/generated/bdqueimadas-chart-<slug>.png` e `chart_spec-<slug>.json` para cada recorte; cópias nacionais `bdqueimadas-chart.png` e `chart_spec.json`.
+- `examples/bdqueimadas-social.manifest.json` e cópia em `public/examples/` para o preset `?preset=bdqueimadas` no compositor.
 
 Depois: `npm run dev` neste app e, em outro terminal, `npm run export:manifest -- examples/bdqueimadas-social.manifest.json`.
 
-A legenda para colar no Instagram está em `social_llm.json` → `post_description` quando você roda o pipeline com `--llm`.
+A legenda para colar no Instagram está em `social_llm.json` → `post_description` quando você roda o pipeline com `--llm` e inclui `post_description` em `--llm-components`.

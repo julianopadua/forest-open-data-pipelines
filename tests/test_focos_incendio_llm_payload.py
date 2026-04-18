@@ -45,6 +45,8 @@ def _minimal_spec() -> dict:
             "last_closed_month": 3,
             "published_at_label": "Mar 2026",
             "source": "INPE (teste)",
+            "biome_scope": "nacional",
+            "biome_label_pt": "Brasil (Nacional)",
         },
     }
 
@@ -69,17 +71,22 @@ def test_acumulado_e_mom_vs_mes() -> None:
     assert mom["focos_ano_anterior"] == 90
 
 
-def test_payload_sem_flags_v2() -> None:
+def test_payload_v3_bioma_metadata() -> None:
     spec = _minimal_spec()
     p = build_focos_incendio_llm_payload(spec, date(2026, 3, 1))
-    assert p["schema"] == "focos_incendio_br_v2"
+    assert p["schema"] == "focos_incendio_br_v3"
     assert "flags" not in p
     assert "escopo" in p["metadata"]
+    assert p["metadata"]["bioma"] == "Brasil (Nacional)"
+    p2 = build_focos_incendio_llm_payload(
+        spec, date(2026, 3, 1), biome="Amazônia"
+    )
+    assert p2["metadata"]["bioma"] == "Amazônia"
 
 
 def test_payload_to_prompt_block_roundtrip() -> None:
     spec = _minimal_spec()
     p = build_focos_incendio_llm_payload(spec, date(2026, 3, 1))
     s = payload_to_prompt_block(p)
-    assert "focos_incendio_br_v2" in s
+    assert "focos_incendio_br_v3" in s
     assert "2026-03-01" in s

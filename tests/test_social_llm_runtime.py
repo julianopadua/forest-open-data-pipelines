@@ -43,6 +43,8 @@ def _minimal_spec() -> dict:
             "last_closed_month": 3,
             "published_at_label": "Mar 2026",
             "source": "INPE (teste)",
+            "biome_scope": "nacional",
+            "biome_label_pt": "Brasil (Nacional)",
         },
     }
 

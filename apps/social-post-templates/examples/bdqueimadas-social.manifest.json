@@ -13,9 +13,9 @@
       "slots": {
         "topic_tag": "Queimadas & Clima",
         "published_at": "Mar 2026",
-        "series_label": "Série temporal",
+        "series_label": "Carrossel",
         "title": "Focos de incêndio no Brasil",
-        "summary": "Comparativo mês a mês: 2026 (só meses já fechados) vs 2025 e média por mês (2021–2025)."
+        "summary": "Brasil, Amazônia, Cerrado e Pantanal — 2026 (meses já fechados) vs 2025 e média por mês (2021–2025)."
       }
     },
     {
@@ -23,10 +23,44 @@
       "slots": {
         "topic_tag": "Queimadas & Clima",
         "published_at": "Mar 2026",
-        "caption": "Focos por mês (Brasil) · BDQueimadas, publicado pelo INPE",
-        "image_url": "/generated/bdqueimadas-chart.png",
-        "body_text": "Em março de 2026 registramos 1.968 focos de queimadas, 16,5 % a menos que o mesmo mês de 2025, que teve 2.357 focos. No acumulado de janeiro a março, o ano atual atingiu 8.406 focos, 14,95 % a mais que os 7.313 focos de 2025 no mesmo período. Esse total acumulado fica um pouco abaixo da média de cinco anos, que era de 8.480,2 focos, representando uma queda de 0,87 %. Assim, embora o mês de março tenha diminuído em relação ao ano anterior, o acumulado geral do ano já mostra um aumento em comparação ao período do ano passado e permanece próximo da tendência histórica. Essas comparações ajudam a entender se o ano está se aproximando ou se afastando dos padrões de queimadas observados nos últimos cinco anos."
-      }
+        "caption": "Focos por mês (Brasil (Nacional)) · BDQueimadas, INPE",
+        "image_url": "/generated/bdqueimadas-chart-nacional.png",
+        "body_text": "Texto de exemplo para o slide nacional (gerado com --llm ou placeholder)."
+      },
+      "generation": { "ok": true, "error": null }
+    },
+    {
+      "type": "body_chart",
+      "slots": {
+        "topic_tag": "Queimadas & Clima",
+        "published_at": "Mar 2026",
+        "caption": "Focos por mês (Amazônia) · BDQueimadas, INPE",
+        "image_url": "/generated/bdqueimadas-chart-amazonia.png",
+        "body_text": "Texto de exemplo para Amazônia."
+      },
+      "generation": { "ok": true, "error": null }
+    },
+    {
+      "type": "body_chart",
+      "slots": {
+        "topic_tag": "Queimadas & Clima",
+        "published_at": "Mar 2026",
+        "caption": "Focos por mês (Cerrado) · BDQueimadas, INPE",
+        "image_url": "/generated/bdqueimadas-chart-cerrado.png",
+        "body_text": "Texto de exemplo para Cerrado."
+      },
+      "generation": { "ok": true, "error": null }
+    },
+    {
+      "type": "body_chart",
+      "slots": {
+        "topic_tag": "Queimadas & Clima",
+        "published_at": "Mar 2026",
+        "caption": "Focos por mês (Pantanal) · BDQueimadas, INPE",
+        "image_url": "/generated/bdqueimadas-chart-pantanal.png",
+        "body_text": "Texto de exemplo para Pantanal."
+      },
+      "generation": { "ok": true, "error": null }
     },
     {
       "type": "cta",

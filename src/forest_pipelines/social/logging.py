@@ -31,23 +31,24 @@ def log_llm_roundtrip(
     system_prompt: str,
     user_prompt: str,
     result: RoutedTextResult,
+    scope: str | None = None,
 ) -> None:
     """Registra prompt completo enviado ao provedor e resposta (texto + modelo + bruto)."""
-    line = json.dumps(
-        {
-            "event": "llm_roundtrip",
-            "topic": topic_id,
-            "component": component,
-            "request": {
-                "system": system_prompt,
-                "user": user_prompt,
-            },
-            "response": {
-                "model": result.model,
-                "text": result.text,
-                "raw_text": result.raw_text,
-            },
+    payload: dict = {
+        "event": "llm_roundtrip",
+        "topic": topic_id,
+        "component": component,
+        "request": {
+            "system": system_prompt,
+            "user": user_prompt,
         },
-        ensure_ascii=False,
-    )
+        "response": {
+            "model": result.model,
+            "text": result.text,
+            "raw_text": result.raw_text,
+        },
+    }
+    if scope is not None:
+        payload["scope"] = scope
+    line = json.dumps(payload, ensure_ascii=False)
     logger.info("%s", line)

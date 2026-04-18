@@ -952,8 +952,13 @@ def count_focos_rows_brasil_file(
     *,
     satellite_candidates: list[str] | None = None,
     reference_satellite: str | None = None,
+    biome_inpe_key: str | None = None,
 ) -> int:
-    """Número de focos (linhas válidas) alinhado ao agregado nacional do report."""
+    """Número de focos (linhas válidas) alinhado ao agregado nacional do report.
+
+    Se ``biome_inpe_key`` for informado (ex.: valor normalizado em maiúsculas como no CSV INPE,
+    p.ex. ``AMAZÔNIA``), conta apenas linhas desse bioma.
+    """
     subset = read_focos_subset_brasil_file(
         path,
         datetime_candidates,
@@ -962,6 +967,9 @@ def count_focos_rows_brasil_file(
         satellite_candidates=satellite_candidates,
         reference_satellite=reference_satellite,
     )
+    if biome_inpe_key:
+        key = str(biome_inpe_key).strip().upper()
+        subset = subset[subset["biome"] == key]
     return int(len(subset))
 
 

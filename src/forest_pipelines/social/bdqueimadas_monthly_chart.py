@@ -23,6 +23,7 @@ from forest_pipelines.datasets.inpe.bdqueimadas_mensal_listing import (
     ensure_mensal_files_for_year,
 )
 from forest_pipelines.reports.builders.bdqueimadas_incremental import (
+    BIOME_LABELS,
     INPE_REFERENCE_SATELLITE,
     _pick_member,
     build_year_payload_from_csv,
@@ -59,6 +60,20 @@ PUBLIC_MANIFEST_COPY = (
     / "examples"
     / "bdqueimadas-social.manifest.json"
 )
+
+# Carrossel fixo: Nacional + três biomas (ordem do manifest de 6 slides).
+BDQUEIMADAS_CAROUSEL_SCOPES: tuple[str | None, ...] = (
+    None,
+    "Amazônia",
+    "Cerrado",
+    "Pantanal",
+)
+
+_SCOPE_TO_INPE_BIOME: dict[str, str] = {
+    "Amazônia": "AMAZÔNIA",
+    "Cerrado": "CERRADO",
+    "Pantanal": "PANTANAL",
+}
 
 MONTH_LABELS_PT = [
     "Jan",
@@ -98,6 +113,33 @@ def last_closed_month_for_calendar_year(reference_date: date, year: int) -> int:
     return reference_date.month - 1
 
 
+def carousel_scope_to_slug(scope: str | None) -> str:
+    """Slug estável para nomes de arquivo (ASCII)."""
+    if scope is None:
+        return "nacional"
+    return {"Amazônia": "amazonia", "Cerrado": "cerrado", "Pantanal": "pantanal"}.get(
+        scope,
+        scope.lower().replace(" ", "-"),
+    )
+
+
+def carousel_scope_to_inpe_biome_key(scope: str | None) -> str | None:
+    """Chave de bioma como no CSV INPE (maiúsculas); None = território nacional."""
+    if scope is None:
+        return None
+    return _SCOPE_TO_INPE_BIOME.get(scope)
+
+
+def carousel_biome_label_pt(scope: str | None) -> str:
+    """Rótulo em pt-BR para metadata/LLM (Nacional vs bioma)."""
+    if scope is None:
+        return "Brasil (Nacional)"
+    key = carousel_scope_to_inpe_biome_key(scope)
+    if key and key in BIOME_LABELS:
+        return str(BIOME_LABELS[key]["pt"])
+    return str(scope)
+
+
 def _trim_payload_monthly_to_inferred_year(payload: dict[str, Any]) -> dict[str, Any]:
     """Descarta meses cujo ano civil do agregado não bate com o ano do arquivo (nome)."""
     inf = payload.get("inferred_year")
@@ -135,6 +177,66 @@ def _monthly_all_payloads_to_df_dedupe(
     df["period"] = df["period"].astype(str)
     df = df.drop_duplicates(subset=["period", "year"], keep="first")
     return df.sort_values(["period"]).reset_index(drop=True)
+
+
+def _monthly_by_biome_payloads_to_df_dedupe(
+    payloads: list[dict[str, Any]],
+    inpe_biome_key: str,
+) -> pd.DataFrame:
+    """Série mensal para um bioma INPE (dedupe period,year como na série nacional)."""
+    target = str(inpe_biome_key).strip().upper()
+    rows: list[dict[str, Any]] = []
+    for item in payloads:
+        for row in item.get("monthly_by_biome", []):
+            b = str(row.get("biome", "")).strip().upper()
+            if b == target:
+                rows.append(dict(row))
+    if not rows:
+        return pd.DataFrame(columns=["period", "year", "value"])
+    df = pd.DataFrame(rows)
+    df["value"] = pd.to_numeric(df["value"], errors="coerce").fillna(0).astype(int)
+    df["year"] = pd.to_numeric(df["year"], errors="coerce").astype(int)
+    df["period"] = df["period"].astype(str)
+    df = df.drop_duplicates(subset=["period", "year"], keep="first")
+    return df.sort_values(["period"]).reset_index(drop=True)
+
+
+def _collect_year_payloads(
+    *,
+    recent_years: int | None,
+    anual_dir: Path,
+    csv_glob: str,
+    satellite_candidates: list[str] | None,
+    reference_satellite: str | None,
+) -> list[dict[str, Any]]:
+    datetime_candidates = list(DEFAULT_DATETIME_CANDIDATES)
+    state_candidates = list(DEFAULT_STATE_CANDIDATES)
+    biome_candidates = list(DEFAULT_BIOME_CANDIDATES)
+    sat_cands = (
+        satellite_candidates
+        if satellite_candidates is not None
+        else list(DEFAULT_SATELLITE_CANDIDATES)
+    )
+    csv_files = _select_annual_reference_csv_files(
+        anual_dir,
+        csv_glob=csv_glob,
+        recent_years=recent_years,
+    )
+    payloads: list[dict[str, Any]] = []
+    for csv_path in csv_files:
+        payloads.append(
+            _trim_payload_monthly_to_inferred_year(
+                build_year_payload_from_csv(
+                    csv_path,
+                    datetime_candidates,
+                    state_candidates,
+                    biome_candidates,
+                    satellite_candidates=sat_cands,
+                    reference_satellite=reference_satellite,
+                )
+            )
+        )
+    return payloads
 
 
 def extract_annual_reference_csvs(
@@ -193,24 +295,13 @@ def load_monthly_all_df(
             "ou copie focos_br_ref_YYYY.csv para essa pasta."
         )
 
-    datetime_candidates = list(DEFAULT_DATETIME_CANDIDATES)
-    state_candidates = list(DEFAULT_STATE_CANDIDATES)
-    biome_candidates = list(DEFAULT_BIOME_CANDIDATES)
-
-    payloads: list[dict[str, Any]] = []
-    for csv_path in csv_files:
-        payloads.append(
-            _trim_payload_monthly_to_inferred_year(
-                build_year_payload_from_csv(
-                    csv_path,
-                    datetime_candidates,
-                    state_candidates,
-                    biome_candidates,
-                    satellite_candidates=satellite_candidates,
-                    reference_satellite=reference_satellite,
-                )
-            )
-        )
+    payloads = _collect_year_payloads(
+        recent_years=recent_years,
+        anual_dir=base_anual,
+        csv_glob=csv_glob,
+        satellite_candidates=satellite_candidates,
+        reference_satellite=reference_satellite,
+    )
 
     monthly_all_df = _monthly_all_payloads_to_df_dedupe(payloads)
     if monthly_all_df.empty:
@@ -225,6 +316,8 @@ def compute_chart_spec(
     current_year_monthly_counts: dict[int, int],
     reference_date: date,
     reference_satellite: str | None = None,
+    biome_scope: str = "nacional",
+    biome_label_pt: str = "Brasil (Nacional)",
 ) -> dict[str, Any]:
     if not current_year_monthly_counts:
         raise RuntimeError(
@@ -281,7 +374,7 @@ def compute_chart_spec(
     published_at_label = format_published_at_pt(last_closed, current_year)
 
     source = (
-        "INPE BDQueimadas ("
+        "INPE BDQueimadas (mensal COIDS + agregação ZIP anual"
         + (f"; satélite {reference_satellite}" if reference_satellite else "")
         + ")"
     )
@@ -295,6 +388,8 @@ def compute_chart_spec(
         "unit": "focos",
         "source": source,
         "published_at_label": published_at_label,
+        "biome_scope": biome_scope,
+        "biome_label_pt": biome_label_pt,
     }
     if reference_satellite:
         meta["reference_satellite"] = reference_satellite
@@ -757,18 +852,23 @@ def build_bdqueimadas_social_assets(
     else:
         log_stage(log, "extract_anual_skipped", {"anual_dir": str(anual_dir.resolve())})
 
-    monthly = load_monthly_all_df(
-        data_dir,
+    year_payloads = _collect_year_payloads(
         recent_years=recent_years,
         anual_dir=anual_dir,
         csv_glob=csv_glob,
         satellite_candidates=sat_cands,
         reference_satellite=ref_sat,
     )
+    monthly_nacional = _monthly_all_payloads_to_df_dedupe(year_payloads)
+    if monthly_nacional.empty:
+        raise RuntimeError("Agregação mensal vazia após leitura dos CSVs em anual/.")
     log_stage(
         log,
         "load_monthly_all_df_done",
-        {"rows": int(len(monthly)), "columns": list(monthly.columns)},
+        {
+            "rows": int(len(monthly_nacional)),
+            "columns": list(monthly_nacional.columns),
+        },
     )
 
     mensal_files = ensure_mensal_files_for_year(
@@ -793,32 +893,120 @@ def build_bdqueimadas_social_assets(
     st_c = list(DEFAULT_STATE_CANDIDATES)
     bio_c = list(DEFAULT_BIOME_CANDIDATES)
 
-    current_year_monthly_counts: dict[int, int] = {}
-    for month, path in mensal_files:
-        current_year_monthly_counts[month] = count_focos_rows_brasil_file(
-            path,
-            dt_c,
-            st_c,
-            bio_c,
-            satellite_candidates=sat_cands,
-            reference_satellite=ref_sat,
+    carousel_scope_outcomes: list[dict[str, Any]] = []
+    for scope in BDQUEIMADAS_CAROUSEL_SCOPES:
+        slug = carousel_scope_to_slug(scope)
+        inpe_key = carousel_scope_to_inpe_biome_key(scope)
+        label_pt = carousel_biome_label_pt(scope)
+        biome_scope_meta = "nacional" if scope is None else (inpe_key or "unknown")
+        log_stage(
+            log,
+            "carousel_scope_start",
+            {"slug": slug, "biome_label_pt": label_pt, "inpe_biome_key": inpe_key},
         )
-    log_stage(
-        log,
-        "current_year_monthly_counts_done",
-        {
-            "months": sorted(current_year_monthly_counts.keys()),
-            "counts_by_month": current_year_monthly_counts,
-        },
-    )
+        try:
+            if scope is None:
+                monthly_df = monthly_nacional
+            else:
+                monthly_df = _monthly_by_biome_payloads_to_df_dedupe(
+                    year_payloads,
+                    inpe_key or "",
+                )
+                if monthly_df.empty:
+                    raise RuntimeError(
+                        f"Série anual vazia para o bioma {label_pt} (INPE: {inpe_key})."
+                    )
 
-    spec = compute_chart_spec(
-        monthly,
-        current_year=cy,
-        current_year_monthly_counts=current_year_monthly_counts,
-        reference_date=ref_d,
-        reference_satellite=ref_sat or None,
+            scope_counts: dict[int, int] = {}
+            for month, path in mensal_files:
+                scope_counts[month] = count_focos_rows_brasil_file(
+                    path,
+                    dt_c,
+                    st_c,
+                    bio_c,
+                    satellite_candidates=sat_cands,
+                    reference_satellite=ref_sat,
+                    biome_inpe_key=inpe_key,
+                )
+
+            scope_spec = compute_chart_spec(
+                monthly_df,
+                current_year=cy,
+                current_year_monthly_counts=scope_counts,
+                reference_date=ref_d,
+                reference_satellite=ref_sat or None,
+                biome_scope=biome_scope_meta,
+                biome_label_pt=label_pt,
+            )
+            stem_png = out_png.stem
+            stem_json = out_json.stem
+            out_png_scope = out_png.parent / f"{stem_png}-{slug}{out_png.suffix}"
+            out_json_scope = out_json.parent / f"{stem_json}-{slug}{out_json.suffix}"
+            render_chart_png(scope_spec, out_png_scope)
+            out_json_scope.parent.mkdir(parents=True, exist_ok=True)
+            out_json_scope.write_text(
+                json.dumps(scope_spec, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            if slug == "nacional":
+                out_png.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(out_png_scope, out_png)
+                shutil.copyfile(out_json_scope, out_json)
+
+            smeta = scope_spec["metadata"]
+            log_stage(
+                log,
+                "carousel_scope_ok",
+                {
+                    "slug": slug,
+                    "chart_png": str(out_png_scope.resolve()),
+                    "chart_spec_json": str(out_json_scope.resolve()),
+                    "last_closed_month": smeta.get("last_closed_month"),
+                },
+            )
+            carousel_scope_outcomes.append(
+                {
+                    "scope": scope,
+                    "slug": slug,
+                    "ok": True,
+                    "spec": scope_spec,
+                    "chart_png": out_png_scope,
+                    "chart_json": out_json_scope,
+                    "image_url": f"/generated/{out_png_scope.name}",
+                    "biome_label_pt": label_pt,
+                    "escopo_nacional": scope is None,
+                }
+            )
+        except Exception as e:  # noqa: BLE001
+            log.exception("carousel_scope_failed")
+            log_stage(
+                log,
+                "carousel_scope_failed",
+                {"slug": slug, "error": str(e)},
+            )
+            carousel_scope_outcomes.append(
+                {
+                    "scope": scope,
+                    "slug": slug,
+                    "ok": False,
+                    "error": str(e),
+                    "biome_label_pt": label_pt,
+                    "escopo_nacional": scope is None,
+                }
+            )
+
+    nacional_ok = next(
+        (o for o in carousel_scope_outcomes if o.get("slug") == "nacional" and o.get("ok")),
+        None,
     )
+    spec = nacional_ok["spec"] if nacional_ok else next(
+        (o["spec"] for o in carousel_scope_outcomes if o.get("ok")),
+        None,
+    )
+    if spec is None:
+        raise RuntimeError(
+            "Nenhum recorte do carrossel (Nacional / biomas) foi gerado com sucesso."
+        )
     meta0 = spec["metadata"]
     log_stage(
         log,
@@ -832,26 +1020,28 @@ def build_bdqueimadas_social_assets(
                 meta0.get("avg_window_years_from"),
                 meta0.get("avg_window_years_to"),
             ],
+            "carousel_slugs": [o.get("slug") for o in carousel_scope_outcomes],
         },
     )
-    render_chart_png(spec, out_png)
     log_stage(log, "render_chart_png_done", {"path": str(out_png.resolve())})
-    out_json.parent.mkdir(parents=True, exist_ok=True)
-    out_json.write_text(
-        json.dumps(spec, ensure_ascii=False, indent=2) + "\n",
-        encoding="utf-8",
-    )
     log_stage(log, "chart_spec_json_written", {"path": str(out_json.resolve())})
 
     llm_graphic_text: str | None = None
+    carousel_body_texts: dict[str, str] = {}
+    carousel_body_models: dict[str, str] = {}
+    post_caption_text: str | None = None
+    post_caption_model: str | None = None
+
     if run_llm:
         cfg = app_config if app_config is not None else DEFAULT_APP_CONFIG
         settings = load_settings(str(cfg))
         from forest_pipelines.social.llm.registry import (
             COMPONENT_GRAPHIC_TEXT,
+            COMPONENT_POST_DESCRIPTION,
             DEFAULT_COMPONENTS,
             TOPIC_FOCOS_INCENDIO_BR,
-            run_topic_components,
+            generate_carousel_instagram_caption,
+            generate_graphic_text_for_carousel_scope,
         )
         requested_components = llm_components if llm_components is not None else DEFAULT_COMPONENTS
 
@@ -865,34 +1055,97 @@ def build_bdqueimadas_social_assets(
                 "app_config": str(cfg.resolve()),
             },
         )
-        llm_out = run_topic_components(
-            TOPIC_FOCOS_INCENDIO_BR,
-            spec,
-            ref_d,
-            settings.llm,
-            components=requested_components,
-            logger=log,
-        )
-        if COMPONENT_GRAPHIC_TEXT in llm_out:
-            llm_graphic_text = llm_out[COMPONENT_GRAPHIC_TEXT]["text"]
+
+        if COMPONENT_POST_DESCRIPTION in requested_components:
+            try:
+                cap = generate_carousel_instagram_caption(
+                    ref_d,
+                    settings.llm,
+                    topic_id=TOPIC_FOCOS_INCENDIO_BR,
+                    logger=log,
+                )
+                post_caption_text = cap["text"]
+                post_caption_model = cap["model"]
+            except Exception as e:  # noqa: BLE001
+                log.exception("carousel_caption_failed")
+                log_stage(log, "carousel_caption_failed", {"error": str(e)})
+                post_caption_text = ""
+                post_caption_model = ""
+
+        if COMPONENT_GRAPHIC_TEXT in requested_components:
+            for outcome in carousel_scope_outcomes:
+                slug = str(outcome.get("slug", ""))
+                if not outcome.get("ok"):
+                    carousel_body_texts[slug] = (
+                        "Não foi possível gerar o texto deste slide (falha nos dados ou no gráfico). "
+                        "Confira o log do pipeline."
+                    )
+                    carousel_body_models[slug] = ""
+                    log_stage(
+                        log,
+                        "carousel_graphic_skipped",
+                        {"slug": slug, "reason": outcome.get("error", "unknown")},
+                    )
+                    continue
+                try:
+                    ospec = outcome["spec"]
+                    blabel = str(outcome.get("biome_label_pt", "Brasil (Nacional)"))
+                    esc_n = bool(outcome.get("escopo_nacional"))
+                    gt = generate_graphic_text_for_carousel_scope(
+                        ospec,
+                        ref_d,
+                        settings.llm,
+                        biome_label_pt=blabel,
+                        escopo_nacional=esc_n,
+                        scope_slug=slug,
+                        topic_id=TOPIC_FOCOS_INCENDIO_BR,
+                        logger=log,
+                    )
+                    carousel_body_texts[slug] = gt["text"]
+                    carousel_body_models[slug] = gt["model"]
+                    if slug == "nacional":
+                        llm_graphic_text = gt["text"]
+                except Exception as e:  # noqa: BLE001
+                    log.exception("carousel_graphic_failed")
+                    log_stage(
+                        log,
+                        "carousel_graphic_failed",
+                        {"slug": slug, "error": str(e)},
+                    )
+                    carousel_body_texts[slug] = (
+                        "Não foi possível gerar o texto automático deste slide. "
+                        f"Erro: {e}"
+                    )
+                    carousel_body_models[slug] = ""
+
         sidecar = out_social_llm if out_social_llm is not None else DEFAULT_SOCIAL_LLM_JSON
         sidecar.parent.mkdir(parents=True, exist_ok=True)
         sidecar_payload: dict[str, Any] = {
-            "schema_version": 1,
+            "schema_version": 2,
             "topic": TOPIC_FOCOS_INCENDIO_BR,
             "reference_date": ref_d.isoformat(),
             "components": list(requested_components),
+            "post_description": post_caption_text,
+            "post_description_model": post_caption_model,
+            "scopes": [],
         }
-        if "post_description" in llm_out:
-            sidecar_payload["post_description"] = llm_out["post_description"]["text"]
-        if "graphic_text" in llm_out:
-            sidecar_payload["graphic_text"] = llm_out["graphic_text"]["text"]
-        sidecar_payload["models"] = {
-            component: data["model"] for component, data in llm_out.items()
-        }
+        for outcome in carousel_scope_outcomes:
+            slug = str(outcome.get("slug", ""))
+            entry: dict[str, Any] = {
+                "slug": slug,
+                "ok": bool(outcome.get("ok")),
+                "biome_label_pt": outcome.get("biome_label_pt"),
+                "error": outcome.get("error"),
+                "graphic_text": carousel_body_texts.get(slug),
+                "graphic_text_model": carousel_body_models.get(slug),
+            }
+            if outcome.get("ok") and outcome.get("chart_json"):
+                entry["chart_spec_json"] = str(Path(outcome["chart_json"]).resolve())
+            if outcome.get("ok") and outcome.get("chart_png"):
+                entry["chart_png"] = str(Path(outcome["chart_png"]).resolve())
+            sidecar_payload["scopes"].append(entry)
         sidecar.write_text(
-            json.dumps(sidecar_payload, ensure_ascii=False, indent=2)
-            + "\n",
+            json.dumps(sidecar_payload, ensure_ascii=False, indent=2) + "\n",
             encoding="utf-8",
         )
         log_stage(
@@ -902,11 +1155,20 @@ def build_bdqueimadas_social_assets(
         )
 
     if emit_manifest is not None:
-        write_bdqueimadas_manifest(spec, emit_manifest, llm_graphic_text=llm_graphic_text)
+        write_bdqueimadas_carousel_manifest(
+            emit_manifest,
+            carousel_scope_outcomes=carousel_scope_outcomes,
+            carousel_body_texts=carousel_body_texts if run_llm else {},
+            post_caption_text=post_caption_text if run_llm else None,
+            meta_ref=spec["metadata"],
+        )
         log_stage(
             log,
             "manifest_written",
-            {"path": str(emit_manifest.resolve()), "used_llm_body": llm_graphic_text is not None},
+            {
+                "path": str(emit_manifest.resolve()),
+                "slides": 6,
+            },
         )
     else:
         log_stage(log, "manifest_skipped", {})
@@ -942,28 +1204,99 @@ def build_bdqueimadas_social_assets(
     return spec
 
 
-def write_bdqueimadas_manifest(
-    spec: dict[str, Any],
+def write_bdqueimadas_carousel_manifest(
     path: Path,
     *,
-    llm_graphic_text: str | None = None,
+    carousel_scope_outcomes: list[dict[str, Any]],
+    carousel_body_texts: dict[str, str],
+    post_caption_text: str | None,
+    meta_ref: dict[str, Any],
 ) -> None:
-    meta = spec["metadata"]
-    ly = meta["latest_year"]
-    py = meta.get("previous_year")
-    y0 = meta["avg_window_years_from"]
-    y1 = meta["avg_window_years_to"]
-    lcm = int(meta.get("last_closed_month", meta.get("ytd_months", 1)))
-    published_at = meta.get("published_at_label", format_published_at_pt(lcm, ly))
+    """Manifest com 6 slides: capa, 4× body_chart (Nacional + biomas), CTA."""
+    ly = meta_ref["latest_year"]
+    py = meta_ref.get("previous_year")
+    y0 = meta_ref["avg_window_years_from"]
+    y1 = meta_ref["avg_window_years_to"]
+    lcm = int(meta_ref.get("last_closed_month", meta_ref.get("ytd_months", 1)))
+    published_at = meta_ref.get("published_at_label", format_published_at_pt(lcm, ly))
 
     default_body = (
-        "O gráfico resume a série mensal de focos no território nacional. "
+        "O gráfico resume a série mensal de focos. "
         "A faixa mais clara representa a média dos anos anteriores por mês; "
         "as linhas comparam o ano corrente com o ano anterior."
     )
-    body_chart_text = default_body if llm_graphic_text is None else llm_graphic_text
 
-    manifest = {
+    slides: list[dict[str, Any]] = [
+        {
+            "type": "cover",
+            "slots": {
+                "topic_tag": "Queimadas & Clima",
+                "published_at": published_at,
+                "series_label": "Carrossel",
+                "title": "Focos de incêndio no Brasil",
+                "summary": (
+                    f"Brasil, Amazônia, Cerrado e Pantanal — "
+                    f"{ly} (meses já fechados) vs "
+                    f"{py if py is not None else '—'} "
+                    f"e média por mês ({y0}–{y1})."
+                ),
+            },
+        },
+    ]
+
+    generation_errors: list[dict[str, Any]] = []
+
+    for outcome in carousel_scope_outcomes:
+        slug = str(outcome.get("slug", ""))
+        ok = bool(outcome.get("ok"))
+        label = str(outcome.get("biome_label_pt", slug))
+        body_txt = carousel_body_texts.get(slug)
+        if not body_txt:
+            body_txt = default_body
+        if not ok:
+            err = str(outcome.get("error", ""))
+            body_txt = (
+                "Não foi possível montar este slide automaticamente. "
+                f"Detalhe: {err}"
+            )
+            generation_errors.append({"slug": slug, "error": err})
+
+        image_url = "/generated/bdqueimadas-chart.png"
+        if ok and outcome.get("chart_png"):
+            image_url = f"/generated/{Path(outcome['chart_png']).name}"
+
+        slides.append(
+            {
+                "type": "body_chart",
+                "slots": {
+                    "topic_tag": "Queimadas & Clima",
+                    "published_at": published_at,
+                    "caption": f"Focos por mês ({label}) · BDQueimadas, INPE",
+                    "image_url": image_url,
+                    "body_text": body_txt,
+                },
+                "generation": {
+                    "ok": ok,
+                    "error": None if ok else str(outcome.get("error", "")),
+                },
+            }
+        )
+
+    slides.append(
+        {
+            "type": "cta",
+            "slots": {
+                "topic_tag": "Queimadas & Clima",
+                "published_at": published_at,
+                "cta_kicker": "Continua acompanhando",
+                "cta_headline": "Mais análises e dados",
+                "cta_subline": "Acesse o portal de dados abertos do instituto.",
+                "cta_url": "www.instituto-exemplo.org",
+            },
+        },
+    )
+
+    manifest: dict[str, Any] = {
         "theme": "green",
         "runId": "bdqueimadas-social",
         "sizes": {
@@ -972,44 +1305,13 @@ def write_bdqueimadas_manifest(
             "pageNumberPx": 24,
             "logoHeightPx": 54,
         },
-        "slides": [
-            {
-                "type": "cover",
-                "slots": {
-                    "topic_tag": "Queimadas & Clima",
-                    "published_at": published_at,
-                    "series_label": "Série temporal",
-                    "title": "Focos de incêndio no Brasil",
-                    "summary": (
-                        f"Comparativo mês a mês: {ly} (só meses já fechados) vs "
-                        f"{py if py is not None else '—'} "
-                        f"e média por mês ({y0}–{y1})."
-                    ),
-                },
-            },
-            {
-                "type": "body_chart",
-                "slots": {
-                    "topic_tag": "Queimadas & Clima",
-                    "published_at": published_at,
-                    "caption": "Focos por mês (Brasil) · BDQueimadas, publicado pelo INPE",
-                    "image_url": "/generated/bdqueimadas-chart.png",
-                    "body_text": body_chart_text,
-                },
-            },
-            {
-                "type": "cta",
-                "slots": {
-                    "topic_tag": "Queimadas & Clima",
-                    "published_at": published_at,
-                    "cta_kicker": "Continua acompanhando",
-                    "cta_headline": "Mais análises e dados",
-                    "cta_subline": "Acesse o portal de dados abertos do instituto.",
-                    "cta_url": "www.instituto-exemplo.org",
-                },
-            },
-        ],
+        "slides": slides,
     }
+    if post_caption_text is not None:
+        manifest["instagram_caption_draft"] = post_caption_text
+    if generation_errors:
+        manifest["generation_errors"] = generation_errors
+
     path.parent.mkdir(parents=True, exist_ok=True)
     text = json.dumps(manifest, ensure_ascii=False, indent=2) + "\n"
     path.write_text(text, encoding="utf-8")
