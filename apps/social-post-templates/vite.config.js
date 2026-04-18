@@ -11,6 +11,7 @@ export default defineConfig({
         greenComposer: "green/composer.html",
         greenCover: "green/slides/cover.html",
         greenBodyImageText: "green/slides/body-image-text.html",
+        greenBodyChart: "green/slides/body-chart.html",
         greenBodyText: "green/slides/body-text.html",
         greenCta: "green/slides/cta.html",
         navy: "navy/index.html",

@@ -69,3 +69,54 @@
 [data-body-text][data-cols="1"] [data-slot="text_col_2"] {
   display: none;
 }
+
+/* Body: chart (large image) + legend + text */
+[data-body-chart] {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  height: 100%;
+  justify-content: flex-start;
+  min-height: 0;
+}
+
+.body-chart-frame {
+  flex: 0 0 auto;
+  width: 100%;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: var(--bg-secondary);
+  border: 1px solid var(--accent-muted);
+  min-height: 420px;
+  max-height: 640px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.body-chart-frame img {
+  width: 100%;
+  height: auto;
+  max-height: 620px;
+  object-fit: contain;
+  display: block;
+}
+
+.body-chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.35rem;
+  background: rgba(11, 61, 46, 0.72);
+  border: 1px solid rgba(46, 204, 154, 0.25);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-secondary);
+}
+
+.body-chart-copy {
+  flex: 1 1 auto;
+  min-height: 0;
+}

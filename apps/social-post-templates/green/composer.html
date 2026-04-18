@@ -55,6 +55,7 @@
       <div class="toolbar">
         <button type="button" class="primary" id="btnAddCover">+ Capa</button>
         <button type="button" id="btnAddImg">+ Imagem + texto</button>
+        <button type="button" id="btnAddChart">+ Gráfico + texto</button>
         <button type="button" id="btnAddTxt">+ Só texto</button>
         <button type="button" id="btnAddCta">+ CTA</button>
         <button type="button" id="btnLoadExample">Carregar exemplo</button>
@@ -133,6 +134,19 @@
         },
         imageSide: "left",
       },
+      body_chart: {
+        label: "Gráfico + texto",
+        defaults: {
+          topic_tag: "Queimadas & Clima",
+          published_at: "Abr 2026",
+          caption: "Série temporal",
+          image_url: "/generated/bdqueimadas-chart.png",
+          legend_current: "● Ano atual",
+          legend_previous: "● Ano anterior",
+          legend_avg: "■ Média histórica",
+          body_text: "Texto de contexto sobre o gráfico.",
+        },
+      },
       body_text: {
         label: "Só texto",
         defaults: {
@@ -166,6 +180,7 @@
     const PATHS = {
       cover: "/green/slides/cover.html",
       body_image_text: "/green/slides/body-image-text.html",
+      body_chart: "/green/slides/body-chart.html",
       body_text: "/green/slides/body-text.html",
       cta: "/green/slides/cta.html",
     };
@@ -405,6 +420,11 @@
       previewIndex = state.slides.length - 1;
       renderAll();
     };
+    document.getElementById("btnAddChart").onclick = () => {
+      state.slides.push(newSlide("body_chart"));
+      previewIndex = state.slides.length - 1;
+      renderAll();
+    };
     document.getElementById("btnAddTxt").onclick = () => {
       state.slides.push(newSlide("body_text"));
       previewIndex = state.slides.length - 1;
@@ -485,16 +505,34 @@
     };
     document.getElementById("btnRefresh").onclick = () => refreshPreview();
 
-    state = {
-      theme: "green",
-      runId: DEFAULT_EXAMPLE.runId,
-      slides: JSON.parse(JSON.stringify(DEFAULT_EXAMPLE.slides)),
-      chromeSizes: { ...(DEFAULT_EXAMPLE.sizes || DEFAULT_CHROME) },
-    };
-    document.getElementById("runId").value = state.runId;
-    syncChromeInputsFromState();
-    previewIndex = 0;
-    renderAll();
+    (async function bootstrapComposer() {
+      let runId = DEFAULT_EXAMPLE.runId;
+      let slides = JSON.parse(JSON.stringify(DEFAULT_EXAMPLE.slides));
+      let chromeSizes = { ...(DEFAULT_EXAMPLE.sizes || DEFAULT_CHROME) };
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("preset") === "bdqueimadas") {
+        try {
+          const r = await fetch("/examples/bdqueimadas-social.manifest.json");
+          if (!r.ok) throw new Error(r.statusText);
+          const data = await r.json();
+          runId = data.runId;
+          slides = data.slides;
+          chromeSizes = { ...DEFAULT_CHROME, ...(data.sizes || {}) };
+        } catch (e) {
+          console.warn("Preset bdqueimadas indisponível, usando exemplo padrão.", e);
+        }
+      }
+      state = {
+        theme: "green",
+        runId,
+        slides,
+        chromeSizes,
+      };
+      document.getElementById("runId").value = state.runId;
+      syncChromeInputsFromState();
+      previewIndex = 0;
+      renderAll();
+    })();
   </script>
 </body>
 </html>

@@ -1,0 +1,46 @@
+{
+  "theme": "green",
+  "runId": "bdqueimadas-social",
+  "sizes": {
+    "topicTagPx": 24,
+    "datePx": 26,
+    "pageNumberPx": 24,
+    "logoHeightPx": 48
+  },
+  "slides": [
+    {
+      "type": "cover",
+      "slots": {
+        "topic_tag": "Queimadas & Clima",
+        "published_at": "Dados abertos",
+        "series_label": "Série temporal",
+        "title": "Focos de calor no Brasil",
+        "summary": "Comparativo mês a mês: 2025 (parcial) vs 2024 e média histórica por mês (2020–2024)."
+      }
+    },
+    {
+      "type": "body_chart",
+      "slots": {
+        "topic_tag": "Queimadas & Clima",
+        "published_at": "Dados abertos",
+        "caption": "Focos por mês (Brasil)",
+        "image_url": "/generated/bdqueimadas-chart.png",
+        "legend_current": "● 2025 (YTD)",
+        "legend_previous": "● 2024 (mesmo período)",
+        "legend_avg": "■ Média 2020–2024 por mês calendário",
+        "body_text": "O gráfico resume a série mensal de focos no território nacional. A faixa mais clara representa a média dos anos anteriores por mês; as linhas comparam o ano corrente com o ano anterior."
+      }
+    },
+    {
+      "type": "cta",
+      "slots": {
+        "topic_tag": "Queimadas & Clima",
+        "published_at": "Dados abertos",
+        "cta_kicker": "Continua acompanhando",
+        "cta_headline": "Mais análises e dados",
+        "cta_subline": "Acesse o portal de dados abertos do instituto.",
+        "cta_url": "www.instituto-exemplo.org"
+      }
+    }
+  ]
+}

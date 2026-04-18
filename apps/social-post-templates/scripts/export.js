@@ -38,6 +38,7 @@ const LEGACY_TEMPLATES = [
 const GREEN_SLIDE_PATHS = {
   cover: "/green/slides/cover.html",
   body_image_text: "/green/slides/body-image-text.html",
+  body_chart: "/green/slides/body-chart.html",
   body_text: "/green/slides/body-text.html",
   cta: "/green/slides/cta.html",
 };

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Verde · Gráfico + texto</title>
+  <link rel="stylesheet" href="../../src/style.css" />
+  <link rel="stylesheet" href="../../src/green/theme.css" />
+</head>
+<body>
+  <div class="canvas-scaler">
+    <div id="card" class="post-canvas grid-cross" style="background-color: var(--bg);">
+
+      <div class="absolute top-0 left-0 right-0 flex items-center justify-between px-12 pt-10 z-10">
+        <span class="chrome-topic tracking-widest uppercase font-semibold" style="color: var(--accent);" data-slot="topic_tag">
+          Queimadas &amp; Clima
+        </span>
+        <span class="chrome-date font-medium" style="color: var(--text-muted);" data-slot="published_at">
+          Dados abertos
+        </span>
+      </div>
+
+      <div class="absolute top-28 bottom-28 left-12 right-12 flex flex-col gap-4" data-body-chart>
+        <div class="body-chart-frame">
+          <img
+            data-slot="image_url"
+            src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1080' height='620'%3E%3Crect fill='%230E4D39' width='100%25' height='100%25'/%3E%3Ctext x='50%25' y='50%25' fill='%232ECC9A' font-size='22' text-anchor='middle' dominant-baseline='middle' font-family='system-ui'%3EGráfico%3C/text%3E%3C/svg%3E"
+            alt=""
+          />
+        </div>
+        <div class="body-chart-legend" aria-label="Legenda">
+          <span data-slot="legend_current">● Ano atual</span>
+          <span data-slot="legend_previous">● Ano anterior</span>
+          <span data-slot="legend_avg">■ Média histórica</span>
+        </div>
+        <div class="body-chart-copy">
+          <p class="leading-snug font-semibold mb-2 text-sm uppercase tracking-widest" style="color: var(--accent);" data-slot="caption">
+            Série temporal
+          </p>
+          <p class="leading-relaxed" style="font-size: 26px; color: var(--text-secondary);" data-slot="body_text">
+            Texto de contexto sobre o gráfico e a leitura dos dados.
+          </p>
+        </div>
+      </div>
+
+      <div class="absolute bottom-0 left-0 right-0 flex items-end justify-between px-12 pb-10">
+        <img
+          class="footer-brand-logo"
+          src="/images/logos/002-wbig-logo.png"
+          alt="Instituto Forest"
+          width="280"
+          height="80"
+        />
+        <span class="chrome-page font-semibold tabular-nums" style="color: var(--accent);" data-slot="card_number">
+          02 / 05
+        </span>
+      </div>
+
+      <div class="absolute bottom-0 left-0 right-0 h-1" style="background: var(--accent);"></div>
+
+    </div>
+  </div>
+
+  <script type="module">
+    import { initFitCanvas } from "../../src/green/fit-canvas.js";
+    import { applySlotsFromQuery } from "../../src/green/slots.js";
+    initFitCanvas();
+    applySlotsFromQuery();
+  </script>
+</body>
+</html>
