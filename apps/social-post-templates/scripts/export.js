@@ -101,11 +101,15 @@ async function exportGreenManifest(browser, manifestFile) {
     const slots = { ...(slide.slots || {}), card_number: cardNum };
 
     await page.waitForLoadState("networkidle");
-    await page.waitForFunction(() => typeof window.applySlots === "function");
+    await page.waitForFunction(
+      () => typeof window.applySlots === "function" && typeof window.applyChromeSizes === "function"
+    );
     await page.evaluate(() => {
       document.documentElement.style.setProperty("--canvas-scale", "1");
     });
-    await page.evaluate(({ slide: s, slots: sl }) => {
+    const chromeSizes = manifest.sizes || {};
+    await page.evaluate(({ slide: s, slots: sl, sizes }) => {
+      window.applyChromeSizes(sizes || {});
       if (s.type === "body_image_text") {
         const el = document.querySelector("[data-body-image-text]");
         if (el) el.dataset.side = s.imageSide || "left";
@@ -115,7 +119,7 @@ async function exportGreenManifest(browser, manifestFile) {
         if (el) el.dataset.cols = String(s.columns ?? 2);
       }
       window.applySlots(sl);
-    }, { slide, slots });
+    }, { slide, slots, sizes: chromeSizes });
 
     const fileName = `${pad2(index + 1)}-${slide.type}.png`;
     const outPath = join(outDir, fileName);

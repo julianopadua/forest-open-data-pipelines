@@ -60,6 +60,29 @@
         <button type="button" id="btnLoadExample">Carregar exemplo</button>
       </div>
 
+      <div class="slide-block" id="chromePanel" style="margin-bottom:1rem">
+        <div class="slide-head"><strong>Metadados · tamanhos (canto)</strong></div>
+        <p class="hint" style="margin:0 0 0.5rem">Ajusta tópico, data, número da página e altura do logo. Vale no preview e nos PNGs exportados (campo <code>sizes</code> no manifest).</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem 1rem">
+          <div>
+            <label for="chromeTopic">Tópico (px)</label>
+            <input type="number" id="chromeTopic" min="10" max="56" step="1" value="24" />
+          </div>
+          <div>
+            <label for="chromeDate">Data (px)</label>
+            <input type="number" id="chromeDate" min="10" max="48" step="1" value="20" />
+          </div>
+          <div>
+            <label for="chromePage">Nº página (px)</label>
+            <input type="number" id="chromePage" min="10" max="40" step="1" value="17" />
+          </div>
+          <div>
+            <label for="chromeLogo">Logo altura (px)</label>
+            <input type="number" id="chromeLogo" min="24" max="96" step="1" value="48" />
+          </div>
+        </div>
+      </div>
+
       <div id="slidesRoot"></div>
 
       <label for="runId">runId (pasta de saída)</label>
@@ -97,7 +120,6 @@
           series_label: "Análise de dados",
           title: "Seca prolongada aumenta risco de queimadas",
           summary: "Meteorologia indica baixa umidade em várias regiões.",
-          brand_name: "ForestLab",
         },
       },
       body_image_text: {
@@ -107,7 +129,6 @@
           published_at: "Abr 2026",
           caption: "Destaque",
           body_text: "Texto de apoio ao lado da imagem.",
-          brand_name: "ForestLab",
           image_url: "",
         },
         imageSide: "left",
@@ -119,7 +140,6 @@
           published_at: "Abr 2026",
           text_col_1: "Primeira coluna de texto.",
           text_col_2: "Segunda coluna de texto.",
-          brand_name: "ForestLab",
         },
         columns: 2,
       },
@@ -132,9 +152,15 @@
           cta_headline: "Gostou do conteúdo?",
           cta_subline: "Acesse o site do instituto para mais análises e dados abertos.",
           cta_url: "www.instituto-exemplo.org",
-          brand_name: "ForestLab",
         },
       },
+    };
+
+    const DEFAULT_CHROME = {
+      topicTagPx: 24,
+      datePx: 20,
+      pageNumberPx: 17,
+      logoHeightPx: 48,
     };
 
     const PATHS = {
@@ -148,11 +174,59 @@
       theme: "green",
       runId: "my-run",
       slides: [],
+      chromeSizes: { ...DEFAULT_CHROME },
     };
 
     let previewIndex = 0;
 
-    const DEFAULT_EXAMPLE = {"theme":"green","runId":"example-run","slides":[{"type":"cover","slots":{"topic_tag":"Queimadas & Clima","published_at":"Abr 2026","series_label":"Análise de dados","title":"Seca prolongada aumenta risco de queimadas","summary":"Meteorologia indica baixa umidade em várias regiões.","brand_name":"ForestLab"}},{"type":"body_image_text","imageSide":"left","slots":{"topic_tag":"Queimadas & Clima","published_at":"Abr 2026","caption":"Mapa de focos","body_text":"Concentração de alertas por bioma no período analisado.","brand_name":"ForestLab"}},{"type":"body_text","columns":2,"slots":{"topic_tag":"Queimadas & Clima","published_at":"Abr 2026","text_col_1":"Primeira coluna com argumento principal.","text_col_2":"Segunda coluna com contexto complementar.","brand_name":"ForestLab"}},{"type":"cta","slots":{"topic_tag":"Queimadas & Clima","published_at":"Abr 2026","cta_kicker":"Continua acompanhando","cta_headline":"Gostou do conteúdo?","cta_subline":"Acesse o site do instituto para mais análises.","cta_url":"www.instituto-exemplo.org","brand_name":"ForestLab"}}]};
+    const DEFAULT_EXAMPLE = {
+      theme: "green",
+      runId: "example-run",
+      sizes: { topicTagPx: 24, datePx: 20, pageNumberPx: 17, logoHeightPx: 48 },
+      slides: [
+        {
+          type: "cover",
+          slots: {
+            topic_tag: "Queimadas & Clima",
+            published_at: "Abr 2026",
+            series_label: "Análise de dados",
+            title: "Seca prolongada aumenta risco de queimadas",
+            summary: "Meteorologia indica baixa umidade em várias regiões.",
+          },
+        },
+        {
+          type: "body_image_text",
+          imageSide: "left",
+          slots: {
+            topic_tag: "Queimadas & Clima",
+            published_at: "Abr 2026",
+            caption: "Mapa de focos",
+            body_text: "Concentração de alertas por bioma no período analisado.",
+          },
+        },
+        {
+          type: "body_text",
+          columns: 2,
+          slots: {
+            topic_tag: "Queimadas & Clima",
+            published_at: "Abr 2026",
+            text_col_1: "Primeira coluna com argumento principal.",
+            text_col_2: "Segunda coluna com contexto complementar.",
+          },
+        },
+        {
+          type: "cta",
+          slots: {
+            topic_tag: "Queimadas & Clima",
+            published_at: "Abr 2026",
+            cta_kicker: "Continua acompanhando",
+            cta_headline: "Gostou do conteúdo?",
+            cta_subline: "Acesse o site do instituto para mais análises.",
+            cta_url: "www.instituto-exemplo.org",
+          },
+        },
+      ],
+    };
 
     function pad(n) {
       return String(n).padStart(2, "0");
@@ -175,6 +249,7 @@
       return {
         theme: "green",
         runId,
+        sizes: { ...state.chromeSizes },
         slides: state.slides.map((s) => {
           const copy = JSON.parse(JSON.stringify(s));
           return copy;
@@ -203,6 +278,11 @@
       });
       if (slide.type === "body_image_text") p.set("side", slide.imageSide || "left");
       if (slide.type === "body_text") p.set("cols", String(slide.columns ?? 2));
+      const c = state.chromeSizes;
+      p.set("chrome_topic", String(c.topicTagPx));
+      p.set("chrome_date", String(c.datePx));
+      p.set("chrome_page", String(c.pageNumberPx));
+      p.set("chrome_logo", String(c.logoHeightPx));
       const base = window.location.origin;
       return `${base}${path}?${p.toString()}`;
     }
@@ -335,13 +415,39 @@
       previewIndex = state.slides.length - 1;
       renderAll();
     };
+    function syncChromeInputsFromState() {
+      document.getElementById("chromeTopic").value = String(state.chromeSizes.topicTagPx);
+      document.getElementById("chromeDate").value = String(state.chromeSizes.datePx);
+      document.getElementById("chromePage").value = String(state.chromeSizes.pageNumberPx);
+      document.getElementById("chromeLogo").value = String(state.chromeSizes.logoHeightPx);
+    }
+
+    function readChromeInputs() {
+      state.chromeSizes = {
+        topicTagPx: Number(document.getElementById("chromeTopic").value) || DEFAULT_CHROME.topicTagPx,
+        datePx: Number(document.getElementById("chromeDate").value) || DEFAULT_CHROME.datePx,
+        pageNumberPx: Number(document.getElementById("chromePage").value) || DEFAULT_CHROME.pageNumberPx,
+        logoHeightPx: Number(document.getElementById("chromeLogo").value) || DEFAULT_CHROME.logoHeightPx,
+      };
+    }
+
+    ["chromeTopic", "chromeDate", "chromePage", "chromeLogo"].forEach((id) => {
+      document.getElementById(id).addEventListener("input", () => {
+        readChromeInputs();
+        syncManifestTextarea();
+        refreshPreview();
+      });
+    });
+
     document.getElementById("btnLoadExample").onclick = () => {
       state = {
         theme: DEFAULT_EXAMPLE.theme,
         runId: DEFAULT_EXAMPLE.runId,
         slides: JSON.parse(JSON.stringify(DEFAULT_EXAMPLE.slides)),
+        chromeSizes: { ...(DEFAULT_EXAMPLE.sizes || DEFAULT_CHROME) },
       };
       document.getElementById("runId").value = state.runId;
+      syncChromeInputsFromState();
       previewIndex = 0;
       renderAll();
     };
@@ -383,8 +489,10 @@
       theme: "green",
       runId: DEFAULT_EXAMPLE.runId,
       slides: JSON.parse(JSON.stringify(DEFAULT_EXAMPLE.slides)),
+      chromeSizes: { ...(DEFAULT_EXAMPLE.sizes || DEFAULT_CHROME) },
     };
     document.getElementById("runId").value = state.runId;
+    syncChromeInputsFromState();
     previewIndex = 0;
     renderAll();
   </script>

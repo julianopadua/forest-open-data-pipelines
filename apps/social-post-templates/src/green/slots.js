@@ -1,13 +1,17 @@
+import { applyChromeFromQuery } from "../chrome/sizes.js";
+
 /**
  * Apply slot values from URL query (?key=value) for preview / quick tests.
  * Values are decoded with decodeURIComponent.
  */
 export function applySlotsFromQuery() {
+  applyChromeFromQuery();
   applyLayoutParams();
   const params = new URLSearchParams(window.location.search);
   const slots = {};
   for (const [k, v] of params.entries()) {
     if (k === "side" || k === "cols") continue;
+    if (k.startsWith("chrome_")) continue;
     slots[k] = v;
   }
   applySlots(slots);

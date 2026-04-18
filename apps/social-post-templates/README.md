@@ -34,7 +34,9 @@ Slides atômicos em `green/slides/`:
 | `body-text.html` | `body_text` | Só texto; `columns`: `1` ou `2` |
 | `cta.html` | `cta` | Encerramento com CTA e URL |
 
-Tokens compartilhados: [`src/green/theme.css`](src/green/theme.css). Preenchimento por query string ou por `window.applySlots` (export).
+Tokens compartilhados: [`src/green/theme.css`](src/green/theme.css) (importa [`src/chrome/chrome-ui.css`](src/chrome/chrome-ui.css)). Preenchimento por query string ou por `window.applySlots` (export).
+
+**Tamanhos do canto (tópico, data, número da página, altura do logo):** editáveis no [compositor](green/composer.html) (painel “Metadados · tamanhos”), refletidos no preview e no export via objeto `sizes` no manifest ou query `?chrome_topic=&chrome_date=&chrome_page=&chrome_logo=` (valores em px). Implementação: [`src/chrome/sizes.js`](src/chrome/sizes.js).
 
 Exemplo de manifest: [`examples/green-manifest.example.json`](examples/green-manifest.example.json).
 
@@ -42,6 +44,7 @@ Exemplo de manifest: [`examples/green-manifest.example.json`](examples/green-man
 
 - `theme`: `"green"`
 - `runId`: nome da pasta de saída em `dist-exports/green/<runId>/`
+- `sizes` (opcional): `{ "topicTagPx", "datePx", "pageNumberPx", "logoHeightPx" }` — números em pixels
 - `slides`: array ordenado; cada item tem:
   - `type`: `cover` | `body_image_text` | `body_text` | `cta`
   - `slots`: objeto string → string (conteúdo dos `data-slot`)
@@ -50,14 +53,14 @@ Exemplo de manifest: [`examples/green-manifest.example.json`](examples/green-man
 
 O campo `card_number` é preenchido automaticamente na exportação (`01 / N`, …).
 
-## Logo
+## Logo (rodapé)
 
-Coloque o arquivo do logo em `public/logos/logo.png` para substituir o placeholder de texto.  
-O arquivo é ignorado pelo git; copie manualmente do diretório `images/logos/` na raiz do repositório.
+Os templates usam imagens em [`public/images/logos/`](public/images/logos/):
 
-```bash
-cp ../../images/logos/001-wlogo.png public/logos/logo.png
-```
+- Fundos escuros (verde, azul): `002-wbig-logo.png`
+- Tema branco: `002-big-logo.png`
+
+O canto inferior esquerdo mostra só o logo (sem texto “ForestLab” ao lado).
 
 ## Estrutura geral
 
@@ -67,6 +70,7 @@ green/composer.html       ← UI do deck + JSON
 green/slides/*.html       ← slides atômicos
 src/green/theme.css       ← tokens do verde
 src/green/slots.js        ← applySlots + query string
+src/chrome/sizes.js       ← tamanhos do chrome (preview + PNG)
 navy/index.html
 white/index.html
 src/style.css             ← Tailwind + canvas / grid
@@ -76,13 +80,13 @@ Comentários `<!-- slot: name -->` marcam áreas lógicas; elementos editáveis 
 
 ## Slots por slide
 
-**Capa (`cover`):** `topic_tag`, `published_at`, `series_label`, `title`, `summary`, `brand_name`, `card_number`
+**Capa (`cover`):** `topic_tag`, `published_at`, `series_label`, `title`, `summary`, `card_number`
 
-**Imagem + texto:** `topic_tag`, `published_at`, `caption`, `body_text`, `image_url`, `brand_name`, `card_number`
+**Imagem + texto:** `topic_tag`, `published_at`, `caption`, `body_text`, `image_url`, `card_number`
 
-**Só texto:** `topic_tag`, `published_at`, `text_col_1`, `text_col_2`, `brand_name`, `card_number` (com uma coluna, `text_col_2` fica oculto)
+**Só texto:** `topic_tag`, `published_at`, `text_col_1`, `text_col_2`, `card_number` (com uma coluna, `text_col_2` fica oculto)
 
-**CTA:** `topic_tag`, `published_at`, `cta_kicker`, `cta_headline`, `cta_subline`, `cta_url`, `brand_name`, `card_number`
+**CTA:** `topic_tag`, `published_at`, `cta_kicker`, `cta_headline`, `cta_subline`, `cta_url`, `card_number`
 
 ## Exportar PNGs (Playwright)
 

@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Template Branco</title>
   <link rel="stylesheet" href="../src/style.css" />
+  <link rel="stylesheet" href="../src/chrome/chrome-ui.css" />
   <style>
     :root {
       --bg:            #FFFFFF;
@@ -29,11 +30,11 @@
 
       <!-- ── Top bar ─────────────────────────────────────────── -->
       <div class="absolute left-0 right-0 flex items-center justify-between px-12 pt-10" style="top: 8px;">
-        <span class="text-xs tracking-widest uppercase font-semibold" style="color: var(--accent);">
+        <span class="chrome-topic tracking-widest uppercase font-semibold" style="color: var(--accent);">
           <!-- slot: topic_tag -->
           Agro &amp; Floresta
         </span>
-        <span class="text-xs font-medium" style="color: var(--text-muted);">
+        <span class="chrome-date font-medium" style="color: var(--text-muted);">
           <!-- slot: published_at -->
           Abr 2026
         </span>
@@ -68,14 +69,14 @@
 
       <!-- ── Footer ──────────────────────────────────────────── -->
       <div class="absolute bottom-0 left-0 right-0 flex items-end justify-between px-12 pb-10">
-        <div class="flex items-center gap-3">
-          <div class="w-8 h-8 rounded-sm" style="background: var(--accent);"></div>
-          <span class="text-sm font-bold tracking-widest uppercase" style="color: var(--text-primary);">
-            <!-- slot: brand_name -->
-            ForestLab
-          </span>
-        </div>
-        <span class="text-sm font-medium tabular-nums" style="color: var(--accent);">
+        <img
+          class="footer-brand-logo"
+          src="/images/logos/002-big-logo.png"
+          alt="Instituto Forest"
+          width="280"
+          height="80"
+        />
+        <span class="chrome-page font-semibold tabular-nums" style="color: var(--accent);">
           <!-- slot: card_number -->
           01 / 05
         </span>
@@ -92,6 +93,10 @@
     }
     fitCanvas();
     window.addEventListener("resize", fitCanvas);
+  </script>
+  <script type="module">
+    import { applyChromeFromQuery } from "../src/chrome/sizes.js";
+    applyChromeFromQuery();
   </script>
 </body>
 </html>

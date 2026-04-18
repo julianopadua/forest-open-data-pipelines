@@ -1,0 +1,31 @@
+/* Metadados do canto: tamanhos editáveis (--chrome-*). Importar depois do :root do tema. */
+:root {
+  --chrome-topic-px: 24px;
+  --chrome-date-px: 20px;
+  --chrome-page-px: 17px;
+  --chrome-logo-h: 48px;
+}
+
+.chrome-topic {
+  font-size: var(--chrome-topic-px);
+  line-height: 1.2;
+  letter-spacing: 0.2em;
+}
+
+.chrome-date {
+  font-size: var(--chrome-date-px);
+  line-height: 1.2;
+}
+
+.chrome-page {
+  font-size: var(--chrome-page-px);
+  line-height: 1.2;
+}
+
+.footer-brand-logo {
+  height: var(--chrome-logo-h);
+  width: auto;
+  display: block;
+  object-fit: contain;
+  object-position: left bottom;
+}

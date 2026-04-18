@@ -1,3 +1,5 @@
+@import "../chrome/chrome-ui.css";
+
 /* Forest green theme tokens — shared by all green slides */
 :root {
   --bg: #0b3d2e;

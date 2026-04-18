@@ -1,6 +1,12 @@
 {
   "theme": "green",
   "runId": "example-run",
+  "sizes": {
+    "topicTagPx": 24,
+    "datePx": 20,
+    "pageNumberPx": 17,
+    "logoHeightPx": 48
+  },
   "slides": [
     {
       "type": "cover",
@@ -9,8 +15,7 @@
         "published_at": "Abr 2026",
         "series_label": "Análise de dados",
         "title": "Seca prolongada aumenta risco de queimadas",
-        "summary": "Meteorologia indica baixa umidade em várias regiões e alerta para aumento no número de focos ativos.",
-        "brand_name": "ForestLab"
+        "summary": "Meteorologia indica baixa umidade em várias regiões e alerta para aumento no número de focos ativos."
       }
     },
     {
@@ -20,8 +25,7 @@
         "topic_tag": "Queimadas & Clima",
         "published_at": "Abr 2026",
         "caption": "Mapa de focos",
-        "body_text": "Concentração de alertas por bioma no período analisado, com ênfase no arco de desmatamento.",
-        "brand_name": "ForestLab"
+        "body_text": "Concentração de alertas por bioma no período analisado, com ênfase no arco de desmatamento."
       }
     },
     {
@@ -31,8 +35,7 @@
         "topic_tag": "Queimadas & Clima",
         "published_at": "Abr 2026",
         "text_col_1": "Primeira coluna com argumento principal e dados de apoio em texto corrido.",
-        "text_col_2": "Segunda coluna com contraponto, contexto ou leitura complementar ao lado.",
-        "brand_name": "ForestLab"
+        "text_col_2": "Segunda coluna com contraponto, contexto ou leitura complementar ao lado."
       }
     },
     {
@@ -42,9 +45,8 @@
         "published_at": "Abr 2026",
         "cta_kicker": "Continua acompanhando",
         "cta_headline": "Gostou do conteúdo?",
-        "cta_subline": "Acesse o site do instituto para mais análises e dados abertos.",
-        "cta_url": "www.instituto-exemplo.org",
-        "brand_name": "ForestLab"
+        "cta_subline": "Acesse o site do instituto para mais análises, dados abertos e atualizações.",
+        "cta_url": "www.instituto-exemplo.org"
       }
     }
   ]
