@@ -19,9 +19,9 @@
       "key": "current",
       "label": "2026",
       "values": [
-        4571,
-        1867,
-        1968,
+        904,
+        286,
+        309,
         null,
         null,
         null,
@@ -37,36 +37,36 @@
       "key": "previous",
       "label": "2025",
       "values": [
-        3137,
-        1819,
-        2357,
-        1641,
-        4263,
-        6060,
-        9803,
-        18451,
-        28214,
-        28678,
-        21301,
-        10669
+        726,
+        634,
+        691,
+        595,
+        2527,
+        3681,
+        5303,
+        8615,
+        14543,
+        11856,
+        5204,
+        1683
       ]
     },
     "avg_5y": {
       "key": "avg_5y",
       "label": "Média 2021–2025 (por mês)",
       "values": [
-        3036.4,
-        2507.6,
-        2936.2,
-        2155.4,
-        5571.8,
-        8487.0,
-        15292.6,
-        42871.6,
-        53599.2,
-        32439.6,
-        19871.4,
-        9118.6
+        748.6,
+        696.0,
+        955.8,
+        838.2,
+        2971.8,
+        4358.0,
+        6578.6,
+        11939.0,
+        18136.4,
+        9646.8,
+        3089.0,
+        1612.2
       ]
     }
   },
@@ -80,8 +80,8 @@
     "unit": "focos",
     "source": "INPE BDQueimadas (mensal COIDS + agregação ZIP anual; satélite AQUA_M-T)",
     "published_at_label": "Mar 2026",
-    "biome_scope": "nacional",
-    "biome_label_pt": "Brasil",
+    "biome_scope": "CERRADO",
+    "biome_label_pt": "Cerrado",
     "reference_satellite": "AQUA_M-T"
   }
 }

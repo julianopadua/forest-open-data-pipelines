@@ -133,7 +133,7 @@ def carousel_scope_to_inpe_biome_key(scope: str | None) -> str | None:
 def carousel_biome_label_pt(scope: str | None) -> str:
     """Rótulo em pt-BR para metadata/LLM (Nacional vs bioma)."""
     if scope is None:
-        return "Brasil (Nacional)"
+        return "Brasil"
     key = carousel_scope_to_inpe_biome_key(scope)
     if key and key in BIOME_LABELS:
         return str(BIOME_LABELS[key]["pt"])
@@ -1230,13 +1230,13 @@ def write_bdqueimadas_carousel_manifest(
         {
             "type": "cover",
             "slots": {
-                "topic_tag": "Queimadas & Clima",
+                "topic_tag": "Queimadas & Focos",
                 "published_at": published_at,
-                "series_label": "Carrossel",
+                "series_label": "Séries Temporais",
                 "title": "Focos de incêndio no Brasil",
                 "summary": (
                     f"Brasil, Amazônia, Cerrado e Pantanal — "
-                    f"{ly} (meses já fechados) vs "
+                    f"{ly} vs "
                     f"{py if py is not None else '—'} "
                     f"e média por mês ({y0}–{y1})."
                 ),
@@ -1269,7 +1269,7 @@ def write_bdqueimadas_carousel_manifest(
             {
                 "type": "body_chart",
                 "slots": {
-                    "topic_tag": "Queimadas & Clima",
+                    "topic_tag": "Queimadas & Focos",
                     "published_at": published_at,
                     "caption": f"Focos por mês ({label}) · BDQueimadas, INPE",
                     "image_url": image_url,
@@ -1286,7 +1286,7 @@ def write_bdqueimadas_carousel_manifest(
         {
             "type": "cta",
             "slots": {
-                "topic_tag": "Queimadas & Clima",
+                "topic_tag": "Queimadas & Focos",
                 "published_at": published_at,
                 "cta_kicker": "Continua acompanhando",
                 "cta_headline": "Mais análises e dados",

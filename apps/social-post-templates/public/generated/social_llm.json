@@ -1,12 +1,53 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "topic": "focos_incendio_br",
   "reference_date": "2026-04-18",
   "components": [
-    "post_description"
+    "post_description",
+    "graphic_text"
   ],
-  "post_description": "[2026-04-18]\nAté março de 2026, o Brasil registrou 8.406 focos de incêndio, um aumento de 14,95% em relação ao mesmo período do ano anterior. Em março, houve 1.968 focos, uma redução de 16,5% em comparação com março de 2025. Esses dados são importantes para entender a tendência dos incêndios no país.",
-  "models": {
-    "post_description": "llama-3.3-70b-versatile"
-  }
+  "post_description": "[2026-04-18]\nFocos de incêndio no Brasil: acompanhe a série temporal e os impactos regionais em nosso território.",
+  "post_description_model": "llama-3.3-70b-versatile",
+  "scopes": [
+    {
+      "slug": "nacional",
+      "ok": true,
+      "biome_label_pt": "Brasil (Nacional)",
+      "error": null,
+      "graphic_text": "O gráfico mostra o número de focos de queimadas detectados em cada mês do ano, com destaque para o último mês encerrado, março de 2026. Em março, o Brasil registrou 1.968 focos, 16,5 % a menos que os 2.357 focos de março de 2025. Até março, o acumulado de 8.406 focos representa 14,95 % a mais que os 7.313 focos acumulados em 2025. Esse total também fica 0,87 % abaixo da média acumulada de 8.480,2 focos calculada a partir das médias mensais dos últimos cinco anos. Assim, o país apresentou uma redução no mês de março, mas um aumento no acumulado anual em relação ao ano anterior, permanecendo próximo à tendência histórica.",
+      "graphic_text_model": "openai/gpt-oss-20b",
+      "chart_spec_json": "/Users/julianopadua/Projects/forest-open-data-pipelines/apps/social-post-templates/public/generated/chart_spec-nacional.json",
+      "chart_png": "/Users/julianopadua/Projects/forest-open-data-pipelines/apps/social-post-templates/public/generated/bdqueimadas-chart-nacional.png"
+    },
+    {
+      "slug": "amazonia",
+      "ok": true,
+      "biome_label_pt": "Amazônia",
+      "error": null,
+      "graphic_text": "No gráfico de focos de queimadas na Amazônia, o mês de março de 2026 registrou 874 focos, um aumento de 13,21 % em relação a março de 2025, que teve 772 focos.  \nAcumulado de janeiro a março, o total de 3.805 focos representa um crescimento de 59,21 % em relação ao mesmo período do ano anterior, que contou com 2.390 focos.  \nComparado à soma das médias mensais dos últimos cinco anos (de 2021 a 2025), o acumulado de 3.805 focos é 7,73 % superior à média de 3.532 focos.  \nEsses números indicam que a Amazônia continua enfrentando um aumento significativo nas queimadas, sobretudo no início do ano.  \nO monitoramento contínuo é essencial para avaliar a eficácia das medidas de prevenção e mitigação.",
+      "graphic_text_model": "openai/gpt-oss-20b",
+      "chart_spec_json": "/Users/julianopadua/Projects/forest-open-data-pipelines/apps/social-post-templates/public/generated/chart_spec-amazonia.json",
+      "chart_png": "/Users/julianopadua/Projects/forest-open-data-pipelines/apps/social-post-templates/public/generated/bdqueimadas-chart-amazonia.png"
+    },
+    {
+      "slug": "cerrado",
+      "ok": true,
+      "biome_label_pt": "Cerrado",
+      "error": null,
+      "graphic_text": "No Cerrado, o número de focos de queimada em março de 2026 foi de 309, quase metade do valor registrado no mesmo mês de 2025. Isso representa uma queda de 55,28 % em relação ao ano anterior. Até o fim de março, o acumulado anual de focos chegou a 1.499, 26,91 % abaixo dos 2.051 registrados no período equivalente de 2025. Em comparação com a média de cinco anos, que seria de 2.400,4 focos, o acumulado também ficou 37,55 % inferior. Esses números indicam uma redução significativa na ocorrência de queimadas no Cerrado neste período.",
+      "graphic_text_model": "openai/gpt-oss-20b",
+      "chart_spec_json": "/Users/julianopadua/Projects/forest-open-data-pipelines/apps/social-post-templates/public/generated/chart_spec-cerrado.json",
+      "chart_png": "/Users/julianopadua/Projects/forest-open-data-pipelines/apps/social-post-templates/public/generated/bdqueimadas-chart-cerrado.png"
+    },
+    {
+      "slug": "pantanal",
+      "ok": true,
+      "biome_label_pt": "Pantanal",
+      "error": null,
+      "graphic_text": "No Pantanal, o último mês fechado, março, apresentou 4 focos de queimada, o mesmo número registrado no mesmo mês do ano anterior, resultando em uma variação percentual de 0%. Já o acumulado desde janeiro até março deste ano totalizou 96 focos, um aumento de 81,13% em relação ao mesmo período do ano anterior, que teve 53 focos. Em comparação com a soma das médias mensais dos últimos 5 anos, o acumulado até março apresentou uma redução de 50,46%, indicando que, apesar do aumento em relação ao ano anterior, os números ainda estão abaixo da média histórica para o período.",
+      "graphic_text_model": "llama-3.3-70b-versatile",
+      "chart_spec_json": "/Users/julianopadua/Projects/forest-open-data-pipelines/apps/social-post-templates/public/generated/chart_spec-pantanal.json",
+      "chart_png": "/Users/julianopadua/Projects/forest-open-data-pipelines/apps/social-post-templates/public/generated/bdqueimadas-chart-pantanal.png"
+    }
+  ]
 }

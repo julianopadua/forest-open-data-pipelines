@@ -11,7 +11,7 @@
     {
       "type": "cover",
       "slots": {
-        "topic_tag": "Queimadas & Clima",
+        "topic_tag": "Queimadas & Focos",
         "published_at": "Abr 2026",
         "series_label": "Análise de dados",
         "title": "Seca prolongada aumenta risco de queimadas",
@@ -22,7 +22,7 @@
       "type": "body_image_text",
       "imageSide": "left",
       "slots": {
-        "topic_tag": "Queimadas & Clima",
+        "topic_tag": "Queimadas & Focos",
         "published_at": "Abr 2026",
         "caption": "Mapa de focos · BDQueimadas, publicado pelo INPE",
         "body_text": "Concentração de alertas por bioma no período analisado, com ênfase no arco de desmatamento."
@@ -32,7 +32,7 @@
       "type": "body_text",
       "columns": 2,
       "slots": {
-        "topic_tag": "Queimadas & Clima",
+        "topic_tag": "Queimadas & Focos",
         "published_at": "Abr 2026",
         "text_col_1": "Primeira coluna com argumento principal e dados de apoio em texto corrido.",
         "text_col_2": "Segunda coluna com contraponto, contexto ou leitura complementar ao lado."
@@ -41,7 +41,7 @@
     {
       "type": "cta",
       "slots": {
-        "topic_tag": "Queimadas & Clima",
+        "topic_tag": "Queimadas & Focos",
         "published_at": "Abr 2026",
         "cta_kicker": "Continua acompanhando",
         "cta_headline": "Gostou do conteúdo?",

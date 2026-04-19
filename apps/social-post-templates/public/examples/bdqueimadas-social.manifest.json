@@ -11,61 +11,73 @@
     {
       "type": "cover",
       "slots": {
-        "topic_tag": "Queimadas & Clima",
+        "topic_tag": "Queimadas & Focos",
         "published_at": "Mar 2026",
-        "series_label": "Carrossel",
+        "series_label": "Séries Temporais",
         "title": "Focos de incêndio no Brasil",
-        "summary": "Brasil, Amazônia, Cerrado e Pantanal — 2026 (meses já fechados) vs 2025 e média por mês (2021–2025)."
+        "summary": "Brasil, Amazônia, Cerrado e Pantanal — 2026 vs 2025 e média por mês (2021–2025)."
       }
     },
     {
       "type": "body_chart",
       "slots": {
-        "topic_tag": "Queimadas & Clima",
+        "topic_tag": "Queimadas & Focos",
         "published_at": "Mar 2026",
-        "caption": "Focos por mês (Brasil (Nacional)) · BDQueimadas, INPE",
+        "caption": "Focos por mês (Brasil) · BDQueimadas, INPE",
         "image_url": "/generated/bdqueimadas-chart-nacional.png",
-        "body_text": "Texto de exemplo para o slide nacional (gerado com --llm ou placeholder)."
+        "body_text": "O gráfico resume a série mensal de focos. A faixa mais clara representa a média dos anos anteriores por mês; as linhas comparam o ano corrente com o ano anterior."
       },
-      "generation": { "ok": true, "error": null }
+      "generation": {
+        "ok": true,
+        "error": null
+      }
     },
     {
       "type": "body_chart",
       "slots": {
-        "topic_tag": "Queimadas & Clima",
+        "topic_tag": "Queimadas & Focos",
         "published_at": "Mar 2026",
         "caption": "Focos por mês (Amazônia) · BDQueimadas, INPE",
         "image_url": "/generated/bdqueimadas-chart-amazonia.png",
-        "body_text": "Texto de exemplo para Amazônia."
+        "body_text": "O gráfico resume a série mensal de focos. A faixa mais clara representa a média dos anos anteriores por mês; as linhas comparam o ano corrente com o ano anterior."
       },
-      "generation": { "ok": true, "error": null }
+      "generation": {
+        "ok": true,
+        "error": null
+      }
     },
     {
       "type": "body_chart",
       "slots": {
-        "topic_tag": "Queimadas & Clima",
+        "topic_tag": "Queimadas & Focos",
         "published_at": "Mar 2026",
         "caption": "Focos por mês (Cerrado) · BDQueimadas, INPE",
         "image_url": "/generated/bdqueimadas-chart-cerrado.png",
-        "body_text": "Texto de exemplo para Cerrado."
+        "body_text": "O gráfico resume a série mensal de focos. A faixa mais clara representa a média dos anos anteriores por mês; as linhas comparam o ano corrente com o ano anterior."
       },
-      "generation": { "ok": true, "error": null }
+      "generation": {
+        "ok": true,
+        "error": null
+      }
     },
     {
       "type": "body_chart",
       "slots": {
-        "topic_tag": "Queimadas & Clima",
+        "topic_tag": "Queimadas & Focos",
         "published_at": "Mar 2026",
         "caption": "Focos por mês (Pantanal) · BDQueimadas, INPE",
         "image_url": "/generated/bdqueimadas-chart-pantanal.png",
-        "body_text": "Texto de exemplo para Pantanal."
+        "body_text": "O gráfico resume a série mensal de focos. A faixa mais clara representa a média dos anos anteriores por mês; as linhas comparam o ano corrente com o ano anterior."
       },
-      "generation": { "ok": true, "error": null }
+      "generation": {
+        "ok": true,
+        "error": null
+      }
     },
     {
       "type": "cta",
       "slots": {
-        "topic_tag": "Queimadas & Clima",
+        "topic_tag": "Queimadas & Focos",
         "published_at": "Mar 2026",
         "cta_kicker": "Continua acompanhando",
         "cta_headline": "Mais análises e dados",
