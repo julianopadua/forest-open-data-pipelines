@@ -76,7 +76,7 @@
     "avg_window_years_from": 2021,
     "avg_window_years_to": 2025,
     "last_closed_month": 3,
-    "reference_date": "2026-04-18",
+    "reference_date": "2026-04-20",
     "unit": "focos",
     "source": "INPE BDQueimadas (mensal COIDS + agregação ZIP anual; satélite AQUA_M-T)",
     "published_at_label": "Mar 2026",
