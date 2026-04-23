@@ -12,10 +12,12 @@ import yaml
 
 from forest_pipelines.reports.builders.bdqueimadas_incremental import (
     ALL_BIOMES_VALUE,
+    INPE_REFERENCE_SATELLITE,
     biome_label_i18n,
     build_incremental_year_caches,
     combine_all_and_biome_records,
     consolidate_year_payloads,
+    read_focos_subset_brasil_file,
     _df_to_records,
 )
 from forest_pipelines.reports.definitions.base import (
@@ -26,6 +28,7 @@ from forest_pipelines.reports.definitions.base import (
 from forest_pipelines.reports.llm.base import maybe_generate_analysis_blocks
 
 RE_YEAR = re.compile(r"(\d{4})")
+RE_MENSAL_CSV = re.compile(r"focos_mensal_br_(\d{4})(\d{2})\.(csv|zip)$", re.IGNORECASE)
 
 DEFAULT_DATETIME_CANDIDATES = [
     "data_pas",
@@ -64,6 +67,7 @@ def build_package(
     settings: Any,
     storage: Any,
     logger: Any,
+    current_year_only: bool = False,
 ) -> dict[str, Any]:
     cfg = load_report_cfg(settings.reports_dir, "bdqueimadas_overview")
 
@@ -83,7 +87,7 @@ def build_package(
     zip_files = _select_zip_files(
         base_dir=settings.data_dir / cfg.dataset.local_relative_dir,
         file_glob=cfg.dataset.file_glob,
-        recent_years=cfg.dataset.recent_years,
+        recent_years=1 if current_year_only else cfg.dataset.recent_years,
     )
 
     if not zip_files:
@@ -230,6 +234,24 @@ def build_package(
         year_range=year_range,
     )
 
+    # Last closed month (latest_period is the most recent closed month)
+    last_closed_month = int(latest_period.split("-")[1]) if "-" in latest_period else 12
+
+    # 5-year average window bounds
+    avg_window_start = min(five_avg_candidate_years) if five_avg_candidate_years else latest_year - 5
+    avg_window_end = max(five_avg_candidate_years) if five_avg_candidate_years else latest_year - 1
+
+    # Latest month 5yr average for LLM context
+    latest_month_5yr_avg_vals = []
+    for yr in five_avg_candidate_years:
+        yr_period = f"{yr}-{latest_period[-2:]}"
+        yr_val = float(monthly_all_df.loc[monthly_all_df["period"] == yr_period, "value"].sum())
+        if yr_val > 0:
+            latest_month_5yr_avg_vals.append(yr_val)
+    latest_month_5yr_avg = round(
+        sum(latest_month_5yr_avg_vals) / len(latest_month_5yr_avg_vals), 0
+    ) if latest_month_5yr_avg_vals else None
+
     analysis_context = {
         "coverage_first_year": first_year,
         "coverage_latest_year": latest_year,
@@ -321,12 +343,25 @@ def build_package(
     source_label_i18n = localized_text_dict(cfg.source_label) or _localized("", "")
     summary_i18n = localized_text_dict(cfg.summary) if cfg.summary is not None else None
 
-    # Last closed month: the month before the current one (latest_period is already the last closed)
-    last_closed_month = int(latest_period.split("-")[1]) if "-" in latest_period else 12
-
-    # 5-year average window metadata
-    avg_window_start = min(five_avg_candidate_years) if five_avg_candidate_years else latest_year - 5
-    avg_window_end = max(five_avg_candidate_years) if five_avg_candidate_years else latest_year - 1
+    # Load monthly CSV files for current year (more accurate than annual ZIP for incomplete year)
+    mensal_dir = settings.data_dir / cfg.dataset.local_relative_dir / "mensal"
+    mensal_counts = _load_mensal_counts_for_current_year(
+        mensal_dir=mensal_dir,
+        current_year=latest_year,
+        datetime_candidates=datetime_candidates,
+        state_candidates=state_candidates,
+        biome_candidates=biome_candidates,
+        satellite_candidates=DEFAULT_SATELLITE_CANDIDATES,
+    )
+    # Override last_closed_month from actual monthly files if available
+    if mensal_counts["last_closed_month"] > 0:
+        last_closed_month = mensal_counts["last_closed_month"]
+        logger.info(
+            "Usando dados mensais INPE COIDS: %d meses disponíveis para %d (último: %d)",
+            len(mensal_counts["national"]),
+            latest_year,
+            last_closed_month,
+        )
 
     # Monthly year comparison section data (biome + state filterable, period static)
     available_states = sorted(
@@ -341,18 +376,8 @@ def build_package(
         previous_year=previous_year,
         five_avg_candidate_years=five_avg_candidate_years,
         last_closed_month=last_closed_month,
+        mensal_counts=mensal_counts,
     )
-
-    # Latest month 5yr average for LLM context
-    latest_month_5yr_avg_vals = []
-    for yr in five_avg_candidate_years:
-        yr_period = f"{yr}-{latest_period[-2:]}"
-        yr_val = float(monthly_all_df.loc[monthly_all_df["period"] == yr_period, "value"].sum())
-        if yr_val > 0:
-            latest_month_5yr_avg_vals.append(yr_val)
-    latest_month_5yr_avg = round(
-        sum(latest_month_5yr_avg_vals) / len(latest_month_5yr_avg_vals), 0
-    ) if latest_month_5yr_avg_vals else None
 
     # Static monthly series: all historical months, __all__ biome only
     static_monthly_df = monthly_all_df[["period", "year", "value"]].copy()
@@ -1266,6 +1291,72 @@ def _now_iso() -> str:
     return pd.Timestamp.utcnow().isoformat().replace("+00:00", "Z")
 
 
+def _load_mensal_counts_for_current_year(
+    mensal_dir: Path,
+    current_year: int,
+    datetime_candidates: list[str],
+    state_candidates: list[str],
+    biome_candidates: list[str],
+    satellite_candidates: list[str] | None = None,
+) -> dict[str, Any]:
+    """
+    Reads INPE monthly CSV files (focos_mensal_br_YYYYMM.csv) for current_year and aggregates:
+      - national total per month
+      - per-biome total per month (BIOME_KEY uppercase, matching CSV)
+      - per-state total per month (state name uppercase, matching CSV)
+
+    Returns a dict with keys: last_closed_month, national, by_biome, by_state.
+    Returns empty structure if no files are found.
+    """
+    month_files: dict[int, Path] = {}
+    if mensal_dir.exists():
+        for f in sorted(mensal_dir.iterdir()):
+            m = RE_MENSAL_CSV.search(f.name)
+            if not m:
+                continue
+            if int(m.group(1)) == current_year:
+                month_files[int(m.group(2))] = f
+
+    if not month_files:
+        return {"last_closed_month": 0, "national": {}, "by_biome": {}, "by_state": {}}
+
+    national: dict[int, int] = {}
+    by_biome: dict[str, dict[int, int]] = {}
+    by_state: dict[str, dict[int, int]] = {}
+
+    for month, fpath in sorted(month_files.items()):
+        df = read_focos_subset_brasil_file(
+            fpath,
+            datetime_candidates,
+            state_candidates,
+            biome_candidates,
+            satellite_candidates=satellite_candidates,
+            reference_satellite=INPE_REFERENCE_SATELLITE,
+        )
+
+        national[month] = len(df)
+
+        if not df.empty:
+            for biome_key, grp in df.dropna(subset=["biome"]).groupby("biome"):
+                k = str(biome_key)
+                if k not in by_biome:
+                    by_biome[k] = {}
+                by_biome[k][month] = len(grp)
+
+            for state_key, grp in df.dropna(subset=["state"]).groupby("state"):
+                k = str(state_key)
+                if k not in by_state:
+                    by_state[k] = {}
+                by_state[k][month] = len(grp)
+
+    return {
+        "last_closed_month": max(month_files.keys()),
+        "national": national,
+        "by_biome": by_biome,
+        "by_state": by_state,
+    }
+
+
 def _build_monthly_year_comparison_records(
     monthly_all_df: pd.DataFrame,
     monthly_by_biome_df: pd.DataFrame,
@@ -1274,8 +1365,13 @@ def _build_monthly_year_comparison_records(
     previous_year: int | None,
     five_avg_candidate_years: list[int],
     last_closed_month: int,
+    mensal_counts: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
-    """Build flat monthly records for the year comparison chart (current/prev/5yr-avg × biome × state)."""
+    """Build flat monthly records for the year comparison chart (current/prev/5yr-avg × biome × state).
+
+    When mensal_counts is provided, uses INPE monthly CSV data for current_year values
+    (more accurate than annual ZIP aggregation for the incomplete current year).
+    """
     ALL = ALL_BIOMES_VALUE
     records: list[dict[str, Any]] = []
 
@@ -1301,6 +1397,9 @@ def _build_monthly_year_comparison_records(
             avg[m] = round(sum(ys) / len(ys), 1) if ys else None
         return avg
 
+    def _mensal_month_vals(counts: dict[int, int]) -> dict[int, int | None]:
+        return {m: counts.get(m) for m in range(1, 13)}
+
     def _add_records(
         scope_biome: str,
         scope_state: str,
@@ -1319,25 +1418,38 @@ def _build_monthly_year_comparison_records(
             })
 
     # --- National (__all__ biome, __all__ state) ---
-    cur_nat = _month_vals(monthly_all_df, latest_year)
+    if mensal_counts and mensal_counts.get("national"):
+        cur_nat = _mensal_month_vals(mensal_counts["national"])
+    else:
+        cur_nat = _month_vals(monthly_all_df, latest_year)
     prev_nat = _month_vals(monthly_all_df, previous_year) if previous_year else {m: None for m in range(1, 13)}
     avg_nat = _avg_vals(monthly_all_df, five_avg_candidate_years)
     _add_records(ALL, ALL, cur_nat, prev_nat, avg_nat)
 
     # --- Per biome (__all__ state) ---
+    mensal_by_biome = mensal_counts.get("by_biome", {}) if mensal_counts else {}
     if not monthly_by_biome_df.empty:
         for biome in monthly_by_biome_df["biome"].unique():
             biome_df = monthly_by_biome_df[monthly_by_biome_df["biome"] == biome]
-            cur_b = _month_vals(biome_df, latest_year)
+            biome_key = str(biome).upper()
+            if biome_key in mensal_by_biome:
+                cur_b = _mensal_month_vals(mensal_by_biome[biome_key])
+            else:
+                cur_b = _month_vals(biome_df, latest_year)
             prev_b = _month_vals(biome_df, previous_year) if previous_year else {m: None for m in range(1, 13)}
             avg_b = _avg_vals(biome_df, five_avg_candidate_years)
             _add_records(str(biome), ALL, cur_b, prev_b, avg_b)
 
     # --- Per state (__all__ biome) ---
+    mensal_by_state = mensal_counts.get("by_state", {}) if mensal_counts else {}
     if not state_month_all_df.empty:
         for state in state_month_all_df["state"].unique():
             state_df = state_month_all_df[state_month_all_df["state"] == state]
-            cur_s = _month_vals(state_df, latest_year)
+            state_key = str(state).upper()
+            if state_key in mensal_by_state:
+                cur_s = _mensal_month_vals(mensal_by_state[state_key])
+            else:
+                cur_s = _month_vals(state_df, latest_year)
             prev_s = _month_vals(state_df, previous_year) if previous_year else {m: None for m in range(1, 13)}
             avg_s = _avg_vals(state_df, five_avg_candidate_years)
             _add_records(ALL, str(state), cur_s, prev_s, avg_s)

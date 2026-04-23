@@ -280,11 +280,25 @@ def build_report(
                 typer.echo("Operação cancelada. Use --force para pular esta confirmação.")
                 raise typer.Exit()
 
+    # --- Scope selection ---
+    typer.echo(
+        "\nEscolha o escopo de carga:\n"
+        "  [1] Apenas ano corrente — carrega só o ZIP mais recente (rápido, ideal p/ atualização mensal)\n"
+        "  [2] Todos os anos configurados — histórico completo (mais lento, recomendado p/ primeira execução)\n"
+    )
+    scope_choice = typer.prompt("Opção (1 ou 2)", default="1")
+    current_year_only = scope_choice.strip() == "1"
+    if current_year_only:
+        typer.echo("→ Modo: apenas ano corrente.\n")
+    else:
+        typer.echo("→ Modo: histórico completo.\n")
+
     runner = get_report_runner(report_id)
     package = runner(
         settings=settings,
         storage=storage,
         logger=logger,
+        current_year_only=current_year_only,
     )
 
     publication = publish_report_package(
