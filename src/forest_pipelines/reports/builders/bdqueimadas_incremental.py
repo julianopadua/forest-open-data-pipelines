@@ -178,6 +178,14 @@ def consolidate_year_payloads(
         [pd.DataFrame(item.get("state_year_by_biome", [])) for item in year_payloads],
         key_cols=["year", "state", "biome"],
     )
+    state_month_all_df = _merge_sum_frames(
+        [pd.DataFrame(item.get("state_month_all", [])) for item in year_payloads],
+        key_cols=["period", "year", "state"],
+    )
+    state_month_by_biome_df = _merge_sum_frames(
+        [pd.DataFrame(item.get("state_month_by_biome", [])) for item in year_payloads],
+        key_cols=["period", "year", "state", "biome"],
+    )
 
     available_biomes = sorted(
         {
@@ -215,6 +223,8 @@ def consolidate_year_payloads(
         "annual_by_biome_df": annual_by_biome_df.sort_values(["year", "biome"]).reset_index(drop=True),
         "state_year_all_df": state_year_all_df.sort_values(["year", "state"]).reset_index(drop=True),
         "state_year_by_biome_df": state_year_by_biome_df.sort_values(["year", "state", "biome"]).reset_index(drop=True),
+        "state_month_all_df": state_month_all_df.sort_values(["period", "state"]).reset_index(drop=True),
+        "state_month_by_biome_df": state_month_by_biome_df.sort_values(["period", "state", "biome"]).reset_index(drop=True),
         "available_biomes": available_biomes,
         "yearly_file_stats": yearly_file_stats,
         "total_rows_processed": total_rows_processed,
@@ -292,6 +302,8 @@ def _build_signature(
             "annual_by_biome",
             "state_year_all",
             "state_year_by_biome",
+            "state_month_all",
+            "state_month_by_biome",
         ],
     }
     raw = json.dumps(payload, ensure_ascii=False, sort_keys=True).encode("utf-8")
@@ -329,6 +341,8 @@ def _is_valid_year_payload(
         "annual_by_biome",
         "state_year_all",
         "state_year_by_biome",
+        "state_month_all",
+        "state_month_by_biome",
     }
 
     if payload.get("cache_schema_version") != CACHE_SCHEMA_VERSION:
@@ -404,6 +418,26 @@ def _finish_year_payload_from_subset(
         .reset_index()
     )
 
+    state_month_all = (
+        subset.dropna(subset=["state"])
+        .groupby(["period_month", "year", "state"])
+        .size()
+        .rename("value")
+        .reset_index()
+        .rename(columns={"period_month": "period"})
+    )
+    state_month_all["period"] = state_month_all["period"].astype(str)
+
+    state_month_by_biome = (
+        subset.dropna(subset=["state", "biome"])
+        .groupby(["period_month", "year", "state", "biome"])
+        .size()
+        .rename("value")
+        .reset_index()
+        .rename(columns={"period_month": "period"})
+    )
+    state_month_by_biome["period"] = state_month_by_biome["period"].astype(str)
+
     available_biomes = sorted(
         {
             str(biome).strip()
@@ -429,6 +463,8 @@ def _finish_year_payload_from_subset(
         "annual_by_biome": _df_to_records(annual_by_biome),
         "state_year_all": _df_to_records(state_year_all),
         "state_year_by_biome": _df_to_records(state_year_by_biome),
+        "state_month_all": _df_to_records(state_month_all),
+        "state_month_by_biome": _df_to_records(state_month_by_biome),
         "processed_at": _now_iso(),
     }
 

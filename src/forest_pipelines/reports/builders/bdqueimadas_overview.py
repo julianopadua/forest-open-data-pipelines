@@ -16,6 +16,7 @@ from forest_pipelines.reports.builders.bdqueimadas_incremental import (
     build_incremental_year_caches,
     combine_all_and_biome_records,
     consolidate_year_payloads,
+    _df_to_records,
 )
 from forest_pipelines.reports.definitions.base import (
     ReportConfig,
@@ -111,6 +112,7 @@ def build_package(
     annual_by_biome_df = consolidated["annual_by_biome_df"]
     state_year_all_df = consolidated["state_year_all_df"]
     state_year_by_biome_df = consolidated["state_year_by_biome_df"]
+    state_month_all_df = consolidated["state_month_all_df"]
     available_biomes = consolidated["available_biomes"]
     yearly_file_stats = consolidated["yearly_file_stats"]
     total_rows_processed = consolidated["total_rows_processed"]
@@ -165,6 +167,56 @@ def build_package(
         limit=cfg.analysis.top_biomes_context_limit,
     )
 
+    # --- Monthly metrics for static sections and enhanced LLM context ---
+    latest_month_num = int(latest_period.split("-")[1]) if "-" in latest_period else 12
+    latest_month_total = int(
+        monthly_all_df.loc[monthly_all_df["period"] == latest_period, "value"].sum()
+    )
+
+    same_period_prev_year: str | None = None
+    same_month_prev_year_total = 0
+    if previous_year is not None:
+        same_period_prev_year = f"{previous_year}-{latest_period[-2:]}"
+        prev_vals = monthly_all_df.loc[monthly_all_df["period"] == same_period_prev_year, "value"]
+        same_month_prev_year_total = int(prev_vals.sum()) if not prev_vals.empty else 0
+
+    current_year_month_periods = [
+        f"{latest_year}-{str(m).zfill(2)}" for m in range(1, latest_month_num + 1)
+    ]
+    ytd_current_year = int(
+        monthly_all_df.loc[monthly_all_df["period"].isin(current_year_month_periods), "value"].sum()
+    )
+
+    ytd_previous_year = 0
+    if previous_year is not None:
+        prev_year_month_periods = [
+            f"{previous_year}-{str(m).zfill(2)}" for m in range(1, latest_month_num + 1)
+        ]
+        ytd_previous_year = int(
+            monthly_all_df.loc[monthly_all_df["period"].isin(prev_year_month_periods), "value"].sum()
+        )
+
+    five_avg_candidate_years = [y for y in available_years if latest_year - 5 <= y < latest_year]
+    ytd_per_year: list[float] = []
+    for yr in five_avg_candidate_years:
+        yr_periods = [f"{yr}-{str(m).zfill(2)}" for m in range(1, latest_month_num + 1)]
+        yr_ytd = float(monthly_all_df.loc[monthly_all_df["period"].isin(yr_periods), "value"].sum())
+        if yr_ytd > 0:
+            ytd_per_year.append(yr_ytd)
+    ytd_5yr_avg = round(sum(ytd_per_year) / len(ytd_per_year), 0) if ytd_per_year else None
+
+    top_states_month_data = _build_top_states_month_merged(
+        state_month_all_df=state_month_all_df,
+        current_period=latest_period,
+        previous_period=same_period_prev_year,
+    )
+    top_states_by_volume_month = _sort_top_states_month(
+        top_states_month_data, sort_by="volume", limit=cfg.display.top_states_limit
+    )
+    top_states_by_variation_month = _sort_top_states_month(
+        top_states_month_data, sort_by="variation", limit=cfg.display.top_states_limit
+    )
+
     highlights = _build_highlights(
         latest_year=latest_year,
         previous_year=previous_year,
@@ -207,6 +259,27 @@ def build_package(
             for row in top_states_table[: min(cfg.analysis.top_states_context_limit, len(top_states_table))]
         ],
         "top_biomes_current_year": top_biomes_context,
+        "monthly_analysis": {
+            "latest_period": latest_period,
+            "latest_month_total": latest_month_total,
+            "same_period_prev_year": same_period_prev_year,
+            "same_month_prev_year_total": same_month_prev_year_total,
+            "latest_month_pct_change": _safe_pct_change(latest_month_total, same_month_prev_year_total),
+            "ytd_current_year": ytd_current_year,
+            "ytd_previous_year": ytd_previous_year,
+            "ytd_pct_change": _safe_pct_change(ytd_current_year, ytd_previous_year),
+            "ytd_5yr_avg": ytd_5yr_avg,
+            "ytd_vs_5yr_avg_pct": _safe_pct_change(ytd_current_year, ytd_5yr_avg) if ytd_5yr_avg else None,
+            "top_states_latest_month": [
+                {
+                    "state": row["state"],
+                    "current_month_total": row["current_month_total"],
+                    "previous_month_total": row["previous_month_total"],
+                    "pct_change": row["pct_change"],
+                }
+                for row in top_states_by_volume_month[: min(cfg.analysis.top_states_context_limit, len(top_states_by_volume_month))]
+            ],
+        },
     }
 
     fallback_analysis = _build_fallback_analysis(
@@ -223,6 +296,10 @@ def build_package(
         year_range=year_range,
         analysis_window_start=analysis_window_start,
         analysis_window_end=analysis_window_end,
+        latest_month_total=latest_month_total,
+        same_month_prev_year_total=same_month_prev_year_total,
+        ytd_current_year=ytd_current_year,
+        ytd_previous_year=ytd_previous_year,
     )
 
     analysis_blocks = maybe_generate_analysis_blocks(
@@ -237,6 +314,17 @@ def build_package(
     title_i18n = localized_text_dict(cfg.title) or _localized("", "")
     source_label_i18n = localized_text_dict(cfg.source_label) or _localized("", "")
     summary_i18n = localized_text_dict(cfg.summary) if cfg.summary is not None else None
+
+    # Static monthly series: all historical months, __all__ biome only
+    static_monthly_df = monthly_all_df[["period", "year", "value"]].copy()
+    static_monthly_df["biome"] = ALL_BIOMES_VALUE
+    static_monthly_records = _df_to_records(static_monthly_df)
+
+    # Month label for column headers (e.g. "Abr/2026")
+    latest_month_label_pt = _month_label_pt(latest_period)
+    latest_month_label_en = _month_label_en(latest_period)
+    prev_month_label_pt = _month_label_pt(same_period_prev_year) if same_period_prev_year else str(previous_year or "")
+    prev_month_label_en = _month_label_en(same_period_prev_year) if same_period_prev_year else str(previous_year or "")
 
     monthly_series_records = combine_all_and_biome_records(
         all_df=monthly_all_df[["period", "year", "value"]],
@@ -330,11 +418,62 @@ def build_package(
         "analysis": analysis_blocks,
         "sections": [
             {
+                "id": "monthly_series_static",
+                "kind": "timeseries",
+                "is_static": True,
+                "highlight_year": latest_year,
+                "title": _localized(
+                    f"Focos mensais — histórico completo com destaque {latest_year}",
+                    f"Monthly hotspots — full history highlighting {latest_year}",
+                ),
+                "x_key": "period",
+                "y_key": "value",
+                "biome_key": "biome",
+                "filterable_by": [],
+                "data": static_monthly_records,
+            },
+            {
+                "id": "top_states_latest_month",
+                "kind": "table",
+                "is_static": True,
+                "title": _localized(
+                    f"Top UFs em focos — {latest_month_label_pt} vs {prev_month_label_pt}",
+                    f"Top states by hotspots — {latest_month_label_en} vs {prev_month_label_en}",
+                ),
+                "columns": [
+                    {"key": "state", "label": _localized("UF", "State")},
+                    {"key": "current_month_total", "label": _localized(latest_month_label_pt, latest_month_label_en)},
+                    {"key": "previous_month_total", "label": _localized(prev_month_label_pt, prev_month_label_en)},
+                    {"key": "absolute_change", "label": _localized("Variação absoluta", "Absolute change")},
+                    {"key": "pct_change", "label": _localized("Variação %", "% change")},
+                ],
+                "filterable_by": [],
+                "data": top_states_by_volume_month,
+            },
+            {
+                "id": "top_states_biggest_movers_month",
+                "kind": "table",
+                "is_static": True,
+                "title": _localized(
+                    f"Maiores variações em focos — {latest_month_label_pt} vs {prev_month_label_pt}",
+                    f"Biggest movers in hotspots — {latest_month_label_en} vs {prev_month_label_en}",
+                ),
+                "columns": [
+                    {"key": "state", "label": _localized("UF", "State")},
+                    {"key": "current_month_total", "label": _localized(latest_month_label_pt, latest_month_label_en)},
+                    {"key": "previous_month_total", "label": _localized(prev_month_label_pt, prev_month_label_en)},
+                    {"key": "absolute_change", "label": _localized("Variação absoluta", "Absolute change")},
+                    {"key": "pct_change", "label": _localized("Variação %", "% change")},
+                ],
+                "filterable_by": [],
+                "data": top_states_by_variation_month,
+            },
+            {
                 "id": "monthly_series",
                 "kind": "timeseries",
                 "title": _localized(
-                    "Série mensal de focos",
-                    "Monthly hotspot series",
+                    "Série mensal de focos (filtros)",
+                    "Monthly hotspot series (filters)",
                 ),
                 "x_key": "period",
                 "y_key": "value",
@@ -352,8 +491,8 @@ def build_package(
                 "id": "annual_totals",
                 "kind": "bar",
                 "title": _localized(
-                    "Totais anuais de focos",
-                    "Annual hotspot totals",
+                    "Série anual de focos",
+                    "Annual hotspot series",
                 ),
                 "x_key": "year",
                 "y_key": "value",
@@ -719,9 +858,17 @@ def _build_fallback_analysis(
     year_range: str,
     analysis_window_start: str,
     analysis_window_end: str,
+    latest_month_total: int = 0,
+    same_month_prev_year_total: int = 0,
+    ytd_current_year: int = 0,
+    ytd_previous_year: int = 0,
 ) -> dict[str, dict[str, str]]:
     yoy = _safe_pct_change(current_year_total, previous_year_total)
     recent_12m_change = _safe_pct_change(recent_12m_total, prior_12m_total)
+    mom_change = _safe_pct_change(latest_month_total, same_month_prev_year_total)
+    ytd_change = _safe_pct_change(ytd_current_year, ytd_previous_year)
+    latest_month_label_pt = _month_label_pt(latest_period)
+    latest_month_label_en = _month_label_en(latest_period)
 
     if previous_year is None:
         headline_pt = (
@@ -741,23 +888,31 @@ def _build_fallback_analysis(
         )
     else:
         headline_pt = (
-            f"A base processada cobre {first_year} a {latest_year}. "
-            f"Em {latest_year}, o conjunto registra {_fmt_int_pt(current_year_total)} focos, "
-            f"contra {_fmt_int_pt(previous_year_total)} em {previous_year}."
+            f"Em {latest_month_label_pt}, {_fmt_int_pt(latest_month_total)} focos — "
+            f"{_fmt_pct_pt(mom_change)} vs {_month_label_pt(f'{previous_year}-{latest_period[-2:]}')}. "
+            f"Acumulado {latest_year}: {_fmt_int_pt(ytd_current_year)} focos ({_fmt_pct_pt(ytd_change)} vs {previous_year})."
         )
         comparison_pt = (
-            f"A comparação anual indica {_fmt_pct_pt(yoy)} entre {previous_year} e {latest_year}. "
-            f"O último período disponível é {latest_period}."
+            f"Comparação mensal ({latest_month_label_pt}): {_fmt_int_pt(latest_month_total)} focos vs "
+            f"{_fmt_int_pt(same_month_prev_year_total)} no mesmo mês de {previous_year} ({_fmt_pct_pt(mom_change)}). "
+            f"Acumulado jan–{latest_month_label_pt}: {_fmt_int_pt(ytd_current_year)} vs "
+            f"{_fmt_int_pt(ytd_previous_year)} em {previous_year} ({_fmt_pct_pt(ytd_change)}). "
+            f"No total anual: {_fmt_int_pt(current_year_total)} em {latest_year} vs "
+            f"{_fmt_int_pt(previous_year_total)} em {previous_year} ({_fmt_pct_pt(yoy)})."
         )
 
         headline_en = (
-            f"The processed dataset covers {first_year} to {latest_year}. "
-            f"In {latest_year}, the set records {_fmt_int_en(current_year_total)} hotspots, "
-            f"versus {_fmt_int_en(previous_year_total)} in {previous_year}."
+            f"In {latest_month_label_en}, {_fmt_int_en(latest_month_total)} hotspots — "
+            f"{_fmt_pct_en(mom_change)} vs {_month_label_en(f'{previous_year}-{latest_period[-2:]}')}. "
+            f"{latest_year} YTD: {_fmt_int_en(ytd_current_year)} hotspots ({_fmt_pct_en(ytd_change)} vs {previous_year})."
         )
         comparison_en = (
-            f"The annual comparison indicates {_fmt_pct_en(yoy)} between {previous_year} and {latest_year}. "
-            f"The latest available period is {latest_period}."
+            f"Monthly comparison ({latest_month_label_en}): {_fmt_int_en(latest_month_total)} hotspots vs "
+            f"{_fmt_int_en(same_month_prev_year_total)} in the same month of {previous_year} ({_fmt_pct_en(mom_change)}). "
+            f"YTD Jan–{latest_month_label_en}: {_fmt_int_en(ytd_current_year)} vs "
+            f"{_fmt_int_en(ytd_previous_year)} in {previous_year} ({_fmt_pct_en(ytd_change)}). "
+            f"Annual total: {_fmt_int_en(current_year_total)} in {latest_year} vs "
+            f"{_fmt_int_en(previous_year_total)} in {previous_year} ({_fmt_pct_en(yoy)})."
         )
 
     overview_pt = (
@@ -965,6 +1120,90 @@ def _fmt_pct_en(value: float | None) -> str:
     if value is None:
         return "no comparable base"
     return f"{value:,.2f}%"
+
+
+def _build_top_states_month_merged(
+    state_month_all_df: pd.DataFrame,
+    current_period: str,
+    previous_period: str | None,
+) -> list[dict[str, Any]]:
+    if state_month_all_df.empty:
+        return []
+
+    current_df = (
+        state_month_all_df.loc[state_month_all_df["period"] == current_period, ["state", "value"]]
+        .rename(columns={"value": "current_month_total"})
+        .copy()
+    )
+    if current_df.empty:
+        return []
+
+    if previous_period is not None and not state_month_all_df.empty:
+        prev_rows = state_month_all_df.loc[state_month_all_df["period"] == previous_period, ["state", "value"]]
+        previous_df = prev_rows.rename(columns={"value": "previous_month_total"}).copy()
+    else:
+        previous_df = pd.DataFrame(columns=["state", "previous_month_total"])
+
+    merged = current_df.merge(previous_df, on="state", how="outer").fillna(0)
+    merged["current_month_total"] = merged["current_month_total"].astype(int)
+    merged["previous_month_total"] = merged["previous_month_total"].astype(int)
+    merged["absolute_change"] = merged["current_month_total"] - merged["previous_month_total"]
+    merged["pct_change"] = merged.apply(
+        lambda row: _safe_pct_change(row["current_month_total"], row["previous_month_total"]),
+        axis=1,
+    )
+
+    rows: list[dict[str, Any]] = []
+    for _, row in merged.iterrows():
+        rows.append({
+            "state": str(row["state"]),
+            "current_month_total": int(row["current_month_total"]),
+            "previous_month_total": int(row["previous_month_total"]),
+            "absolute_change": int(row["absolute_change"]),
+            "pct_change": None if row["pct_change"] is None else round(float(row["pct_change"]), 2),
+        })
+    return rows
+
+
+def _sort_top_states_month(
+    rows: list[dict[str, Any]],
+    sort_by: str,
+    limit: int,
+) -> list[dict[str, Any]]:
+    if sort_by == "volume":
+        sorted_rows = sorted(rows, key=lambda r: (r["current_month_total"], r["previous_month_total"]), reverse=True)
+    else:
+        def _abs_pct(r: dict[str, Any]) -> float:
+            v = r.get("pct_change")
+            return abs(float(v)) if v is not None else 0.0
+        sorted_rows = sorted(rows, key=_abs_pct, reverse=True)
+    return sorted_rows[:limit]
+
+
+_PT_MONTH_ABBR = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
+_EN_MONTH_ABBR = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+
+def _month_label_pt(period: str | None) -> str:
+    if not period or "-" not in period:
+        return period or ""
+    year, month = period.split("-", 1)
+    try:
+        m = int(month)
+        return f"{_PT_MONTH_ABBR[m - 1]}/{year}"
+    except (ValueError, IndexError):
+        return period
+
+
+def _month_label_en(period: str | None) -> str:
+    if not period or "-" not in period:
+        return period or ""
+    year, month = period.split("-", 1)
+    try:
+        m = int(month)
+        return f"{_EN_MONTH_ABBR[m - 1]}/{year}"
+    except (ValueError, IndexError):
+        return period
 
 
 def _now_iso() -> str:
