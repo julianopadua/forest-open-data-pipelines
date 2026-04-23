@@ -223,16 +223,25 @@ def sync(
         raise RuntimeError(f"Validação do feed: {msg}")
 
     manifest_body: dict[str, Any] = {
+        "schema_version": "1.0",
         "dataset_id": cfg.id,
         "title": cfg.title,
         "source_dataset_url": cfg.source_dataset_url,
         "bucket_prefix": cfg.bucket_prefix,
-        "source": cfg.source_key,
-        "source_name": cfg.source_display_name,
         "generated_at": generated_at,
-        "item_count": len(items),
-        "categories_monitored": [{"slug": c.slug, "label": c.label} for c in cfg.categories],
+        "generation_status": "success",
+        "warnings": [],
         "items": items,
+        "meta": {
+            "source_agency": cfg.source_display_name,
+            "custom_tags": {
+                "source_key": cfg.source_key,
+                "item_count": len(items),
+                "categories_monitored": [
+                    {"slug": c.slug, "label": c.label} for c in cfg.categories
+                ],
+            },
+        },
     }
 
     raw_bytes = json.dumps(manifest_body, ensure_ascii=False, indent=2).encode("utf-8")

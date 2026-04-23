@@ -141,6 +141,7 @@ def sync(settings: Any, storage: Any, logger: Any, **kwargs) -> dict[str, Any]:
 
     logger.info(f"Indexing complete. {len(items)} items found.")
     
+    partial = len(items) != len(links)
     return build_manifest(
         dataset_id=cfg.id,
         title=cfg.title,
@@ -148,8 +149,17 @@ def sync(settings: Any, storage: Any, logger: Any, **kwargs) -> dict[str, Any]:
         bucket_prefix=cfg.bucket_prefix,
         items=items,
         meta={
-            "total_items": len(items),
-            "status": "success" if len(items) == len(links) else "partial",
-            "scraped_at": datetime.utcnow().isoformat()
-        }
+            "source_agency": "EIA",
+            "custom_tags": {
+                "total_items": len(items),
+                "total_expected": len(links),
+                "scraped_at": datetime.utcnow().isoformat(),
+            },
+        },
+        generation_status="success_partial_fallback" if partial else "success",
+        warnings=(
+            [f"Apenas {len(items)}/{len(links)} arquivos foram baixados com sucesso."]
+            if partial
+            else None
+        ),
     )

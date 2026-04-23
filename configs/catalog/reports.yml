@@ -1,0 +1,27 @@
+# configs/catalog/reports.yml
+#
+# Presentation metadata for the reports catalog consumed by the portal.
+# The pipeline `publish-catalog` command emits catalog/reports_catalog.json
+# to Supabase Storage from this file.
+schema_version: "1.0"
+
+reports:
+  - id: bdqueimadas_overview
+    slug: bdqueimadas-overview
+    title: "BDQueimadas - Panorama Sintético de Focos"
+    description: |
+      Leitura sintética da série histórica de focos de queimadas, com filtros
+      por período e bioma, comparação anual e visão comparativa por UF.
+    source_title: "INPE - Programa Queimadas"
+    category_title: "Meio ambiente"
+    manifest_path: reports/bdqueimadas/overview/manifest.json
+    stable_report_path: reports/bdqueimadas/overview/report.json
+    source_portal_href: "/open-data/inpe/inpe-bdqueimadas-focos"
+    tags: [queimadas, inpe, focos]
+    layout: news
+    hero_image_src: "/images/reports/bdqueimadas-cerrado-hero.png"
+    hero_image_credit_pt: "Imagem ilustrativa do bioma Cerrado em chamas. Fonte: Conexão UFRJ."
+    hero_image_credit_en: "Illustrative image of the Cerrado on flames. Source: Conexão UFRJ."
+    related_article_url: "https://conexao.ufrj.br/2021/07/como-o-fogo-se-comporta-no-cerrado/"
+    related_article_label_pt: "Como o fogo se comporta no Cerrado? (Conexão UFRJ)"
+    related_article_label_en: "How does fire behave in the Cerrado? (Conexão UFRJ)"

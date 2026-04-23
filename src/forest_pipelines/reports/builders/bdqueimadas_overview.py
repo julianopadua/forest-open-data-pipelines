@@ -125,12 +125,11 @@ def build_package(
         raise RuntimeError("Não foi possível montar séries agregadas para o report BDQueimadas.")
 
     first_year = int(annual_all_df["year"].min())
-    latest_year = int(annual_all_df["year"].max())
-    previous_year = _find_previous_year(annual_all_df, latest_year)
+    zip_latest_year = int(annual_all_df["year"].max())
+    zip_previous_year = _find_previous_year(annual_all_df, zip_latest_year)
 
     first_period = str(monthly_all_df["period"].iloc[0])
-    latest_period = str(monthly_all_df["period"].iloc[-1])
-    year_range = f"{first_year}-{latest_year}"
+    zip_latest_period = str(monthly_all_df["period"].iloc[-1])
 
     available_years = [int(y) for y in annual_all_df["year"].tolist()]
     available_periods = [str(period) for period in monthly_all_df["period"].tolist()]
@@ -143,9 +142,44 @@ def build_package(
     default_annual_start = int(default_annual_window["year"].iloc[0])
     default_annual_end = int(default_annual_window["year"].iloc[-1])
 
-    current_year_total = int(
-        annual_all_df.loc[annual_all_df["year"] == latest_year, "value"].iloc[0]
+    # --- Load mensal CSVs early — determines whether we have data beyond the ZIPs ---
+    mensal_dir = settings.data_dir / cfg.dataset.local_relative_dir / "mensal"
+    calendar_year = pd.Timestamp.now().year
+    mensal_counts = _load_mensal_counts_for_current_year(
+        mensal_dir=mensal_dir,
+        current_year=calendar_year,
+        datetime_candidates=datetime_candidates,
+        state_candidates=state_candidates,
+        biome_candidates=biome_candidates,
+        satellite_candidates=DEFAULT_SATELLITE_CANDIDATES,
     )
+
+    # If mensal CSVs cover a year beyond the last ZIP, use that as the effective current year
+    _mensal_is_current = mensal_counts["last_closed_month"] > 0 and calendar_year > zip_latest_year
+    if _mensal_is_current:
+        latest_year = calendar_year
+        previous_year = zip_latest_year
+        last_closed_month = mensal_counts["last_closed_month"]
+        latest_period = f"{latest_year}-{str(last_closed_month).zfill(2)}"
+        latest_month_num = last_closed_month
+        logger.info(
+            "Dados mensais INPE para %d: %d meses (último: mês %d). ZIPs cobrem até %d.",
+            latest_year, len(mensal_counts["national"]), last_closed_month, zip_latest_year,
+        )
+    else:
+        latest_year = zip_latest_year
+        previous_year = zip_previous_year
+        latest_period = zip_latest_period
+        last_closed_month = int(latest_period.split("-")[1]) if "-" in latest_period else 12
+        latest_month_num = last_closed_month
+
+    year_range = f"{first_year}-{latest_year}"
+
+    # Current year totals: prefer mensal data, fall back to ZIP
+    if _mensal_is_current:
+        current_year_total = sum(mensal_counts["national"].values())
+    else:
+        current_year_total = int(annual_all_df.loc[annual_all_df["year"] == latest_year, "value"].iloc[0])
     previous_year_total = int(
         annual_all_df.loc[annual_all_df["year"] == previous_year, "value"].iloc[0]
     ) if previous_year is not None else 0
@@ -153,10 +187,11 @@ def build_package(
     recent_12m_total = int(monthly_all_df["value"].tail(12).sum())
     prior_12m_total = int(monthly_all_df["value"].iloc[-24:-12].sum()) if len(monthly_all_df) >= 24 else 0
 
+    # Top-states annual table and biome context: always from ZIP (latest complete year)
     top_states_table = _build_top_states_table(
         state_year_series=state_year_all_df,
-        latest_year=latest_year,
-        previous_year=previous_year,
+        latest_year=zip_latest_year,
+        previous_year=zip_previous_year,
         limit=cfg.display.top_states_limit,
     )
 
@@ -166,39 +201,31 @@ def build_package(
 
     top_biomes_context = _build_top_biomes_context(
         annual_by_biome_df=annual_by_biome_df,
-        latest_year=latest_year,
-        previous_year=previous_year,
+        latest_year=zip_latest_year,
+        previous_year=zip_previous_year,
         limit=cfg.analysis.top_biomes_context_limit,
     )
 
-    # --- Monthly metrics for static sections and enhanced LLM context ---
-    latest_month_num = int(latest_period.split("-")[1]) if "-" in latest_period else 12
-    latest_month_total = int(
-        monthly_all_df.loc[monthly_all_df["period"] == latest_period, "value"].sum()
-    )
+    # --- Monthly metrics (prefer mensal for current year, ZIP for prev year / 5yr avg) ---
+    if _mensal_is_current:
+        latest_month_total = mensal_counts["national"].get(last_closed_month, 0)
+        ytd_current_year = sum(mensal_counts["national"].values())
+    else:
+        latest_month_total = int(monthly_all_df.loc[monthly_all_df["period"] == latest_period, "value"].sum())
+        current_year_month_periods = [f"{latest_year}-{str(m).zfill(2)}" for m in range(1, latest_month_num + 1)]
+        ytd_current_year = int(monthly_all_df.loc[monthly_all_df["period"].isin(current_year_month_periods), "value"].sum())
 
     same_period_prev_year: str | None = None
     same_month_prev_year_total = 0
     if previous_year is not None:
-        same_period_prev_year = f"{previous_year}-{latest_period[-2:]}"
+        same_period_prev_year = f"{previous_year}-{str(last_closed_month).zfill(2)}"
         prev_vals = monthly_all_df.loc[monthly_all_df["period"] == same_period_prev_year, "value"]
         same_month_prev_year_total = int(prev_vals.sum()) if not prev_vals.empty else 0
 
-    current_year_month_periods = [
-        f"{latest_year}-{str(m).zfill(2)}" for m in range(1, latest_month_num + 1)
-    ]
-    ytd_current_year = int(
-        monthly_all_df.loc[monthly_all_df["period"].isin(current_year_month_periods), "value"].sum()
-    )
-
     ytd_previous_year = 0
     if previous_year is not None:
-        prev_year_month_periods = [
-            f"{previous_year}-{str(m).zfill(2)}" for m in range(1, latest_month_num + 1)
-        ]
-        ytd_previous_year = int(
-            monthly_all_df.loc[monthly_all_df["period"].isin(prev_year_month_periods), "value"].sum()
-        )
+        prev_year_month_periods = [f"{previous_year}-{str(m).zfill(2)}" for m in range(1, latest_month_num + 1)]
+        ytd_previous_year = int(monthly_all_df.loc[monthly_all_df["period"].isin(prev_year_month_periods), "value"].sum())
 
     five_avg_candidate_years = [y for y in available_years if latest_year - 5 <= y < latest_year]
     ytd_per_year: list[float] = []
@@ -209,10 +236,14 @@ def build_package(
             ytd_per_year.append(yr_ytd)
     ytd_5yr_avg = round(sum(ytd_per_year) / len(ytd_per_year), 0) if ytd_per_year else None
 
+    # Top-states monthly table: always from ZIP (state-month data for current year is not in ZIPs)
+    zip_same_period_prev = (
+        f"{zip_previous_year}-{zip_latest_period[-2:]}" if zip_previous_year else None
+    )
     top_states_month_data = _build_top_states_month_merged(
         state_month_all_df=state_month_all_df,
-        current_period=latest_period,
-        previous_period=same_period_prev_year,
+        current_period=zip_latest_period,
+        previous_period=zip_same_period_prev,
     )
     top_states_by_volume_month = _sort_top_states_month(
         top_states_month_data, sort_by="volume", limit=cfg.display.top_states_limit
@@ -234,9 +265,6 @@ def build_package(
         year_range=year_range,
     )
 
-    # Last closed month (latest_period is the most recent closed month)
-    last_closed_month = int(latest_period.split("-")[1]) if "-" in latest_period else 12
-
     # 5-year average window bounds
     avg_window_start = min(five_avg_candidate_years) if five_avg_candidate_years else latest_year - 5
     avg_window_end = max(five_avg_candidate_years) if five_avg_candidate_years else latest_year - 1
@@ -244,7 +272,7 @@ def build_package(
     # Latest month 5yr average for LLM context
     latest_month_5yr_avg_vals = []
     for yr in five_avg_candidate_years:
-        yr_period = f"{yr}-{latest_period[-2:]}"
+        yr_period = f"{yr}-{str(last_closed_month).zfill(2)}"
         yr_val = float(monthly_all_df.loc[monthly_all_df["period"] == yr_period, "value"].sum())
         if yr_val > 0:
             latest_month_5yr_avg_vals.append(yr_val)
@@ -343,26 +371,6 @@ def build_package(
     source_label_i18n = localized_text_dict(cfg.source_label) or _localized("", "")
     summary_i18n = localized_text_dict(cfg.summary) if cfg.summary is not None else None
 
-    # Load monthly CSV files for current year (more accurate than annual ZIP for incomplete year)
-    mensal_dir = settings.data_dir / cfg.dataset.local_relative_dir / "mensal"
-    mensal_counts = _load_mensal_counts_for_current_year(
-        mensal_dir=mensal_dir,
-        current_year=latest_year,
-        datetime_candidates=datetime_candidates,
-        state_candidates=state_candidates,
-        biome_candidates=biome_candidates,
-        satellite_candidates=DEFAULT_SATELLITE_CANDIDATES,
-    )
-    # Override last_closed_month from actual monthly files if available
-    if mensal_counts["last_closed_month"] > 0:
-        last_closed_month = mensal_counts["last_closed_month"]
-        logger.info(
-            "Usando dados mensais INPE COIDS: %d meses disponíveis para %d (último: %d)",
-            len(mensal_counts["national"]),
-            latest_year,
-            last_closed_month,
-        )
-
     # Monthly year comparison section data (biome + state filterable, period static)
     available_states = sorted(
         str(s) for s in state_month_all_df["state"].unique() if pd.notna(s)
@@ -384,11 +392,11 @@ def build_package(
     static_monthly_df["biome"] = ALL_BIOMES_VALUE
     static_monthly_records = _df_to_records(static_monthly_df)
 
-    # Month label for column headers (e.g. "Abr/2026")
-    latest_month_label_pt = _month_label_pt(latest_period)
-    latest_month_label_en = _month_label_en(latest_period)
-    prev_month_label_pt = _month_label_pt(same_period_prev_year) if same_period_prev_year else str(previous_year or "")
-    prev_month_label_en = _month_label_en(same_period_prev_year) if same_period_prev_year else str(previous_year or "")
+    # Month labels for top-states monthly table columns (always from ZIP, which has full state data)
+    latest_month_label_pt = _month_label_pt(zip_latest_period)
+    latest_month_label_en = _month_label_en(zip_latest_period)
+    prev_month_label_pt = _month_label_pt(zip_same_period_prev) if zip_same_period_prev else str(zip_previous_year or "")
+    prev_month_label_en = _month_label_en(zip_same_period_prev) if zip_same_period_prev else str(zip_previous_year or "")
 
     monthly_series_records = combine_all_and_biome_records(
         all_df=monthly_all_df[["period", "year", "value"]],
@@ -466,9 +474,9 @@ def build_package(
                 "available_periods": available_periods,
                 "bounds": {
                     "year_start": first_year,
-                    "year_end": latest_year,
+                    "year_end": zip_latest_year,
                     "period_start": first_period,
-                    "period_end": latest_period,
+                    "period_end": zip_latest_period,
                 },
             },
         },

@@ -152,9 +152,14 @@ def sync(settings: Any, storage: Any, logger: Any, **kwargs) -> dict[str, Any]:
         bucket_prefix=cfg.bucket_prefix,
         items=items,
         meta={
-            "last_release_iso": release_date,
-            "week_ending": scraped["metadata"]["week_ending_raw"],
-            "next_release_iso": scraped["metadata"]["next_release_date_iso"],
-            "scraped_at": datetime.utcnow().isoformat()
-        }
+            "source_agency": "EIA",
+            "release": {
+                "last_release_iso": release_date,
+                "next_release_iso": scraped["metadata"]["next_release_date_iso"],
+                "week_ending": scraped["metadata"]["week_ending_raw"],
+            },
+            "custom_tags": {
+                "scraped_at": datetime.utcnow().isoformat(),
+            },
+        },
     )

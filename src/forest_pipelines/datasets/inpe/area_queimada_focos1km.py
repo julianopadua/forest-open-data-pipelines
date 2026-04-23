@@ -126,9 +126,11 @@ def sync(
         bucket_prefix=cfg.bucket_prefix,
         items=items,
         meta={
-            "source": "INPE - Programa Queimadas",
-            "observation": "Links indexados via Dataserver COIDS com verificação HEAD.",
-            "total_items": len(items),
-            "generated_at": datetime.utcnow().isoformat()
-        }
+            "source_agency": "INPE - Programa Queimadas",
+            "notes": "Links indexados via Dataserver COIDS com verificação HEAD.",
+            "custom_tags": {
+                "total_items": len(items),
+                "indexed_at": datetime.utcnow().isoformat(),
+            },
+        },
     )

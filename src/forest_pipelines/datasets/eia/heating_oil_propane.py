@@ -136,11 +136,16 @@ def sync(settings: Any, storage: Any, logger: Any, **kwargs) -> dict[str, Any]:
         bucket_prefix=cfg.bucket_prefix,
         items=items,
         meta={
-            "last_release_iso": meta_dates["release_date"],
-            "next_release_iso": meta_dates["next_release"],
-            "total_files": len(items),
-            "scraped_at": datetime.utcnow().isoformat()
-        }
+            "source_agency": "EIA",
+            "release": {
+                "last_release_iso": meta_dates["release_date"],
+                "next_release_iso": meta_dates["next_release"],
+            },
+            "custom_tags": {
+                "total_files": len(items),
+                "scraped_at": datetime.utcnow().isoformat(),
+            },
+        },
     )
 
 def load_dataset_cfg(datasets_dir: Path, dataset_id: str) -> DatasetCfg:

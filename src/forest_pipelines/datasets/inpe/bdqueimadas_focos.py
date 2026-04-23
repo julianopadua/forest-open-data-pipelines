@@ -103,8 +103,10 @@ def sync(
         bucket_prefix=cfg.bucket_prefix,
         items=items,
         meta={
-            "source": "INPE - Programa Queimadas",
-            "observation": "Dados anuais do satélite de referência (Brasil)",
-            "total_years": len(items)
-        }
+            "source_agency": "INPE - Programa Queimadas",
+            "notes": "Dados anuais do satélite de referência (Brasil).",
+            "custom_tags": {
+                "total_years": len(items),
+            },
+        },
     )

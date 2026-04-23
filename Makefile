@@ -33,6 +33,7 @@ endif
 .PHONY: build-report-bdqueimadas build-report-bdqueimadas-force
 .PHONY: audit-bdqueimadas
 .PHONY: anp-catalog anp-catalog-smoke
+.PHONY: publish-catalog
 .PHONY: bdqueimadas-social-assets bdqueimadas-social-full
 .PHONY: test test-verbose
 .PHONY: clean
@@ -115,6 +116,11 @@ anp-catalog: ## Scrape full ANP catalog from dados.gov.br (all pages)
 
 anp-catalog-smoke: ## Quick smoke test — fetch first 5 pages only (no SUPABASE needed)
 	$(FPIPE) anp-catalog --limit 5
+
+# ── Portal Catalog (SSOT) ─────────────────────────────────────────────────────
+## Portal Catalog
+publish-catalog: ## Build + upload catalog/open_data_catalog.json and catalog/reports_catalog.json
+	$(FPIPE) publish-catalog
 
 # ── Social Media ──────────────────────────────────────────────────────────────
 ## Social Media

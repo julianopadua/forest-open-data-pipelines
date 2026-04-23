@@ -12,6 +12,7 @@ from forest_pipelines.cli_help import (
     ANP_PUBLISH_DOC,
     AUDIT_DATASET_DOC,
     BUILD_REPORT_DOC,
+    PUBLISH_CATALOG_DOC,
     SYNC_DOC,
     build_app_help,
     short_command_summary,
@@ -310,6 +311,73 @@ def build_report(
     logger.info("Manifest do report: %s", publication["public_urls"]["manifest"])
     logger.info("Report live: %s", publication["public_urls"]["live_report"])
     logger.info("Build do report concluído com sucesso!")
+
+
+@app.command(
+    "publish-catalog",
+    rich_help_panel="Pipelines e storage",
+    help=PUBLISH_CATALOG_DOC,
+    short_help=short_command_summary(PUBLISH_CATALOG_DOC),
+)
+def publish_catalog_cmd(
+    config_path: str = typer.Option(
+        "configs/app.yml",
+        "--config-path",
+        help="YAML principal (bucket Supabase via supabase.bucket_open_data_env).",
+    ),
+    bucket_prefix: str = typer.Option(
+        "catalog",
+        "--bucket-prefix",
+        help="Prefixo dentro do bucket (sem barra final); padrão: catalog.",
+    ),
+    anp_compact: str | None = typer.Option(
+        None,
+        "--anp-compact",
+        help="Caminho para anp_catalog_compact.json. Padrão: <root>/anp_catalog_compact.json.",
+    ),
+) -> None:
+    from pathlib import Path
+
+    from forest_pipelines.catalog.build import (
+        build_catalogs_from_defaults,
+        publish_catalogs,
+    )
+
+    settings = load_settings(config_path)
+    logger = get_logger(settings.logs_dir, "catalog/publish")
+
+    override = Path(anp_compact).resolve() if anp_compact else None
+    open_envelope, reports_envelope = build_catalogs_from_defaults(
+        settings.root,
+        anp_compact_override=override,
+    )
+
+    logger.info(
+        "Catálogo open-data: %d datasets, status=%s, warnings=%d",
+        len(open_envelope.get("datasets", [])),
+        open_envelope.get("generation_status"),
+        len(open_envelope.get("warnings", [])),
+    )
+    logger.info(
+        "Catálogo reports: %d reports, status=%s",
+        len(reports_envelope.get("reports", [])),
+        reports_envelope.get("generation_status"),
+    )
+
+    storage = SupabaseStorage.from_env(
+        logger=logger,
+        bucket_open_data=settings.supabase_bucket_open_data,
+    )
+
+    result = publish_catalogs(
+        storage=storage,
+        open_data_envelope=open_envelope,
+        reports_envelope=reports_envelope,
+        bucket_prefix=bucket_prefix,
+        logger=logger,
+    )
+    typer.echo(result["public_urls"]["open_data_catalog"])
+    typer.echo(result["public_urls"]["reports_catalog"])
 
 
 @app.command(

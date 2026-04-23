@@ -92,9 +92,11 @@ def sync(
         bucket_prefix=cfg.bucket_prefix,
         items=items,
         meta={
-            "source": "INMET - Instituto Nacional de Meteorologia",
-            "observation": "Links indexados com metadados de tamanho obtidos via HTTP HEAD.",
-            "total_items": len(items),
-            "generated_at": datetime.utcnow().isoformat()
-        }
+            "source_agency": "INMET - Instituto Nacional de Meteorologia",
+            "notes": "Links indexados com metadados de tamanho obtidos via HTTP HEAD.",
+            "custom_tags": {
+                "total_items": len(items),
+                "indexed_at": datetime.utcnow().isoformat(),
+            },
+        },
     )

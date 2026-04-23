@@ -120,3 +120,22 @@ Roda a auditoria registrada para o dataset (validações, resumo). Grava Markdow
 Exemplo:
   forest-pipelines audit-dataset inpe_bdqueimadas_focos
 """
+
+
+PUBLISH_CATALOG_DOC = """\
+Gera e publica os catálogos consolidados (open_data_catalog.json e reports_catalog.json) no bucket Storage,
+sob o prefixo catalog/ por padrão. O frontend do portal consome esses JSONs e elimina arrays hardcoded.
+
+Fontes (SSOT):
+  • configs/catalog/open_data.yml — datasets não-ANP (UI metadata: category, segment, subcategory, source)
+  • configs/catalog/reports.yml — catálogo de relatórios (slug, título, layout, hero, etc.)
+  • anp_catalog_compact.json (na raiz do repo) — catálogo ANP já transformado (gerado por anp-compact)
+
+Se o arquivo compacto da ANP não existir, o catálogo é publicado sem os datasets ANP e uma warning é
+registrada no envelope (generation_status=success_partial_fallback).
+
+Exemplos:
+  forest-pipelines publish-catalog
+  forest-pipelines publish-catalog --bucket-prefix catalog/v1
+  forest-pipelines publish-catalog --anp-compact ./some-other/anp_catalog_compact.json
+"""
