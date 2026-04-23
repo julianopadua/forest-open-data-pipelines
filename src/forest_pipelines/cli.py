@@ -250,6 +250,11 @@ def build_report(
         "--config-path",
         help="YAML principal (paths, bucket Supabase para publicação do pacote).",
     ),
+    force: bool = typer.Option(
+        False,
+        "--force",
+        help="Sobrescreve o report publicado sem pedir confirmação, mesmo que o período não tenha mudado.",
+    ),
 ) -> None:
     settings = load_settings(config_path)
     logger = get_logger(settings.logs_dir, f"reports/{report_id}")
@@ -258,6 +263,22 @@ def build_report(
         logger=logger,
         bucket_open_data=settings.supabase_bucket_open_data,
     )
+
+    # --- Smart overwrite check ---
+    if not force:
+        existing_meta = _fetch_existing_report_meta(storage, report_id, logger)
+        if existing_meta is not None:
+            last_period = existing_meta.get("latest_period") or existing_meta.get("latest_period", "?")
+            generated_at = existing_meta.get("generated_at", "?")
+            typer.echo(
+                f"\nReport '{report_id}' já foi publicado anteriormente.\n"
+                f"  Período coberto : {last_period}\n"
+                f"  Gerado em       : {generated_at}\n"
+            )
+            should_continue = typer.confirm("Deseja regenerar e sobrescrever?", default=False)
+            if not should_continue:
+                typer.echo("Operação cancelada. Use --force para pular esta confirmação.")
+                raise typer.Exit()
 
     runner = get_report_runner(report_id)
     package = runner(
@@ -306,6 +327,34 @@ def audit_dataset(
     logger.info("Auditoria concluída.")
     logger.info("Markdown: %s", result["readme_path"])
     logger.info("JSON resumo: %s", result["summary_json_path"])
+
+
+def _fetch_existing_report_meta(storage: Any, report_id: str, logger: Any) -> dict | None:
+    """Try to fetch the published manifest for a report to check if it already exists."""
+    from typing import Any as _Any  # noqa: PLC0415
+    try:
+        from forest_pipelines.reports.registry.reports import get_report_runner  # noqa: PLC0415
+        # Derive bucket prefix from the registry config (same logic as publish)
+        from forest_pipelines.reports.definitions.base import load_report_cfg  # noqa: PLC0415
+        from pathlib import Path  # noqa: PLC0415
+
+        # We need settings to get reports_dir — load minimal config
+        from forest_pipelines.settings import load_settings as _ls  # noqa: PLC0415
+        settings = _ls("configs/app.yml")
+        cfg = load_report_cfg(settings.reports_dir, report_id)
+        bucket_prefix = cfg.bucket_prefix.rstrip("/")
+        manifest_path = f"{bucket_prefix}/manifest.json"
+
+        raw = storage.download_bytes(manifest_path)
+        if raw is None:
+            return None
+        manifest = json.loads(raw)
+        meta = manifest.get("meta", {})
+        meta["generated_at"] = manifest.get("generated_at")
+        return meta
+    except Exception as e:  # noqa: BLE001
+        logger.debug("Não foi possível verificar report existente: %s", e)
+        return None
 
 
 if __name__ == "__main__":

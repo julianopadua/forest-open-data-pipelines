@@ -30,7 +30,7 @@ endif
 .PHONY: help
 .PHONY: venv install dev check-env
 .PHONY: sync-cvm sync-inpe sync-eia sync-inmet sync-news sync-all
-.PHONY: build-report-bdqueimadas
+.PHONY: build-report-bdqueimadas build-report-bdqueimadas-force
 .PHONY: audit-bdqueimadas
 .PHONY: anp-catalog anp-catalog-smoke
 .PHONY: bdqueimadas-social-assets bdqueimadas-social-full
@@ -97,8 +97,11 @@ sync-all: sync-cvm sync-inpe sync-eia sync-news ## Sync all primary datasets seq
 
 # ── Reports ───────────────────────────────────────────────────────────────────
 ## Reports
-build-report-bdqueimadas: ## Build and publish BDQueimadas fire overview report
+build-report-bdqueimadas: ## Build and publish BDQueimadas report (prompts if already published)
 	$(FPIPE) build-report bdqueimadas_overview
+
+build-report-bdqueimadas-force: ## Build and publish BDQueimadas report, overwriting without prompt
+	$(FPIPE) build-report bdqueimadas_overview --force
 
 # ── Audits ────────────────────────────────────────────────────────────────────
 ## Audits

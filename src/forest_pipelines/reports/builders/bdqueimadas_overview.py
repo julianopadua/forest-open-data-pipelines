@@ -261,10 +261,16 @@ def build_package(
         "top_biomes_current_year": top_biomes_context,
         "monthly_analysis": {
             "latest_period": latest_period,
+            "latest_month_num": latest_month_num,
+            "last_closed_month": last_closed_month,
+            "avg_window_start": avg_window_start,
+            "avg_window_end": avg_window_end,
             "latest_month_total": latest_month_total,
             "same_period_prev_year": same_period_prev_year,
             "same_month_prev_year_total": same_month_prev_year_total,
-            "latest_month_pct_change": _safe_pct_change(latest_month_total, same_month_prev_year_total),
+            "latest_month_pct_change_vs_prev_year": _safe_pct_change(latest_month_total, same_month_prev_year_total),
+            "latest_month_5yr_avg": latest_month_5yr_avg,
+            "latest_month_pct_change_vs_5yr_avg": _safe_pct_change(latest_month_total, latest_month_5yr_avg) if latest_month_5yr_avg else None,
             "ytd_current_year": ytd_current_year,
             "ytd_previous_year": ytd_previous_year,
             "ytd_pct_change": _safe_pct_change(ytd_current_year, ytd_previous_year),
@@ -314,6 +320,39 @@ def build_package(
     title_i18n = localized_text_dict(cfg.title) or _localized("", "")
     source_label_i18n = localized_text_dict(cfg.source_label) or _localized("", "")
     summary_i18n = localized_text_dict(cfg.summary) if cfg.summary is not None else None
+
+    # Last closed month: the month before the current one (latest_period is already the last closed)
+    last_closed_month = int(latest_period.split("-")[1]) if "-" in latest_period else 12
+
+    # 5-year average window metadata
+    avg_window_start = min(five_avg_candidate_years) if five_avg_candidate_years else latest_year - 5
+    avg_window_end = max(five_avg_candidate_years) if five_avg_candidate_years else latest_year - 1
+
+    # Monthly year comparison section data (biome + state filterable, period static)
+    available_states = sorted(
+        str(s) for s in state_month_all_df["state"].unique() if pd.notna(s)
+    ) if not state_month_all_df.empty else []
+
+    monthly_year_comparison_data = _build_monthly_year_comparison_records(
+        monthly_all_df=monthly_all_df,
+        monthly_by_biome_df=monthly_by_biome_df,
+        state_month_all_df=state_month_all_df,
+        latest_year=latest_year,
+        previous_year=previous_year,
+        five_avg_candidate_years=five_avg_candidate_years,
+        last_closed_month=last_closed_month,
+    )
+
+    # Latest month 5yr average for LLM context
+    latest_month_5yr_avg_vals = []
+    for yr in five_avg_candidate_years:
+        yr_period = f"{yr}-{latest_period[-2:]}"
+        yr_val = float(monthly_all_df.loc[monthly_all_df["period"] == yr_period, "value"].sum())
+        if yr_val > 0:
+            latest_month_5yr_avg_vals.append(yr_val)
+    latest_month_5yr_avg = round(
+        sum(latest_month_5yr_avg_vals) / len(latest_month_5yr_avg_vals), 0
+    ) if latest_month_5yr_avg_vals else None
 
     # Static monthly series: all historical months, __all__ biome only
     static_monthly_df = monthly_all_df[["period", "year", "value"]].copy()
@@ -417,6 +456,23 @@ def build_package(
         "highlights": highlights,
         "analysis": analysis_blocks,
         "sections": [
+            {
+                "id": "monthly_year_comparison",
+                "kind": "monthly_year_comparison",
+                "is_static": True,
+                "title": _localized(
+                    f"Focos mensais por ano — comparativo {latest_year} vs {previous_year} vs média {avg_window_start}–{avg_window_end}",
+                    f"Monthly hotspots by year — {latest_year} vs {previous_year} vs {avg_window_start}–{avg_window_end} average",
+                ),
+                "current_year": latest_year,
+                "previous_year": previous_year,
+                "avg_window_start": avg_window_start,
+                "avg_window_end": avg_window_end,
+                "last_closed_month": last_closed_month,
+                "filterable_by": ["biome", "state"],
+                "available_states": available_states,
+                "data": monthly_year_comparison_data,
+            },
             {
                 "id": "monthly_series_static",
                 "kind": "timeseries",
@@ -1208,3 +1264,82 @@ def _month_label_en(period: str | None) -> str:
 
 def _now_iso() -> str:
     return pd.Timestamp.utcnow().isoformat().replace("+00:00", "Z")
+
+
+def _build_monthly_year_comparison_records(
+    monthly_all_df: pd.DataFrame,
+    monthly_by_biome_df: pd.DataFrame,
+    state_month_all_df: pd.DataFrame,
+    latest_year: int,
+    previous_year: int | None,
+    five_avg_candidate_years: list[int],
+    last_closed_month: int,
+) -> list[dict[str, Any]]:
+    """Build flat monthly records for the year comparison chart (current/prev/5yr-avg × biome × state)."""
+    ALL = ALL_BIOMES_VALUE
+    records: list[dict[str, Any]] = []
+
+    def _month_vals(df: pd.DataFrame, year: int, period_col: str = "period") -> dict[int, int | None]:
+        vals: dict[int, int | None] = {}
+        for m in range(1, 13):
+            period = f"{year}-{str(m).zfill(2)}"
+            rows = df.loc[df[period_col] == period, "value"]
+            vals[m] = int(rows.sum()) if not rows.empty else None
+        return vals
+
+    def _avg_vals(df: pd.DataFrame, years: list[int]) -> dict[int, float | None]:
+        avg: dict[int, float | None] = {}
+        for m in range(1, 13):
+            ys = []
+            for yr in years:
+                period = f"{yr}-{str(m).zfill(2)}"
+                rows = df.loc[df["period"] == period, "value"]
+                if not rows.empty:
+                    v = float(rows.sum())
+                    if v > 0:
+                        ys.append(v)
+            avg[m] = round(sum(ys) / len(ys), 1) if ys else None
+        return avg
+
+    def _add_records(
+        scope_biome: str,
+        scope_state: str,
+        cur_vals: dict[int, int | None],
+        prev_vals: dict[int, int | None],
+        avg_5yr: dict[int, float | None],
+    ) -> None:
+        for m in range(1, 13):
+            records.append({
+                "month": m,
+                "biome": scope_biome,
+                "state": scope_state,
+                "current_year_val": cur_vals[m] if m <= last_closed_month else None,
+                "previous_year_val": prev_vals[m],
+                "avg_5yr_val": avg_5yr[m],
+            })
+
+    # --- National (__all__ biome, __all__ state) ---
+    cur_nat = _month_vals(monthly_all_df, latest_year)
+    prev_nat = _month_vals(monthly_all_df, previous_year) if previous_year else {m: None for m in range(1, 13)}
+    avg_nat = _avg_vals(monthly_all_df, five_avg_candidate_years)
+    _add_records(ALL, ALL, cur_nat, prev_nat, avg_nat)
+
+    # --- Per biome (__all__ state) ---
+    if not monthly_by_biome_df.empty:
+        for biome in monthly_by_biome_df["biome"].unique():
+            biome_df = monthly_by_biome_df[monthly_by_biome_df["biome"] == biome]
+            cur_b = _month_vals(biome_df, latest_year)
+            prev_b = _month_vals(biome_df, previous_year) if previous_year else {m: None for m in range(1, 13)}
+            avg_b = _avg_vals(biome_df, five_avg_candidate_years)
+            _add_records(str(biome), ALL, cur_b, prev_b, avg_b)
+
+    # --- Per state (__all__ biome) ---
+    if not state_month_all_df.empty:
+        for state in state_month_all_df["state"].unique():
+            state_df = state_month_all_df[state_month_all_df["state"] == state]
+            cur_s = _month_vals(state_df, latest_year)
+            prev_s = _month_vals(state_df, previous_year) if previous_year else {m: None for m in range(1, 13)}
+            avg_s = _avg_vals(state_df, five_avg_candidate_years)
+            _add_records(ALL, str(state), cur_s, prev_s, avg_s)
+
+    return records
