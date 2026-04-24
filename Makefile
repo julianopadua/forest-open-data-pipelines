@@ -121,7 +121,6 @@ anp-catalog-smoke: ## Quick smoke test — fetch first 5 pages only (no SUPABASE
 ## Portal Catalog
 publish-catalog: ## Build + upload catalog/open_data_catalog.json and catalog/reports_catalog.json
 	$(FPIPE) publish-catalog
-
 # ── Social Media ──────────────────────────────────────────────────────────────
 ## Social Media
 bdqueimadas-social-assets: ## Generate BDQueimadas carousel charts + manifest (no LLM required)

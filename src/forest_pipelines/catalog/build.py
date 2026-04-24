@@ -235,7 +235,7 @@ def _default_reports_config_path(root: Path) -> Path:
 
 def _default_anp_compact_path(root: Path) -> Path:
     # Project-standard location produced by `anp-compact`.
-    return root / "anp_catalog_compact.json"
+    return root / "src" / "forest_pipelines" / "dados_abertos" / "anp_catalog_compact.json"
 
 
 def build_catalogs_from_defaults(
