@@ -256,6 +256,17 @@ def build_report(
         "--force",
         help="Sobrescreve o report publicado sem pedir confirmação, mesmo que o período não tenha mudado.",
     ),
+    scope: str = typer.Option(
+        "",
+        "--scope",
+        help="Escopo de carga: 'current' (só ano corrente, rápido) ou 'full' (histórico completo). "
+             "Se omitido, exibe prompt interativo.",
+    ),
+    no_llm: bool = typer.Option(
+        False,
+        "--no-llm",
+        help="Pula a geração via LLM e usa o fallback determinístico, independentemente do config.",
+    ),
 ) -> None:
     settings = load_settings(config_path)
     logger = get_logger(settings.logs_dir, f"reports/{report_id}")
@@ -282,17 +293,22 @@ def build_report(
                 raise typer.Exit()
 
     # --- Scope selection ---
-    typer.echo(
-        "\nEscolha o escopo de carga:\n"
-        "  [1] Apenas ano corrente — carrega só o ZIP mais recente (rápido, ideal p/ atualização mensal)\n"
-        "  [2] Todos os anos configurados — histórico completo (mais lento, recomendado p/ primeira execução)\n"
-    )
-    scope_choice = typer.prompt("Opção (1 ou 2)", default="1")
-    current_year_only = scope_choice.strip() == "1"
-    if current_year_only:
-        typer.echo("→ Modo: apenas ano corrente.\n")
+    scope_lower = scope.strip().lower()
+    if scope_lower in ("current", "full"):
+        current_year_only = scope_lower == "current"
+        typer.echo(f"→ Modo: {'apenas ano corrente' if current_year_only else 'histórico completo'}.\n")
     else:
-        typer.echo("→ Modo: histórico completo.\n")
+        typer.echo(
+            "\nEscolha o escopo de carga:\n"
+            "  [1] Apenas ano corrente — carrega só o ZIP mais recente (rápido, ideal p/ atualização mensal)\n"
+            "  [2] Todos os anos configurados — histórico completo (mais lento, recomendado p/ primeira execução)\n"
+        )
+        scope_choice = typer.prompt("Opção (1 ou 2)", default="1")
+        current_year_only = scope_choice.strip() == "1"
+        typer.echo(f"→ Modo: {'apenas ano corrente' if current_year_only else 'histórico completo'}.\n")
+
+    if no_llm:
+        typer.echo("→ LLM desabilitado: usando fallback determinístico.\n")
 
     runner = get_report_runner(report_id)
     package = runner(
@@ -300,6 +316,7 @@ def build_report(
         storage=storage,
         logger=logger,
         current_year_only=current_year_only,
+        skip_llm=no_llm,
     )
 
     publication = publish_report_package(

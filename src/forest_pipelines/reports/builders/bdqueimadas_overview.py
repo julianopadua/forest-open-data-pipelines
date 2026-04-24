@@ -68,6 +68,7 @@ def build_package(
     storage: Any,
     logger: Any,
     current_year_only: bool = False,
+    skip_llm: bool = False,
 ) -> dict[str, Any]:
     cfg = load_report_cfg(settings.reports_dir, "bdqueimadas_overview")
 
@@ -265,9 +266,10 @@ def build_package(
         year_range=year_range,
     )
 
-    # 5-year average window bounds
-    avg_window_start = min(five_avg_candidate_years) if five_avg_candidate_years else latest_year - 5
-    avg_window_end = max(five_avg_candidate_years) if five_avg_candidate_years else latest_year - 1
+    # Historical average: all years before the current one
+    hist_avg_candidate_years = [y for y in available_years if y < latest_year]
+    avg_window_start = min(hist_avg_candidate_years) if hist_avg_candidate_years else first_year
+    avg_window_end = max(hist_avg_candidate_years) if hist_avg_candidate_years else latest_year - 1
 
     # Latest month 5yr average for LLM context
     latest_month_5yr_avg_vals = []
@@ -365,6 +367,7 @@ def build_package(
         prompt_context=analysis_context,
         fallback_blocks=fallback_analysis,
         logger=logger,
+        skip_llm=skip_llm,
     )
 
     title_i18n = localized_text_dict(cfg.title) or _localized("", "")
@@ -382,15 +385,10 @@ def build_package(
         state_month_all_df=state_month_all_df,
         latest_year=latest_year,
         previous_year=previous_year,
-        five_avg_candidate_years=five_avg_candidate_years,
+        five_avg_candidate_years=hist_avg_candidate_years,
         last_closed_month=last_closed_month,
         mensal_counts=mensal_counts,
     )
-
-    # Static monthly series: all historical months, __all__ biome only
-    static_monthly_df = monthly_all_df[["period", "year", "value"]].copy()
-    static_monthly_df["biome"] = ALL_BIOMES_VALUE
-    static_monthly_records = _df_to_records(static_monthly_df)
 
     # Month labels for top-states monthly table columns (always from ZIP, which has full state data)
     latest_month_label_pt = _month_label_pt(zip_latest_period)
@@ -494,8 +492,8 @@ def build_package(
                 "kind": "monthly_year_comparison",
                 "is_static": True,
                 "title": _localized(
-                    f"Focos mensais por ano — comparativo {latest_year} vs {previous_year} vs média {avg_window_start}–{avg_window_end}",
-                    f"Monthly hotspots by year — {latest_year} vs {previous_year} vs {avg_window_start}–{avg_window_end} average",
+                    f"Focos mensais por ano — comparativo {latest_year} vs {previous_year} vs média histórica",
+                    f"Monthly hotspots by year — {latest_year} vs {previous_year} vs historical average",
                 ),
                 "current_year": latest_year,
                 "previous_year": previous_year,
@@ -505,21 +503,6 @@ def build_package(
                 "filterable_by": ["biome", "state"],
                 "available_states": available_states,
                 "data": monthly_year_comparison_data,
-            },
-            {
-                "id": "monthly_series_static",
-                "kind": "timeseries",
-                "is_static": True,
-                "highlight_year": latest_year,
-                "title": _localized(
-                    f"Focos mensais — histórico completo com destaque {latest_year}",
-                    f"Monthly hotspots — full history highlighting {latest_year}",
-                ),
-                "x_key": "period",
-                "y_key": "value",
-                "biome_key": "biome",
-                "filterable_by": [],
-                "data": static_monthly_records,
             },
             {
                 "id": "top_states_latest_month",

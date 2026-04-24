@@ -31,6 +31,7 @@ endif
 .PHONY: venv install dev check-env
 .PHONY: sync-cvm sync-inpe sync-eia sync-inmet sync-news sync-all
 .PHONY: build-report-bdqueimadas build-report-bdqueimadas-force
+.PHONY: build-report-bdqueimadas-no-llm build-report-bdqueimadas-force-no-llm
 .PHONY: audit-bdqueimadas
 .PHONY: anp-catalog anp-catalog-smoke
 .PHONY: publish-catalog
@@ -98,11 +99,17 @@ sync-all: sync-cvm sync-inpe sync-eia sync-news ## Sync all primary datasets seq
 
 # ── Reports ───────────────────────────────────────────────────────────────────
 ## Reports
-build-report-bdqueimadas: ## Build and publish BDQueimadas report (prompts if already published)
+build-report-bdqueimadas: ## Build and publish BDQueimadas report (prompts for scope + overwrite)
 	$(FPIPE) build-report bdqueimadas_overview
 
 build-report-bdqueimadas-force: ## Build and publish BDQueimadas report, overwriting without prompt
 	$(FPIPE) build-report bdqueimadas_overview --force
+
+build-report-bdqueimadas-no-llm: ## Build BDQueimadas report (current year, deterministic fallback — no LLM)
+	$(FPIPE) build-report bdqueimadas_overview --force --scope current --no-llm
+
+build-report-bdqueimadas-force-no-llm: ## Build BDQueimadas report, full history, no LLM
+	$(FPIPE) build-report bdqueimadas_overview --force --scope full --no-llm
 
 # ── Audits ────────────────────────────────────────────────────────────────────
 ## Audits

@@ -17,11 +17,12 @@ def maybe_generate_analysis_blocks(
     prompt_context: dict[str, Any],
     fallback_blocks: dict[str, Any],
     logger: Any,
+    skip_llm: bool = False,
 ) -> dict[str, dict[str, str]]:
     normalized_fallback = _normalize_fallback_blocks(fallback_blocks)
     required_keys = list(normalized_fallback.keys())
 
-    if not llm_cfg.enabled:
+    if not llm_cfg.enabled or skip_llm:
         return normalized_fallback
 
     localized_results: dict[str, dict[str, str]] = {}

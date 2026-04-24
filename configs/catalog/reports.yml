@@ -17,6 +17,7 @@ reports:
     manifest_path: reports/bdqueimadas/overview/manifest.json
     stable_report_path: reports/bdqueimadas/overview/report.json
     source_portal_href: "/open-data/inpe/inpe-bdqueimadas-focos"
+    source_dataset_url: "https://queimadas.dgi.inpe.br/queimadas/bdqueimadas/"
     tags: [queimadas, inpe, focos]
     layout: news
     hero_image_src: "/images/reports/bdqueimadas-cerrado-hero.png"

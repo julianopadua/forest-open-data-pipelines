@@ -106,10 +106,16 @@ Exemplos:
 BUILD_REPORT_DOC = """\
 Gera o pacote estático de um relatório (HTML, assets, manifest) e publica no Storage via publish_report_package.
 
-Hoje há um report registrado; o comando registra no log URLs públicas do manifest e do relatório.
+Opções relevantes:
+  --force          Sobrescreve sem pedir confirmação.
+  --scope current  Carrega só o ZIP mais recente (rápido, atualização mensal). Pula prompt interativo.
+  --scope full     Carrega todo o histórico configurado (lento, primeira execução). Pula prompt interativo.
+  --no-llm         Pula a geração via LLM e usa o fallback determinístico, mesmo que llm.enabled=true no config.
 
-Exemplo:
+Exemplos:
   forest-pipelines build-report bdqueimadas_overview
+  forest-pipelines build-report bdqueimadas_overview --force --scope current --no-llm
+  forest-pipelines build-report bdqueimadas_overview --scope full
 """
 
 

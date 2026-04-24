@@ -152,6 +152,7 @@ def _report_entry(raw: dict[str, Any]) -> dict[str, Any]:
     }
     for optional_key in (
         "source_portal_href",
+        "source_dataset_url",
         "layout",
         "hero_image_src",
         "hero_image_credit_pt",
