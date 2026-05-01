@@ -1,0 +1,6 @@
+# configs/datasets/inpe/bdqueimadas_painel_fogo.yml
+id: inpe_bdqueimadas_painel_fogo
+title: "INPE - BDQueimadas - Painel-Fogo"
+source_url: "https://dataserver-coids.inpe.br/queimadas/queimadas/Painel-Fogo/"
+bucket_prefix: inpe/bdqueimadas/painel_fogo
+include_meta: false

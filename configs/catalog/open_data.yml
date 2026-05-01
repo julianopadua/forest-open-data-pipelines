@@ -176,6 +176,17 @@ datasets:
     manifest_path: inpe/bdqueimadas/boletins_integrados/manifest.json
     source_url: "https://dataserver-coids.inpe.br/queimadas/queimadas/Boletins-Integrados/"
 
+  - id: inpe_bdqueimadas_painel_fogo
+    category_title: "Meio ambiente"
+    subcategory_title: "Queimadas"
+    source_id: inpe
+    source_title: INPE
+    slug: inpe-bdqueimadas-painel-fogo
+    title: "Painel-Fogo (mensal)"
+    description: "Painéis mensais Painel-Fogo em PDF pelo Programa Queimadas/INPE (Dataserver COIDS)."
+    manifest_path: inpe/bdqueimadas/painel_fogo/manifest.json
+    source_url: "https://dataserver-coids.inpe.br/queimadas/queimadas/Painel-Fogo/"
+
   - id: inpe_area_queimada_focos1km
     category_title: "Meio ambiente"
     subcategory_title: "Queimadas"
