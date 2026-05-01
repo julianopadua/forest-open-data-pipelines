@@ -1,0 +1,6 @@
+# configs/datasets/inpe/bdqueimadas_boletins_integrados.yml
+id: inpe_bdqueimadas_boletins_integrados
+title: "INPE - BDQueimadas - Boletins Integrados"
+source_url: "https://dataserver-coids.inpe.br/queimadas/queimadas/Boletins-Integrados/"
+bucket_prefix: inpe/bdqueimadas/boletins_integrados
+include_meta: false

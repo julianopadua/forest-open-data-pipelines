@@ -165,6 +165,17 @@ datasets:
     manifest_path: inpe/bdqueimadas/focos_br_ref/manifest.json
     source_url: "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/anual/Brasil_sat_ref/"
 
+  - id: inpe_bdqueimadas_boletins_integrados
+    category_title: "Meio ambiente"
+    subcategory_title: "Queimadas"
+    source_id: inpe
+    source_title: INPE
+    slug: inpe-bdqueimadas-boletins-integrados
+    title: "Boletins Integrados de Queimadas"
+    description: "Boletins mensais integrados de queimadas publicados em PDF pelo Programa Queimadas/INPE."
+    manifest_path: inpe/bdqueimadas/boletins_integrados/manifest.json
+    source_url: "https://dataserver-coids.inpe.br/queimadas/queimadas/Boletins-Integrados/"
+
   - id: inpe_area_queimada_focos1km
     category_title: "Meio ambiente"
     subcategory_title: "Queimadas"

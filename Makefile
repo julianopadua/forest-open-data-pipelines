@@ -29,7 +29,7 @@ endif
 
 .PHONY: help
 .PHONY: venv install dev check-env
-.PHONY: sync-cvm sync-inpe sync-eia sync-inmet sync-news sync-all
+.PHONY: sync-cvm sync-inpe sync-inpe-boletins sync-eia sync-inmet sync-news sync-all
 .PHONY: build-report-bdqueimadas build-report-bdqueimadas-force
 .PHONY: build-report-bdqueimadas-no-llm build-report-bdqueimadas-force-no-llm
 .PHONY: audit-bdqueimadas
@@ -85,6 +85,9 @@ sync-cvm: ## Sync CVM daily fund information (last 12 months)
 
 sync-inpe: ## Sync INPE BDQueimadas fire focus data
 	$(FPIPE) sync inpe_bdqueimadas_focos
+
+sync-inpe-boletins: ## Sync INPE BDQueimadas integrated bulletins
+	$(FPIPE) sync inpe_bdqueimadas_boletins_integrados
 
 sync-eia: ## Sync EIA weekly petroleum data
 	$(FPIPE) sync eia_petroleum_weekly
