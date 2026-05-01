@@ -11,7 +11,6 @@ import requests
 import yaml
 from bs4 import BeautifulSoup
 
-from forest_pipelines.http import stream_download
 from forest_pipelines.manifests.build_manifest import build_manifest
 
 RE_YEAR_DIR = re.compile(r"^(19|20)\d{2}$")
@@ -106,6 +105,18 @@ def extract_pdf_urls(source_url: str) -> list[BoletimResource]:
     return sorted(found.values(), key=lambda item: item.period, reverse=True)
 
 
+def validate_source_urls(resources: list[BoletimResource]) -> None:
+    if not resources:
+        raise RuntimeError("Nenhum PDF público encontrado na URL fonte.")
+
+    invalid = [resource.url for resource in resources if not resource.url.startswith(("http://", "https://"))]
+    if invalid:
+        raise RuntimeError(
+            "URL fonte não é viável para catálogo URL-only; links relativos/privados encontrados: "
+            + ", ".join(invalid[:3])
+        )
+
+
 def sync(
     settings: Any,
     storage: Any,
@@ -116,17 +127,13 @@ def sync(
 
     logger.info("Explorando boletins integrados INPE: %s", cfg.source_url)
     all_resources = extract_pdf_urls(cfg.source_url)
+    validate_source_urls(all_resources)
     limit = latest_months if latest_months and latest_months > 0 else len(all_resources)
     selected_resources = all_resources[:limit]
 
     items: list[dict[str, Any]] = []
     for resource in selected_resources:
-        local_path = settings.data_dir / cfg.id / resource.year / resource.filename
-        object_path = f"{cfg.bucket_prefix}/data/{resource.year}/{resource.filename}"
-
-        logger.info("Baixando boletim integrado %s: %s", resource.period, resource.filename)
-        dl = stream_download(resource.url, local_path)
-        storage.upload_file(object_path, str(dl.file_path), "application/pdf", upsert=True)
+        logger.info("Indexando URL do boletim integrado %s: %s", resource.period, resource.url)
 
         items.append(
             {
@@ -134,9 +141,9 @@ def sync(
                 "period": resource.period,
                 "filename": resource.filename,
                 "title": f"Boletim integrado {resource.month}/{resource.year}",
-                "sha256": dl.sha256,
-                "size_bytes": dl.size_bytes,
-                "public_url": storage.public_url(object_path),
+                "sha256": "external",
+                "size_bytes": 0,
+                "public_url": resource.url,
                 "source_url": resource.url,
             }
         )

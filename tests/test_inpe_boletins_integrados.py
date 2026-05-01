@@ -58,7 +58,7 @@ def test_extract_pdf_urls_walks_year_directories(monkeypatch) -> None:
     assert [resource.filename for resource in resources] == ["02_2025.pdf", "01_2024.pdf"]
 
 
-def test_sync_uploads_pdfs_and_builds_manifest(monkeypatch, tmp_path) -> None:
+def test_sync_indexes_source_urls_without_uploading_pdfs(monkeypatch, tmp_path) -> None:
     cfg_dir = tmp_path / "configs" / "datasets" / "inpe"
     cfg_dir.mkdir(parents=True)
     (cfg_dir / "bdqueimadas_boletins_integrados.yml").write_text(
@@ -84,11 +84,6 @@ def test_sync_uploads_pdfs_and_builds_manifest(monkeypatch, tmp_path) -> None:
     ]
     monkeypatch.setattr(module, "extract_pdf_urls", lambda source_url: resources)
 
-    def fake_stream_download(url, out_path):
-        return SimpleNamespace(file_path=out_path, sha256="sha256-pdf", size_bytes=1234)
-
-    monkeypatch.setattr(module, "stream_download", fake_stream_download)
-
     class FakeStorage:
         def __init__(self) -> None:
             self.uploads = []
@@ -113,11 +108,17 @@ def test_sync_uploads_pdfs_and_builds_manifest(monkeypatch, tmp_path) -> None:
     assert manifest["items"][0]["period"] == "2025-02"
     assert manifest["items"][0]["kind"] == "data"
     assert manifest["items"][0]["title"] == "Boletim integrado 02/2025"
-    assert storage.uploads == [
-        (
-            "inpe/bdqueimadas/boletins_integrados/data/2025/02_2025.pdf",
-            str(tmp_path / "data" / "inpe_bdqueimadas_boletins_integrados" / "2025" / "02_2025.pdf"),
-            "application/pdf",
-            True,
-        )
-    ]
+    assert manifest["items"][0]["sha256"] == "external"
+    assert manifest["items"][0]["size_bytes"] == 0
+    assert manifest["items"][0]["public_url"] == "https://example.test/boletins/2025/02_2025.pdf"
+    assert manifest["items"][0]["source_url"] == "https://example.test/boletins/2025/02_2025.pdf"
+    assert storage.uploads == []
+
+
+def test_validate_source_urls_blocks_when_no_public_source_url() -> None:
+    try:
+        module.validate_source_urls([])
+    except RuntimeError as exc:
+        assert "Nenhum PDF público" in str(exc)
+    else:
+        raise AssertionError("expected RuntimeError")
