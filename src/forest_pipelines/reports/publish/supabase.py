@@ -65,11 +65,13 @@ def publish_report_package(
 
     generated_report = package["generated_report"]
     live_report = package["live_report"]
+    auxiliary_json = list(package.get("auxiliary_json") or [])
 
     generated_path = f"{bucket_prefix}/generated/report.json"
     live_path = f"{bucket_prefix}/live/report.json"
     stable_live_path = f"{bucket_prefix}/report.json"
     manifest_path = f"{bucket_prefix}/manifest.json"
+    auxiliary_paths: dict[str, str] = {}
 
     storage.upload_bytes(
         object_path=generated_path,
@@ -92,6 +94,22 @@ def publish_report_package(
         upsert=True,
     )
 
+    for item in auxiliary_json:
+        if not isinstance(item, dict):
+            continue
+        relative_path = str(item.get("relative_path") or "").strip().lstrip("/")
+        payload = item.get("payload")
+        if not relative_path or not isinstance(payload, dict):
+            continue
+        object_path = f"{bucket_prefix}/{relative_path}"
+        storage.upload_bytes(
+            object_path=object_path,
+            data=_to_bytes(payload),
+            content_type="application/json",
+            upsert=True,
+        )
+        auxiliary_paths[relative_path] = object_path
+
     manifest = {
         "schema_version": REPORT_MANIFEST_SCHEMA_VERSION,
         "report_id": report_id,
@@ -106,12 +124,17 @@ def publish_report_package(
             "live_report": live_path,
             "stable_live_report": stable_live_path,
             "manifest": manifest_path,
+            **auxiliary_paths,
         },
         "public_urls": {
             "generated_report": storage.public_url(generated_path),
             "live_report": storage.public_url(live_path),
             "stable_live_report": storage.public_url(stable_live_path),
             "manifest": storage.public_url(manifest_path),
+            **{
+                relative_path: storage.public_url(object_path)
+                for relative_path, object_path in auxiliary_paths.items()
+            },
         },
         "meta": _normalize_report_meta(package.get("meta")),
     }

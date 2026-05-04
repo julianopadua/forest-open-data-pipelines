@@ -116,6 +116,7 @@ def build_package(
         state_candidates=state_candidates,
         biome_candidates=biome_candidates,
         logger=logger,
+        include_cached_payloads=current_year_only,
     )
 
     consolidated = consolidate_year_payloads(incremental["year_payloads"])
@@ -150,7 +151,15 @@ def build_package(
     calendar_year = pd.Timestamp.now().year
     reference_year, reference_month = _resolve_reference_month(calendar_year, reference_month_mode)
 
-    if refresh_mensal and mensal_dir.exists():
+    if refresh_mensal and skip_mensal_download:
+        logger.warning(
+            "Mensal INPE: --refresh-mensal não tem efeito com --skip-mensal-download (cache não é limpo nem baixado).",
+        )
+
+    #sempre refaz cache local do ano civil corrente antes do download, salvo skip_mensal_download
+    #captura republicacoes do inpe no mesmo ficheiro; refresh_mensal fica por compatibilidade
+    if not skip_mensal_download and mensal_dir.exists():
+        removed = 0
         for f in mensal_dir.iterdir():
             if not f.is_file():
                 continue
@@ -159,6 +168,12 @@ def build_package(
                 continue
             if int(match.group(1)) == calendar_year:
                 f.unlink()
+                removed += 1
+        logger.info(
+            "Mensal INPE: cache do ano %d limpo (%d ficheiro(s) removidos); a seguir download da listagem.",
+            calendar_year,
+            removed,
+        )
 
     if not skip_mensal_download:
         try:
@@ -167,6 +182,11 @@ def build_package(
                 year=calendar_year,
                 cache_dir=mensal_dir,
                 skip_download=False,
+            )
+            logger.info(
+                "Mensal INPE: ficheiros do ano %d garantidos em %s.",
+                calendar_year,
+                str(mensal_dir.resolve()),
             )
         except FileNotFoundError as e:
             logger.warning(
@@ -257,7 +277,8 @@ def build_package(
         latest_period=latest_period,
     )
     recent_12m_total = int(rolling_12m["recent_total"])
-    prior_12m_total = int(rolling_12m["prior_total"] or 0)
+    prior_12m_total_raw = rolling_12m["prior_total"]
+    prior_12m_total = int(prior_12m_total_raw) if prior_12m_total_raw is not None else 0
 
     top_states_table = _build_top_states_table(
         state_year_series=state_year_all_df,
@@ -297,7 +318,11 @@ def build_package(
         prev_year_month_periods = [f"{previous_year}-{str(m).zfill(2)}" for m in range(1, latest_month_num + 1)]
         ytd_previous_year = int(monthly_all_df.loc[monthly_all_df["period"].isin(prev_year_month_periods), "value"].sum())
 
-    five_avg_candidate_years = [y for y in available_years if latest_year - 5 <= y < latest_year]
+    five_avg_candidate_years = _resolve_historical_average_years(
+        available_years=available_years,
+        current_year=latest_year,
+        window=5,
+    )
     ytd_per_year: list[float] = []
     for yr in five_avg_candidate_years:
         yr_periods = [f"{yr}-{str(m).zfill(2)}" for m in range(1, latest_month_num + 1)]
@@ -306,7 +331,7 @@ def build_package(
             ytd_per_year.append(yr_ytd)
     ytd_5yr_avg = round(sum(ytd_per_year) / len(ytd_per_year), 0) if ytd_per_year else None
 
-    # Top UF / bioma: mês de latest_period vs mesmo mês do ano civil anterior (alinhado ao comparativo mensal)
+    #top uf / bioma compara o mes de latest_period com o mesmo mes do ano civil anterior
     month_compare_current, month_compare_previous = _month_same_month_prev_year_periods(latest_period)
     top_states_month_data = _build_top_states_month_comparison(
         state_month_all_df=state_month_all_df,
@@ -344,12 +369,11 @@ def build_package(
         year_range=year_range,
     )
 
-    # Historical average: all years before the current one
-    hist_avg_candidate_years = [y for y in available_years if y < latest_year]
+    hist_avg_candidate_years = five_avg_candidate_years
     avg_window_start = min(hist_avg_candidate_years) if hist_avg_candidate_years else first_year
     avg_window_end = max(hist_avg_candidate_years) if hist_avg_candidate_years else latest_year - 1
 
-    # Latest month 5yr average for LLM context
+    #media de 5 anos do mes mais recente para o contexto llm
     latest_month_5yr_avg_vals = []
     for yr in five_avg_candidate_years:
         yr_period = f"{yr}-{str(last_closed_month).zfill(2)}"
@@ -375,7 +399,9 @@ def build_package(
         "current_year_total": current_year_total,
         "previous_year_total": previous_year_total,
         "recent_12m_total": recent_12m_total,
-        "prior_12m_total": prior_12m_total,
+        "prior_12m_total": prior_12m_total_raw,
+        "rolling_12m_pct_change": rolling_12m["pct_change"],
+        "historical_average_years": hist_avg_candidate_years,
         "total_rows_processed": total_rows_processed,
         "file_count_used": len(zip_files),
         "available_biomes": available_biomes,
@@ -396,6 +422,7 @@ def build_package(
             "reference_month_mode": reference_month_mode,
             "avg_window_start": avg_window_start,
             "avg_window_end": avg_window_end,
+            "historical_average_years": hist_avg_candidate_years,
             "latest_month_total": latest_month_total,
             "same_period_prev_year": same_period_prev_year,
             "same_month_prev_year_total": same_month_prev_year_total,
@@ -499,17 +526,54 @@ def build_package(
     data_attribution = {
         "source_url": FOCOS_DATASERVER_CSV_URL,
         "source_label": _localized(
-            "INPE - COIDS (transferência de dados de focos)",
-            "INPE - COIDS (hotspot data transfer)",
+            "INPE - COIDS",
+            "INPE - COIDS",
         ),
         "charts_legend": _localized(
-            "Série filtrada por bioma, UF e período ativo; valores são contagens agregadas de focos.",
-            "Series filtered by biome, state and active period; values are aggregated hotspot counts.",
+            "Filtrado por bioma, UF e período.",
+            "Filtered by biome, state and period.",
         ),
         "tables_legend": _localized(
-            "Totais do mês de referência comparados ao mesmo mês do ano civil anterior.",
-            "Reference month totals compared to the same month in the previous calendar year.",
+            "Mês de referência vs mesmo mês anterior.",
+            "Reference month vs prior-year month.",
         ),
+    }
+
+    generated_at = _now_iso()
+    historical_years = [int(y) for y in available_years if int(y) < latest_year]
+    historical_report_data = {
+        "schema_version": REPORT_SCHEMA_VERSION,
+        "report_id": cfg.id,
+        "kind": "historical",
+        "generated_at": generated_at,
+        "years": historical_years,
+        "historical_average_years": hist_avg_candidate_years,
+        "monthly_series": [
+            row for row in monthly_series_records if int(row.get("year") or 0) < latest_year
+        ],
+        "annual_totals": [
+            row for row in annual_totals_records if int(row.get("year") or 0) < latest_year
+        ],
+        "yearly_file_stats": [
+            row for row in yearly_file_stats if int(row.get("inferred_year") or 0) < latest_year
+        ],
+    }
+    current_year_report_data = {
+        "schema_version": REPORT_SCHEMA_VERSION,
+        "report_id": cfg.id,
+        "kind": "current_year",
+        "generated_at": generated_at,
+        "year": latest_year,
+        "latest_period": latest_period,
+        "last_closed_month": last_closed_month,
+        "reference_month_mode": reference_month_mode,
+        "monthly_counts": [
+            row for row in monthly_series_records if int(row.get("year") or 0) == latest_year
+        ],
+        "annual_totals": [
+            row for row in annual_totals_records if int(row.get("year") or 0) == latest_year
+        ],
+        "monthly_analysis": analysis_context["monthly_analysis"],
     }
 
     generated_report = {
@@ -520,7 +584,7 @@ def build_package(
         "summary": summary_i18n,
         "available_locales": SUPPORTED_REPORT_LOCALES,
         "default_locale": DEFAULT_REPORT_LOCALE,
-        "generated_at": _now_iso(),
+        "generated_at": generated_at,
         "publication_status": "generated",
         "dataset": {
             "dataset_id": cfg.dataset.dataset_id,
@@ -593,8 +657,8 @@ def build_package(
                 "kind": "monthly_year_comparison",
                 "is_static": True,
                 "title": _localized(
-                    f"Focos mensais por ano - comparativo {latest_year} vs {previous_year} vs média histórica",
-                    f"Monthly hotspots by year - {latest_year} vs {previous_year} vs historical average",
+                    f"Focos mensais por ano - comparativo {latest_year} vs {previous_year} vs média {avg_window_start}-{avg_window_end}",
+                    f"Monthly hotspots by year - {latest_year} vs {previous_year} vs avg {avg_window_start}-{avg_window_end}",
                 ),
                 "current_year": latest_year,
                 "previous_year": previous_year,
@@ -728,6 +792,10 @@ def build_package(
         "bucket_prefix": cfg.bucket_prefix,
         "generated_report": generated_report,
         "live_report": live_report,
+        "auxiliary_json": [
+            {"relative_path": "data/historical.json", "payload": historical_report_data},
+            {"relative_path": "data/current_year.json", "payload": current_year_report_data},
+        ],
         "meta": {
             "schema_version": REPORT_SCHEMA_VERSION,
             "source_label": generated_report["source_label"],
@@ -742,6 +810,10 @@ def build_package(
             "default_locale": DEFAULT_REPORT_LOCALE,
             "available_biomes": available_biomes,
             "cache": incremental["cache_stats"],
+            "artifacts": {
+                "historical": "data/historical.json",
+                "current_year": "data/current_year.json",
+            },
         },
     }
 
@@ -836,6 +908,15 @@ def _find_previous_year(annual_series: pd.DataFrame, latest_year: int) -> int | 
     years = sorted(int(y) for y in annual_series["year"].tolist())
     previous = [y for y in years if y < latest_year]
     return previous[-1] if previous else None
+
+
+def _resolve_historical_average_years(
+    available_years: list[int],
+    current_year: int,
+    window: int = 5,
+) -> list[int]:
+    closed_years = sorted({int(y) for y in available_years if int(y) < current_year})
+    return closed_years[-window:]
 
 
 def _build_top_states_table(

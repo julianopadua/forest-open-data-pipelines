@@ -110,6 +110,7 @@ Opções relevantes:
   --force          Sobrescreve sem pedir confirmação.
   --scope current  Carrega só o ZIP mais recente (rápido, atualização mensal). Pula prompt interativo.
   --scope full     Carrega todo o histórico configurado (lento, primeira execução). Pula prompt interativo.
+  --llm            Reroda a geração via LLM sem prompt interativo.
   --no-llm         Pula a geração via LLM e usa o fallback determinístico, mesmo que llm.enabled=true no config.
   --reference-month previous|current  Escolhe mês anterior ou vigente para agregados mensais do BDQueimadas.
   --skip-mensal-download              Não faz HTTP; usa apenas CSVs mensais já presentes no cache local.

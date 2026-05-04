@@ -37,6 +37,7 @@ def build_incremental_year_caches(
     state_candidates: list[str],
     biome_candidates: list[str],
     logger: Any,
+    include_cached_payloads: bool = False,
 ) -> dict[str, Any]:
     cache_prefix = cache_prefix.rstrip("/")
     manifest_path = f"{cache_prefix}/incremental_manifest.json"
@@ -117,6 +118,37 @@ def build_incremental_year_caches(
             "row_count": int(payload.get("row_count", 0)),
             "processed_at": payload.get("processed_at"),
         }
+
+    if include_cached_payloads:
+        selected_names = set(new_manifest_files)
+        for file_name, cached_entry in sorted(manifest_files.items()):
+            if file_name in selected_names:
+                continue
+
+            inferred_year = cached_entry.get("year")
+            cache_object_path = cached_entry.get("cache_object_path")
+            fingerprint = cached_entry.get("fingerprint")
+            if not isinstance(inferred_year, int) or not isinstance(cache_object_path, str):
+                continue
+            if not isinstance(fingerprint, dict):
+                continue
+
+            cached_payload = _download_json(storage, cache_object_path, logger)
+            if not _is_valid_year_payload(
+                payload=cached_payload,
+                inferred_year=inferred_year,
+                fingerprint=fingerprint,
+                build_signature=build_signature,
+            ):
+                logger.warning("Cache anual histórico inválido ou ausente: %s", file_name)
+                continue
+            if not isinstance(cached_payload, dict):
+                continue
+
+            logger.info("Reutilizando agregado anual histórico em cache: %s", file_name)
+            year_payloads.append(cached_payload)
+            new_manifest_files[file_name] = cached_entry
+            reused_count += 1
 
     new_manifest = {
         "cache_schema_version": CACHE_SCHEMA_VERSION,

@@ -329,6 +329,11 @@ def build_report(
         "--no-llm",
         help="Pula a geração via LLM e usa o fallback determinístico, independentemente do config.",
     ),
+    llm: bool = typer.Option(
+        False,
+        "--llm",
+        help="Reroda a geração via LLM sem prompt interativo.",
+    ),
     skip_mensal_download: bool = typer.Option(
         False,
         "--skip-mensal-download",
@@ -384,8 +389,24 @@ def build_report(
         current_year_only = scope_choice.strip() == "1"
         typer.echo(f"→ Modo: {'apenas ano corrente' if current_year_only else 'histórico completo'}.\n")
 
+    if no_llm and llm:
+        typer.echo("Use apenas uma opção: --llm ou --no-llm.")
+        raise typer.Exit(code=1)
+
     if no_llm:
         typer.echo("→ LLM desabilitado: usando fallback determinístico.\n")
+        skip_llm = True
+    elif llm:
+        typer.echo("→ LLM habilitado: rerodando análise textual.\n")
+        skip_llm = False
+    else:
+        should_run_llm = typer.confirm("Deseja rerodar a LLM agora?", default=False)
+        skip_llm = not should_run_llm
+        typer.echo(
+            "→ LLM habilitado: rerodando análise textual.\n"
+            if should_run_llm
+            else "→ LLM desabilitado: usando fallback determinístico.\n"
+        )
 
     reference_month_mode = _resolve_reference_month_mode_for_cli(
         report_id=report_id,
@@ -402,7 +423,7 @@ def build_report(
         storage=storage,
         logger=logger,
         current_year_only=current_year_only,
-        skip_llm=no_llm,
+        skip_llm=skip_llm,
         skip_mensal_download=skip_mensal_download,
         refresh_mensal=refresh_mensal,
         reference_month_mode=reference_month_mode,
