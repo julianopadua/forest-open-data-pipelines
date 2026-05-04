@@ -15,7 +15,6 @@ from forest_pipelines.reports.builders.bdqueimadas_incremental import (
     INPE_REFERENCE_SATELLITE,
     biome_label_i18n,
     build_incremental_year_caches,
-    combine_all_and_biome_records,
     consolidate_year_payloads,
     read_focos_subset_brasil_file,
     _df_to_records,
@@ -61,6 +60,9 @@ DEFAULT_SATELLITE_CANDIDATES = [
 SUPPORTED_REPORT_LOCALES = ["pt", "en"]
 DEFAULT_REPORT_LOCALE = "pt"
 REPORT_SCHEMA_VERSION = 2
+
+# Fonte operacional dos agregados de focos (COIDS / INPE).
+FOCOS_DATASERVER_CSV_URL = "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/"
 
 
 def build_package(
@@ -118,6 +120,7 @@ def build_package(
     state_year_all_df = consolidated["state_year_all_df"]
     state_year_by_biome_df = consolidated["state_year_by_biome_df"]
     state_month_all_df = consolidated["state_month_all_df"]
+    state_month_by_biome_df = consolidated["state_month_by_biome_df"]
     available_biomes = consolidated["available_biomes"]
     yearly_file_stats = consolidated["yearly_file_stats"]
     total_rows_processed = consolidated["total_rows_processed"]
@@ -143,7 +146,7 @@ def build_package(
     default_annual_start = int(default_annual_window["year"].iloc[0])
     default_annual_end = int(default_annual_window["year"].iloc[-1])
 
-    # --- Load mensal CSVs early — determines whether we have data beyond the ZIPs ---
+    # --- Load mensal CSVs early - determines whether we have data beyond the ZIPs ---
     mensal_dir = settings.data_dir / cfg.dataset.local_relative_dir / "mensal"
     calendar_year = pd.Timestamp.now().year
     mensal_counts = _load_mensal_counts_for_current_year(
@@ -173,6 +176,11 @@ def build_package(
         latest_period = zip_latest_period
         last_closed_month = int(latest_period.split("-")[1]) if "-" in latest_period else 12
         latest_month_num = last_closed_month
+
+    if latest_period not in available_periods:
+        available_periods = sorted({*available_periods, latest_period})
+    if latest_year not in available_years:
+        available_years = sorted({*available_years, latest_year})
 
     year_range = f"{first_year}-{latest_year}"
 
@@ -237,20 +245,29 @@ def build_package(
             ytd_per_year.append(yr_ytd)
     ytd_5yr_avg = round(sum(ytd_per_year) / len(ytd_per_year), 0) if ytd_per_year else None
 
-    # Top-states monthly table: always from ZIP (state-month data for current year is not in ZIPs)
-    zip_same_period_prev = (
-        f"{zip_previous_year}-{zip_latest_period[-2:]}" if zip_previous_year else None
-    )
-    top_states_month_data = _build_top_states_month_merged(
+    # Top UF / bioma: mês de latest_period vs mesmo mês do ano civil anterior (alinhado ao comparativo mensal)
+    month_compare_current, month_compare_previous = _month_same_month_prev_year_periods(latest_period)
+    top_states_month_data = _build_top_states_month_comparison(
         state_month_all_df=state_month_all_df,
-        current_period=zip_latest_period,
-        previous_period=zip_same_period_prev,
+        current_period=month_compare_current,
+        previous_period=month_compare_previous,
+        mensal_counts=mensal_counts,
+        mensal_is_current=_mensal_is_current,
+        calendar_year=calendar_year,
     )
     top_states_by_volume_month = _sort_top_states_month(
         top_states_month_data, sort_by="volume", limit=cfg.display.top_states_limit
     )
-    top_states_by_variation_month = _sort_top_states_month(
-        top_states_month_data, sort_by="variation", limit=cfg.display.top_states_limit
+    top_biomes_month_data = _build_top_biomes_month_comparison(
+        monthly_by_biome_df=monthly_by_biome_df,
+        current_period=month_compare_current,
+        previous_period=month_compare_previous,
+        mensal_counts=mensal_counts,
+        mensal_is_current=_mensal_is_current,
+        calendar_year=calendar_year,
+    )
+    top_biomes_by_volume_month = _sort_top_biomes_month(
+        top_biomes_month_data, sort_by="volume", limit=cfg.display.top_states_limit
     )
 
     highlights = _build_highlights(
@@ -390,27 +407,43 @@ def build_package(
         mensal_counts=mensal_counts,
     )
 
-    # Month labels for top-states monthly table columns (always from ZIP, which has full state data)
-    latest_month_label_pt = _month_label_pt(zip_latest_period)
-    latest_month_label_en = _month_label_en(zip_latest_period)
-    prev_month_label_pt = _month_label_pt(zip_same_period_prev) if zip_same_period_prev else str(zip_previous_year or "")
-    prev_month_label_en = _month_label_en(zip_same_period_prev) if zip_same_period_prev else str(zip_previous_year or "")
+    # Month labels for top-states / top-biomes tables (alinhados a latest_period)
+    latest_month_label_pt = _month_label_pt(month_compare_current)
+    latest_month_label_en = _month_label_en(month_compare_current)
+    prev_month_label_pt = _month_label_pt(month_compare_previous) if month_compare_previous else ""
+    prev_month_label_en = _month_label_en(month_compare_previous) if month_compare_previous else ""
 
-    monthly_series_records = combine_all_and_biome_records(
-        all_df=monthly_all_df[["period", "year", "value"]],
-        by_biome_df=monthly_by_biome_df[["period", "year", "biome", "value"]],
-        sort_cols=["period"],
+    monthly_series_records = _build_state_biome_monthly_series_records(
+        monthly_all_df=monthly_all_df,
+        monthly_by_biome_df=monthly_by_biome_df,
+        state_month_all_df=state_month_all_df,
+        state_month_by_biome_df=state_month_by_biome_df,
+        mensal_counts=mensal_counts,
+        mensal_is_current=_mensal_is_current,
+        calendar_year=calendar_year,
     )
-    annual_totals_records = combine_all_and_biome_records(
-        all_df=annual_all_df[["year", "value"]],
-        by_biome_df=annual_by_biome_df[["year", "biome", "value"]],
-        sort_cols=["year"],
+    annual_totals_records = _build_state_biome_annual_series_records(
+        annual_all_df=annual_all_df,
+        annual_by_biome_df=annual_by_biome_df,
+        state_year_all_df=state_year_all_df,
+        state_year_by_biome_df=state_year_by_biome_df,
     )
-    state_year_records = combine_all_and_biome_records(
-        all_df=state_year_all_df[["year", "state", "value"]],
-        by_biome_df=state_year_by_biome_df[["year", "state", "biome", "value"]],
-        sort_cols=["year", "state"],
-    )
+
+    data_attribution = {
+        "source_url": FOCOS_DATASERVER_CSV_URL,
+        "source_label": _localized(
+            "INPE - COIDS (transferência de dados de focos)",
+            "INPE - COIDS (hotspot data transfer)",
+        ),
+        "charts_legend": _localized(
+            "Série filtrada por bioma, UF e período ativo; valores são contagens agregadas de focos.",
+            "Series filtered by biome, state and active period; values are aggregated hotspot counts.",
+        ),
+        "tables_legend": _localized(
+            "Totais do mês de referência comparados ao mesmo mês do ano civil anterior.",
+            "Reference month totals compared to the same month in the previous calendar year.",
+        ),
+    }
 
     generated_report = {
         "schema_version": REPORT_SCHEMA_VERSION,
@@ -472,9 +505,9 @@ def build_package(
                 "available_periods": available_periods,
                 "bounds": {
                     "year_start": first_year,
-                    "year_end": zip_latest_year,
+                    "year_end": latest_year,
                     "period_start": first_period,
-                    "period_end": zip_latest_period,
+                    "period_end": latest_period,
                 },
             },
         },
@@ -486,14 +519,15 @@ def build_package(
         },
         "highlights": highlights,
         "analysis": analysis_blocks,
+        "data_attribution": data_attribution,
         "sections": [
             {
                 "id": "monthly_year_comparison",
                 "kind": "monthly_year_comparison",
                 "is_static": True,
                 "title": _localized(
-                    f"Focos mensais por ano — comparativo {latest_year} vs {previous_year} vs média histórica",
-                    f"Monthly hotspots by year — {latest_year} vs {previous_year} vs historical average",
+                    f"Focos mensais por ano - comparativo {latest_year} vs {previous_year} vs média histórica",
+                    f"Monthly hotspots by year - {latest_year} vs {previous_year} vs historical average",
                 ),
                 "current_year": latest_year,
                 "previous_year": previous_year,
@@ -509,8 +543,8 @@ def build_package(
                 "kind": "table",
                 "is_static": True,
                 "title": _localized(
-                    f"Top UFs em focos — {latest_month_label_pt} vs {prev_month_label_pt}",
-                    f"Top states by hotspots — {latest_month_label_en} vs {prev_month_label_en}",
+                    f"Top UFs em focos - {latest_month_label_pt} vs {prev_month_label_pt}",
+                    f"Top states by hotspots - {latest_month_label_en} vs {prev_month_label_en}",
                 ),
                 "columns": [
                     {"key": "state", "label": _localized("UF", "State")},
@@ -523,37 +557,42 @@ def build_package(
                 "data": top_states_by_volume_month,
             },
             {
-                "id": "top_states_biggest_movers_month",
+                "id": "top_biomes_latest_month",
                 "kind": "table",
                 "is_static": True,
                 "title": _localized(
-                    f"Maiores variações em focos — {latest_month_label_pt} vs {prev_month_label_pt}",
-                    f"Biggest movers in hotspots — {latest_month_label_en} vs {prev_month_label_en}",
+                    f"Top biomas em focos - {latest_month_label_pt} vs {prev_month_label_pt}",
+                    f"Top biomes by hotspots - {latest_month_label_en} vs {prev_month_label_en}",
                 ),
                 "columns": [
-                    {"key": "state", "label": _localized("UF", "State")},
+                    {"key": "biome", "label": _localized("Bioma", "Biome")},
                     {"key": "current_month_total", "label": _localized(latest_month_label_pt, latest_month_label_en)},
                     {"key": "previous_month_total", "label": _localized(prev_month_label_pt, prev_month_label_en)},
                     {"key": "absolute_change", "label": _localized("Variação absoluta", "Absolute change")},
                     {"key": "pct_change", "label": _localized("Variação %", "% change")},
                 ],
                 "filterable_by": [],
-                "data": top_states_by_variation_month,
+                "data": top_biomes_by_volume_month,
             },
             {
                 "id": "monthly_series",
                 "kind": "timeseries",
+                "is_static": True,
+                "inline_biome_state_filter": True,
                 "title": _localized(
-                    "Série mensal de focos (filtros)",
-                    "Monthly hotspot series (filters)",
+                    "Série mensal de focos",
+                    "Monthly hotspot series",
                 ),
                 "x_key": "period",
                 "y_key": "value",
                 "biome_key": "biome",
-                "filterable_by": ["period", "biome"],
+                "state_key": "state",
+                "filterable_by": ["period", "biome", "state"],
                 "period_filter_granularity": "month",
+                "available_states": available_states,
                 "default_view": {
                     "biome": ALL_BIOMES_VALUE,
+                    "state": ALL_BIOMES_VALUE,
                     "start_period": default_monthly_start,
                     "end_period": default_monthly_end,
                 },
@@ -562,54 +601,26 @@ def build_package(
             {
                 "id": "annual_totals",
                 "kind": "bar",
+                "is_static": True,
+                "inline_biome_state_filter": True,
                 "title": _localized(
-                    "Série anual de focos",
-                    "Annual hotspot series",
+                    "Totais anuais de focos",
+                    "Annual hotspot totals",
                 ),
                 "x_key": "year",
                 "y_key": "value",
                 "biome_key": "biome",
-                "filterable_by": ["period", "biome"],
+                "state_key": "state",
+                "filterable_by": ["period", "biome", "state"],
                 "period_filter_granularity": "year",
+                "available_states": available_states,
                 "default_view": {
                     "biome": ALL_BIOMES_VALUE,
+                    "state": ALL_BIOMES_VALUE,
                     "start_year": default_annual_start,
                     "end_year": default_annual_end,
                 },
                 "data": annual_totals_records,
-            },
-            {
-                "id": "top_states_current_vs_previous",
-                "kind": "table",
-                "title": _localized(
-                    "Comparação por UF: ano selecionado vs ano anterior",
-                    "State comparison: selected year vs previous year",
-                ),
-                "filterable_by": ["period", "biome"],
-                "period_filter_granularity": "year",
-                "comparison_strategy": "latest_vs_previous_year_within_filtered_range",
-                "group_key": "state",
-                "year_key": "year",
-                "value_key": "value",
-                "biome_key": "biome",
-                "default_view": {
-                    "biome": ALL_BIOMES_VALUE,
-                    "current_year": latest_year,
-                    "previous_year": previous_year,
-                },
-                "columns": [
-                    {"key": "state", "label": _localized("UF", "State")},
-                    {"key": "current_year_total", "label": _localized("Ano selecionado", "Selected year")},
-                    {"key": "previous_year_total", "label": _localized("Ano anterior", "Previous year")},
-                    {"key": "absolute_change", "label": _localized("Variação absoluta", "Absolute change")},
-                    {"key": "pct_change", "label": _localized("Variação %", "% change")},
-                ],
-                "initial_comparison": {
-                    "current_year": latest_year,
-                    "previous_year": previous_year,
-                    "rows": top_states_table,
-                },
-                "data": state_year_records,
             },
         ],
         "analysis_context": analysis_context,
@@ -960,7 +971,7 @@ def _build_fallback_analysis(
         )
     else:
         headline_pt = (
-            f"Em {latest_month_label_pt}, {_fmt_int_pt(latest_month_total)} focos — "
+            f"Em {latest_month_label_pt}, {_fmt_int_pt(latest_month_total)} focos - "
             f"{_fmt_pct_pt(mom_change)} vs {_month_label_pt(f'{previous_year}-{latest_period[-2:]}')}. "
             f"Acumulado {latest_year}: {_fmt_int_pt(ytd_current_year)} focos ({_fmt_pct_pt(ytd_change)} vs {previous_year})."
         )
@@ -974,7 +985,7 @@ def _build_fallback_analysis(
         )
 
         headline_en = (
-            f"In {latest_month_label_en}, {_fmt_int_en(latest_month_total)} hotspots — "
+            f"In {latest_month_label_en}, {_fmt_int_en(latest_month_total)} hotspots - "
             f"{_fmt_pct_en(mom_change)} vs {_month_label_en(f'{previous_year}-{latest_period[-2:]}')}. "
             f"{latest_year} YTD: {_fmt_int_en(ytd_current_year)} hotspots ({_fmt_pct_en(ytd_change)} vs {previous_year})."
         )
@@ -1145,6 +1156,12 @@ def _ensure_bilingual_report(report: dict[str, Any]) -> dict[str, Any]:
             if key in methodology and methodology.get(key) is not None:
                 methodology[key] = _coerce_localized_value(methodology.get(key))
 
+    da = report.get("data_attribution")
+    if isinstance(da, dict):
+        for dk in ("source_label", "charts_legend", "tables_legend"):
+            if dk in da and da.get(dk) is not None:
+                da[dk] = _coerce_localized_value(da.get(dk))
+
     return report
 
 
@@ -1192,6 +1209,277 @@ def _fmt_pct_en(value: float | None) -> str:
     if value is None:
         return "no comparable base"
     return f"{value:,.2f}%"
+
+
+def _month_same_month_prev_year_periods(latest_period: str) -> tuple[str, str | None]:
+    if "-" not in latest_period:
+        return latest_period, None
+    y_str, mo = latest_period.split("-", 1)
+    y = int(y_str)
+    return latest_period, f"{y - 1}-{mo}"
+
+
+def _augment_state_month_with_mensal(
+    state_month_all_df: pd.DataFrame,
+    current_period: str,
+    mensal_counts: dict[str, Any],
+    mensal_is_current: bool,
+    calendar_year: int,
+) -> pd.DataFrame:
+    if not mensal_is_current or "-" not in current_period:
+        return state_month_all_df
+    year_cur = int(current_period.split("-")[0])
+    month_num = int(current_period.split("-")[1])
+    if year_cur != calendar_year:
+        return state_month_all_df
+    by_state = mensal_counts.get("by_state") or {}
+    if not by_state:
+        return state_month_all_df
+    extra_rows: list[dict[str, Any]] = []
+    for st_key, per_m in by_state.items():
+        v = int(per_m.get(month_num, 0))
+        extra_rows.append({
+            "period": current_period,
+            "year": year_cur,
+            "state": str(st_key),
+            "value": v,
+        })
+    if not extra_rows:
+        return state_month_all_df
+    extra_df = pd.DataFrame(extra_rows)
+    base = state_month_all_df.loc[state_month_all_df["period"] != current_period].copy()
+    return pd.concat([base, extra_df], ignore_index=True)
+
+
+def _augment_monthly_by_biome_with_mensal(
+    monthly_by_biome_df: pd.DataFrame,
+    current_period: str,
+    mensal_counts: dict[str, Any],
+    mensal_is_current: bool,
+    calendar_year: int,
+) -> pd.DataFrame:
+    if not mensal_is_current or "-" not in current_period:
+        return monthly_by_biome_df
+    year_cur = int(current_period.split("-")[0])
+    month_num = int(current_period.split("-")[1])
+    if year_cur != calendar_year:
+        return monthly_by_biome_df
+    by_bio = mensal_counts.get("by_biome") or {}
+    if not by_bio:
+        return monthly_by_biome_df
+    extra_rows: list[dict[str, Any]] = []
+    for bio_key, per_m in by_bio.items():
+        v = int(per_m.get(month_num, 0))
+        extra_rows.append({
+            "period": current_period,
+            "year": year_cur,
+            "biome": str(bio_key),
+            "value": v,
+        })
+    if not extra_rows:
+        return monthly_by_biome_df
+    extra_df = pd.DataFrame(extra_rows)
+    base = monthly_by_biome_df.loc[monthly_by_biome_df["period"] != current_period].copy()
+    return pd.concat([base, extra_df], ignore_index=True)
+
+
+def _build_top_states_month_comparison(
+    state_month_all_df: pd.DataFrame,
+    current_period: str,
+    previous_period: str | None,
+    mensal_counts: dict[str, Any],
+    mensal_is_current: bool,
+    calendar_year: int,
+) -> list[dict[str, Any]]:
+    eff = _augment_state_month_with_mensal(
+        state_month_all_df=state_month_all_df,
+        current_period=current_period,
+        mensal_counts=mensal_counts,
+        mensal_is_current=mensal_is_current,
+        calendar_year=calendar_year,
+    )
+    return _build_top_states_month_merged(
+        state_month_all_df=eff,
+        current_period=current_period,
+        previous_period=previous_period,
+    )
+
+
+def _build_top_biomes_month_comparison(
+    monthly_by_biome_df: pd.DataFrame,
+    current_period: str,
+    previous_period: str | None,
+    mensal_counts: dict[str, Any],
+    mensal_is_current: bool,
+    calendar_year: int,
+) -> list[dict[str, Any]]:
+    eff = _augment_monthly_by_biome_with_mensal(
+        monthly_by_biome_df=monthly_by_biome_df,
+        current_period=current_period,
+        mensal_counts=mensal_counts,
+        mensal_is_current=mensal_is_current,
+        calendar_year=calendar_year,
+    )
+    return _build_top_biomes_month_merged(
+        monthly_by_biome_df=eff,
+        current_period=current_period,
+        previous_period=previous_period,
+    )
+
+
+def _build_top_biomes_month_merged(
+    monthly_by_biome_df: pd.DataFrame,
+    current_period: str,
+    previous_period: str | None,
+) -> list[dict[str, Any]]:
+    if monthly_by_biome_df.empty:
+        return []
+
+    current_df = (
+        monthly_by_biome_df.loc[monthly_by_biome_df["period"] == current_period, ["biome", "value"]]
+        .rename(columns={"value": "current_month_total"})
+        .copy()
+    )
+    if current_df.empty:
+        return []
+
+    if previous_period is not None and not monthly_by_biome_df.empty:
+        prev_rows = monthly_by_biome_df.loc[
+            monthly_by_biome_df["period"] == previous_period, ["biome", "value"]
+        ]
+        previous_df = prev_rows.rename(columns={"value": "previous_month_total"}).copy()
+    else:
+        previous_df = pd.DataFrame(columns=["biome", "previous_month_total"])
+
+    merged = current_df.merge(previous_df, on="biome", how="outer").fillna(0)
+    merged["current_month_total"] = merged["current_month_total"].astype(int)
+    merged["previous_month_total"] = merged["previous_month_total"].astype(int)
+    merged["absolute_change"] = merged["current_month_total"] - merged["previous_month_total"]
+    merged["pct_change"] = merged.apply(
+        lambda row: _safe_pct_change(row["current_month_total"], row["previous_month_total"]),
+        axis=1,
+    )
+
+    rows: list[dict[str, Any]] = []
+    for _, row in merged.iterrows():
+        rows.append({
+            "biome": str(row["biome"]),
+            "current_month_total": int(row["current_month_total"]),
+            "previous_month_total": int(row["previous_month_total"]),
+            "absolute_change": int(row["absolute_change"]),
+            "pct_change": None if row["pct_change"] is None else round(float(row["pct_change"]), 2),
+        })
+    return rows
+
+
+def _sort_top_biomes_month(
+    rows: list[dict[str, Any]],
+    sort_by: str,
+    limit: int,
+) -> list[dict[str, Any]]:
+    if sort_by == "volume":
+        sorted_rows = sorted(
+            rows, key=lambda r: (r["current_month_total"], r["previous_month_total"]), reverse=True
+        )
+    else:
+        def _abs_pct(r: dict[str, Any]) -> float:
+            v = r.get("pct_change")
+            return abs(float(v)) if v is not None else 0.0
+        sorted_rows = sorted(rows, key=_abs_pct, reverse=True)
+    return sorted_rows[:limit]
+
+
+def _build_state_biome_monthly_series_records(
+    monthly_all_df: pd.DataFrame,
+    monthly_by_biome_df: pd.DataFrame,
+    state_month_all_df: pd.DataFrame,
+    state_month_by_biome_df: pd.DataFrame,
+    mensal_counts: dict[str, Any],
+    mensal_is_current: bool,
+    calendar_year: int,
+) -> list[dict[str, Any]]:
+    ALL = ALL_BIOMES_VALUE
+    by_key: dict[tuple[str, str, str], dict[str, Any]] = {}
+
+    def upsert(period: str, year: int, value: int, biome: str, state: str) -> None:
+        k = (period, biome, state)
+        by_key[k] = {
+            "period": period,
+            "year": year,
+            "value": int(value),
+            "biome": biome,
+            "state": state,
+        }
+
+    if not monthly_all_df.empty:
+        for _, r in monthly_all_df.iterrows():
+            upsert(str(r["period"]), int(r["year"]), int(r["value"]), ALL, ALL)
+    if not monthly_by_biome_df.empty:
+        for _, r in monthly_by_biome_df.iterrows():
+            upsert(str(r["period"]), int(r["year"]), int(r["value"]), str(r["biome"]), ALL)
+    if not state_month_all_df.empty:
+        for _, r in state_month_all_df.iterrows():
+            upsert(str(r["period"]), int(r["year"]), int(r["value"]), ALL, str(r["state"]))
+    if not state_month_by_biome_df.empty:
+        for _, r in state_month_by_biome_df.iterrows():
+            upsert(str(r["period"]), int(r["year"]), int(r["value"]), str(r["biome"]), str(r["state"]))
+
+    if mensal_is_current and mensal_counts.get("national"):
+        cy = calendar_year
+        for m, v in mensal_counts["national"].items():
+            p = f"{cy}-{int(m):02d}"
+            upsert(p, cy, int(v), ALL, ALL)
+        for bio_key, per_m in (mensal_counts.get("by_biome") or {}).items():
+            for m, v in per_m.items():
+                p = f"{cy}-{int(m):02d}"
+                upsert(p, cy, int(v), str(bio_key), ALL)
+        for st_key, per_m in (mensal_counts.get("by_state") or {}).items():
+            for m, v in per_m.items():
+                p = f"{cy}-{int(m):02d}"
+                upsert(p, cy, int(v), ALL, str(st_key))
+        for pair, per_m in (mensal_counts.get("by_state_biome") or {}).items():
+            if isinstance(pair, tuple) and len(pair) == 2:
+                st_k, bio_k = str(pair[0]), str(pair[1])
+            else:
+                continue
+            for m, v in per_m.items():
+                p = f"{cy}-{int(m):02d}"
+                upsert(p, cy, int(v), bio_k, st_k)
+
+    rows = list(by_key.values())
+    rows.sort(key=lambda r: (r["period"], r["state"], r["biome"]))
+    return rows
+
+
+def _build_state_biome_annual_series_records(
+    annual_all_df: pd.DataFrame,
+    annual_by_biome_df: pd.DataFrame,
+    state_year_all_df: pd.DataFrame,
+    state_year_by_biome_df: pd.DataFrame,
+) -> list[dict[str, Any]]:
+    ALL = ALL_BIOMES_VALUE
+    by_key: dict[tuple[int, str, str], dict[str, Any]] = {}
+
+    def upsert(year: int, value: int, biome: str, state: str) -> None:
+        k = (year, biome, state)
+        by_key[k] = {"year": year, "value": int(value), "biome": biome, "state": state}
+
+    if not annual_all_df.empty:
+        for _, r in annual_all_df.iterrows():
+            upsert(int(r["year"]), int(r["value"]), ALL, ALL)
+    if not annual_by_biome_df.empty:
+        for _, r in annual_by_biome_df.iterrows():
+            upsert(int(r["year"]), int(r["value"]), str(r["biome"]), ALL)
+    if not state_year_all_df.empty:
+        for _, r in state_year_all_df.iterrows():
+            upsert(int(r["year"]), int(r["value"]), ALL, str(r["state"]))
+    if not state_year_by_biome_df.empty:
+        for _, r in state_year_by_biome_df.iterrows():
+            upsert(int(r["year"]), int(r["value"]), str(r["biome"]), str(r["state"]))
+
+    rows = list(by_key.values())
+    rows.sort(key=lambda r: (r["year"], r["state"], r["biome"]))
+    return rows
 
 
 def _build_top_states_month_merged(
@@ -1309,11 +1597,18 @@ def _load_mensal_counts_for_current_year(
                 month_files[int(m.group(2))] = f
 
     if not month_files:
-        return {"last_closed_month": 0, "national": {}, "by_biome": {}, "by_state": {}}
+        return {
+            "last_closed_month": 0,
+            "national": {},
+            "by_biome": {},
+            "by_state": {},
+            "by_state_biome": {},
+        }
 
     national: dict[int, int] = {}
     by_biome: dict[str, dict[int, int]] = {}
     by_state: dict[str, dict[int, int]] = {}
+    by_state_biome: dict[tuple[str, str], dict[int, int]] = {}
 
     for month, fpath in sorted(month_files.items()):
         df = read_focos_subset_brasil_file(
@@ -1340,11 +1635,20 @@ def _load_mensal_counts_for_current_year(
                     by_state[k] = {}
                 by_state[k][month] = len(grp)
 
+            pair_df = df.dropna(subset=["state", "biome"])
+            if not pair_df.empty:
+                for (sk, bk), grp in pair_df.groupby(["state", "biome"]):
+                    key = (str(sk).upper(), str(bk).upper())
+                    if key not in by_state_biome:
+                        by_state_biome[key] = {}
+                    by_state_biome[key][month] = len(grp)
+
     return {
         "last_closed_month": max(month_files.keys()),
         "national": national,
         "by_biome": by_biome,
         "by_state": by_state,
+        "by_state_biome": by_state_biome,
     }
 
 
