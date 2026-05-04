@@ -5,11 +5,15 @@ import copy
 import json
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import pandas as pd
 import yaml
 
+from forest_pipelines.datasets.inpe.bdqueimadas_mensal_listing import (
+    DEFAULT_MENSAL_BASE_URL,
+    ensure_mensal_files_for_year,
+)
 from forest_pipelines.reports.builders.bdqueimadas_incremental import (
     ALL_BIOMES_VALUE,
     INPE_REFERENCE_SATELLITE,
@@ -71,6 +75,9 @@ def build_package(
     logger: Any,
     current_year_only: bool = False,
     skip_llm: bool = False,
+    skip_mensal_download: bool = False,
+    refresh_mensal: bool = False,
+    reference_month_mode: Literal["previous", "current"] | str = "previous",
 ) -> dict[str, Any]:
     cfg = load_report_cfg(settings.reports_dir, "bdqueimadas_overview")
 
@@ -138,17 +145,37 @@ def build_package(
     available_years = [int(y) for y in annual_all_df["year"].tolist()]
     available_periods = [str(period) for period in monthly_all_df["period"].tolist()]
 
-    default_monthly_window = monthly_all_df.tail(cfg.display.monthly_points).copy()
-    default_annual_window = annual_all_df.tail(cfg.display.annual_years).copy()
-
-    default_monthly_start = str(default_monthly_window["period"].iloc[0])
-    default_monthly_end = str(default_monthly_window["period"].iloc[-1])
-    default_annual_start = int(default_annual_window["year"].iloc[0])
-    default_annual_end = int(default_annual_window["year"].iloc[-1])
-
-    # --- Load mensal CSVs early - determines whether we have data beyond the ZIPs ---
+    reference_month_mode = _normalize_reference_month_mode(reference_month_mode)
     mensal_dir = settings.data_dir / cfg.dataset.local_relative_dir / "mensal"
     calendar_year = pd.Timestamp.now().year
+    reference_year, reference_month = _resolve_reference_month(calendar_year, reference_month_mode)
+
+    if refresh_mensal and mensal_dir.exists():
+        for f in mensal_dir.iterdir():
+            if not f.is_file():
+                continue
+            match = RE_MENSAL_CSV.search(f.name)
+            if not match:
+                continue
+            if int(match.group(1)) == calendar_year:
+                f.unlink()
+
+    if not skip_mensal_download:
+        try:
+            ensure_mensal_files_for_year(
+                base_url=DEFAULT_MENSAL_BASE_URL,
+                year=calendar_year,
+                cache_dir=mensal_dir,
+                skip_download=False,
+            )
+        except FileNotFoundError as e:
+            logger.warning(
+                "Nenhum CSV mensal disponível para %d em %s (%s).",
+                calendar_year,
+                DEFAULT_MENSAL_BASE_URL,
+                e,
+            )
+
     mensal_counts = _load_mensal_counts_for_current_year(
         mensal_dir=mensal_dir,
         current_year=calendar_year,
@@ -158,12 +185,28 @@ def build_package(
         satellite_candidates=DEFAULT_SATELLITE_CANDIDATES,
     )
 
-    # If mensal CSVs cover a year beyond the last ZIP, use that as the effective current year
-    _mensal_is_current = mensal_counts["last_closed_month"] > 0 and calendar_year > zip_latest_year
+    mensal_available_months = sorted(int(m) for m in mensal_counts["national"].keys())
+    _mensal_is_current = (
+        mensal_counts["last_closed_month"] > 0
+        and calendar_year > zip_latest_year
+        and reference_year == calendar_year
+    )
     if _mensal_is_current:
+        if reference_month not in mensal_available_months:
+            if reference_month_mode == "current":
+                raise RuntimeError(
+                    f"Modo mês vigente selecionado ({calendar_year}-{reference_month:02d}), "
+                    "mas o CSV mensal ainda não está disponível no cache/listagem do INPE."
+                )
+            raise RuntimeError(
+                f"Modo mês anterior selecionado ({calendar_year}-{reference_month:02d}), "
+                "mas o CSV mensal não foi encontrado no cache local."
+            )
+
+        mensal_counts = _truncate_mensal_counts(mensal_counts, reference_month)
         latest_year = calendar_year
         previous_year = zip_latest_year
-        last_closed_month = mensal_counts["last_closed_month"]
+        last_closed_month = reference_month
         latest_period = f"{latest_year}-{str(last_closed_month).zfill(2)}"
         latest_month_num = last_closed_month
         logger.info(
@@ -182,21 +225,40 @@ def build_package(
     if latest_year not in available_years:
         available_years = sorted({*available_years, latest_year})
 
+    default_start_year = min(latest_year, max(2019, first_year))
+    default_monthly_start = _resolve_monthly_start_period(
+        available_periods=available_periods,
+        start_year=default_start_year,
+        fallback_start=first_period,
+        fallback_end=latest_period,
+    )
+    default_monthly_end = latest_period
+    default_annual_start = default_start_year
+    default_annual_end = latest_year
+
     year_range = f"{first_year}-{latest_year}"
 
-    # Current year totals: prefer mensal data, fall back to ZIP
     if _mensal_is_current:
-        current_year_total = sum(mensal_counts["national"].values())
+        current_year_total = _sum_mensal_until(mensal_counts["national"], last_closed_month)
     else:
         current_year_total = int(annual_all_df.loc[annual_all_df["year"] == latest_year, "value"].iloc[0])
     previous_year_total = int(
         annual_all_df.loc[annual_all_df["year"] == previous_year, "value"].iloc[0]
     ) if previous_year is not None else 0
 
-    recent_12m_total = int(monthly_all_df["value"].tail(12).sum())
-    prior_12m_total = int(monthly_all_df["value"].iloc[-24:-12].sum()) if len(monthly_all_df) >= 24 else 0
+    effective_national_series = _build_effective_national_monthly_series(
+        monthly_all_df=monthly_all_df,
+        mensal_counts=mensal_counts,
+        mensal_is_current=_mensal_is_current,
+        calendar_year=calendar_year,
+    )
+    rolling_12m = _compute_rolling_12m_metrics(
+        monthly_series=effective_national_series,
+        latest_period=latest_period,
+    )
+    recent_12m_total = int(rolling_12m["recent_total"])
+    prior_12m_total = int(rolling_12m["prior_total"] or 0)
 
-    # Top-states annual table and biome context: always from ZIP (latest complete year)
     top_states_table = _build_top_states_table(
         state_year_series=state_year_all_df,
         latest_year=zip_latest_year,
@@ -204,9 +266,9 @@ def build_package(
         limit=cfg.display.top_states_limit,
     )
 
-    analysis_window_df = monthly_all_df.tail(cfg.analysis.recent_months).copy()
-    analysis_window_start = str(analysis_window_df["period"].iloc[0])
-    analysis_window_end = str(analysis_window_df["period"].iloc[-1])
+    analysis_window_periods = [period for period, _ in effective_national_series][-cfg.analysis.recent_months:]
+    analysis_window_start = analysis_window_periods[0] if analysis_window_periods else first_period
+    analysis_window_end = analysis_window_periods[-1] if analysis_window_periods else latest_period
 
     top_biomes_context = _build_top_biomes_context(
         annual_by_biome_df=annual_by_biome_df,
@@ -215,10 +277,9 @@ def build_package(
         limit=cfg.analysis.top_biomes_context_limit,
     )
 
-    # --- Monthly metrics (prefer mensal for current year, ZIP for prev year / 5yr avg) ---
     if _mensal_is_current:
         latest_month_total = mensal_counts["national"].get(last_closed_month, 0)
-        ytd_current_year = sum(mensal_counts["national"].values())
+        ytd_current_year = _sum_mensal_until(mensal_counts["national"], last_closed_month)
     else:
         latest_month_total = int(monthly_all_df.loc[monthly_all_df["period"] == latest_period, "value"].sum())
         current_year_month_periods = [f"{latest_year}-{str(m).zfill(2)}" for m in range(1, latest_month_num + 1)]
@@ -332,6 +393,7 @@ def build_package(
             "latest_period": latest_period,
             "latest_month_num": latest_month_num,
             "last_closed_month": last_closed_month,
+            "reference_month_mode": reference_month_mode,
             "avg_window_start": avg_window_start,
             "avg_window_end": avg_window_end,
             "latest_month_total": latest_month_total,
@@ -345,6 +407,15 @@ def build_package(
             "ytd_pct_change": _safe_pct_change(ytd_current_year, ytd_previous_year),
             "ytd_5yr_avg": ytd_5yr_avg,
             "ytd_vs_5yr_avg_pct": _safe_pct_change(ytd_current_year, ytd_5yr_avg) if ytd_5yr_avg else None,
+            "rolling_12_months": {
+                "window_end_period": latest_period,
+                "recent_window_start_period": rolling_12m["recent_window_start_period"],
+                "prior_window_start_period": rolling_12m["prior_window_start_period"],
+                "recent_total": rolling_12m["recent_total"],
+                "prior_total": rolling_12m["prior_total"],
+                "pct_change": rolling_12m["pct_change"],
+                "has_full_prior_window": rolling_12m["has_full_prior_window"],
+            },
             "top_states_latest_month": [
                 {
                     "state": row["state"],
@@ -421,13 +492,9 @@ def build_package(
         mensal_counts=mensal_counts,
         mensal_is_current=_mensal_is_current,
         calendar_year=calendar_year,
+        max_month_in_current_year=last_closed_month if _mensal_is_current else None,
     )
-    annual_totals_records = _build_state_biome_annual_series_records(
-        annual_all_df=annual_all_df,
-        annual_by_biome_df=annual_by_biome_df,
-        state_year_all_df=state_year_all_df,
-        state_year_by_biome_df=state_year_by_biome_df,
-    )
+    annual_totals_records = _build_annual_totals_from_monthly_series(monthly_series_records)
 
     data_attribution = {
         "source_url": FOCOS_DATASERVER_CSV_URL,
@@ -577,7 +644,7 @@ def build_package(
             {
                 "id": "monthly_series",
                 "kind": "timeseries",
-                "is_static": True,
+                "is_static": False,
                 "inline_biome_state_filter": True,
                 "title": _localized(
                     "Série mensal de focos",
@@ -601,7 +668,7 @@ def build_package(
             {
                 "id": "annual_totals",
                 "kind": "bar",
-                "is_static": True,
+                "is_static": False,
                 "inline_biome_state_filter": True,
                 "title": _localized(
                     "Totais anuais de focos",
@@ -971,9 +1038,8 @@ def _build_fallback_analysis(
         )
     else:
         headline_pt = (
-            f"Em {latest_month_label_pt}, {_fmt_int_pt(latest_month_total)} focos - "
-            f"{_fmt_pct_pt(mom_change)} vs {_month_label_pt(f'{previous_year}-{latest_period[-2:]}')}. "
-            f"Acumulado {latest_year}: {_fmt_int_pt(ytd_current_year)} focos ({_fmt_pct_pt(ytd_change)} vs {previous_year})."
+            f"{latest_month_label_pt}: {_fmt_int_pt(latest_month_total)} focos "
+            f"({_fmt_pct_pt(mom_change)} vs {_month_label_pt(f'{previous_year}-{latest_period[-2:]}')})."
         )
         comparison_pt = (
             f"Comparação mensal ({latest_month_label_pt}): {_fmt_int_pt(latest_month_total)} focos vs "
@@ -985,9 +1051,8 @@ def _build_fallback_analysis(
         )
 
         headline_en = (
-            f"In {latest_month_label_en}, {_fmt_int_en(latest_month_total)} hotspots - "
-            f"{_fmt_pct_en(mom_change)} vs {_month_label_en(f'{previous_year}-{latest_period[-2:]}')}. "
-            f"{latest_year} YTD: {_fmt_int_en(ytd_current_year)} hotspots ({_fmt_pct_en(ytd_change)} vs {previous_year})."
+            f"{latest_month_label_en}: {_fmt_int_en(latest_month_total)} hotspots "
+            f"({_fmt_pct_en(mom_change)} vs {_month_label_en(f'{previous_year}-{latest_period[-2:]}')})."
         )
         comparison_en = (
             f"Monthly comparison ({latest_month_label_en}): {_fmt_int_en(latest_month_total)} hotspots vs "
@@ -1397,6 +1462,7 @@ def _build_state_biome_monthly_series_records(
     mensal_counts: dict[str, Any],
     mensal_is_current: bool,
     calendar_year: int,
+    max_month_in_current_year: int | None = None,
 ) -> list[dict[str, Any]]:
     ALL = ALL_BIOMES_VALUE
     by_key: dict[tuple[str, str, str], dict[str, Any]] = {}
@@ -1427,14 +1493,20 @@ def _build_state_biome_monthly_series_records(
     if mensal_is_current and mensal_counts.get("national"):
         cy = calendar_year
         for m, v in mensal_counts["national"].items():
+            if max_month_in_current_year is not None and int(m) > max_month_in_current_year:
+                continue
             p = f"{cy}-{int(m):02d}"
             upsert(p, cy, int(v), ALL, ALL)
         for bio_key, per_m in (mensal_counts.get("by_biome") or {}).items():
             for m, v in per_m.items():
+                if max_month_in_current_year is not None and int(m) > max_month_in_current_year:
+                    continue
                 p = f"{cy}-{int(m):02d}"
                 upsert(p, cy, int(v), str(bio_key), ALL)
         for st_key, per_m in (mensal_counts.get("by_state") or {}).items():
             for m, v in per_m.items():
+                if max_month_in_current_year is not None and int(m) > max_month_in_current_year:
+                    continue
                 p = f"{cy}-{int(m):02d}"
                 upsert(p, cy, int(v), ALL, str(st_key))
         for pair, per_m in (mensal_counts.get("by_state_biome") or {}).items():
@@ -1443,6 +1515,8 @@ def _build_state_biome_monthly_series_records(
             else:
                 continue
             for m, v in per_m.items():
+                if max_month_in_current_year is not None and int(m) > max_month_in_current_year:
+                    continue
                 p = f"{cy}-{int(m):02d}"
                 upsert(p, cy, int(v), bio_k, st_k)
 
@@ -1451,33 +1525,24 @@ def _build_state_biome_monthly_series_records(
     return rows
 
 
-def _build_state_biome_annual_series_records(
-    annual_all_df: pd.DataFrame,
-    annual_by_biome_df: pd.DataFrame,
-    state_year_all_df: pd.DataFrame,
-    state_year_by_biome_df: pd.DataFrame,
+def _build_annual_totals_from_monthly_series(
+    monthly_series_records: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
-    ALL = ALL_BIOMES_VALUE
-    by_key: dict[tuple[int, str, str], dict[str, Any]] = {}
+    by_key: dict[tuple[int, str, str], int] = {}
+    for row in monthly_series_records:
+        year = int(row.get("year") or 0)
+        if year <= 0:
+            continue
+        biome = str(row.get("biome") or ALL_BIOMES_VALUE)
+        state = str(row.get("state") or ALL_BIOMES_VALUE)
+        value = int(row.get("value") or 0)
+        key = (year, biome, state)
+        by_key[key] = by_key.get(key, 0) + value
 
-    def upsert(year: int, value: int, biome: str, state: str) -> None:
-        k = (year, biome, state)
-        by_key[k] = {"year": year, "value": int(value), "biome": biome, "state": state}
-
-    if not annual_all_df.empty:
-        for _, r in annual_all_df.iterrows():
-            upsert(int(r["year"]), int(r["value"]), ALL, ALL)
-    if not annual_by_biome_df.empty:
-        for _, r in annual_by_biome_df.iterrows():
-            upsert(int(r["year"]), int(r["value"]), str(r["biome"]), ALL)
-    if not state_year_all_df.empty:
-        for _, r in state_year_all_df.iterrows():
-            upsert(int(r["year"]), int(r["value"]), ALL, str(r["state"]))
-    if not state_year_by_biome_df.empty:
-        for _, r in state_year_by_biome_df.iterrows():
-            upsert(int(r["year"]), int(r["value"]), str(r["biome"]), str(r["state"]))
-
-    rows = list(by_key.values())
+    rows = [
+        {"year": year, "biome": biome, "state": state, "value": int(value)}
+        for (year, biome, state), value in by_key.items()
+    ]
     rows.sort(key=lambda r: (r["year"], r["state"], r["biome"]))
     return rows
 
@@ -1568,6 +1633,148 @@ def _month_label_en(period: str | None) -> str:
 
 def _now_iso() -> str:
     return pd.Timestamp.utcnow().isoformat().replace("+00:00", "Z")
+
+
+def _normalize_reference_month_mode(mode: str) -> Literal["previous", "current"]:
+    norm = str(mode).strip().lower()
+    if norm in {"current", "vigente", "mes_vigente"}:
+        return "current"
+    if norm in {"previous", "anterior", "mes_anterior", ""}:
+        return "previous"
+    raise ValueError("reference_month_mode deve ser 'previous' ou 'current'.")
+
+
+def _resolve_reference_month(
+    calendar_year: int,
+    mode: Literal["previous", "current"],
+) -> tuple[int, int]:
+    now = pd.Timestamp.now()
+    if mode == "current":
+        return calendar_year, int(now.month)
+
+    if int(now.month) == 1:
+        return calendar_year - 1, 12
+    return calendar_year, int(now.month) - 1
+
+
+def _sum_mensal_until(counts: dict[int, int], max_month: int) -> int:
+    total = 0
+    for month, value in counts.items():
+        if int(month) <= max_month:
+            total += int(value)
+    return total
+
+
+def _truncate_mensal_counts(mensal_counts: dict[str, Any], max_month: int) -> dict[str, Any]:
+    def _truncate(per_month: dict[int, int]) -> dict[int, int]:
+        return {
+            int(month): int(value)
+            for month, value in per_month.items()
+            if int(month) <= max_month
+        }
+
+    truncated_by_biome: dict[str, dict[int, int]] = {}
+    for biome, per_month in (mensal_counts.get("by_biome") or {}).items():
+        values = _truncate(per_month)
+        if values:
+            truncated_by_biome[str(biome)] = values
+
+    truncated_by_state: dict[str, dict[int, int]] = {}
+    for state, per_month in (mensal_counts.get("by_state") or {}).items():
+        values = _truncate(per_month)
+        if values:
+            truncated_by_state[str(state)] = values
+
+    truncated_by_state_biome: dict[tuple[str, str], dict[int, int]] = {}
+    for pair, per_month in (mensal_counts.get("by_state_biome") or {}).items():
+        values = _truncate(per_month)
+        if values:
+            if isinstance(pair, tuple) and len(pair) == 2:
+                truncated_by_state_biome[(str(pair[0]), str(pair[1]))] = values
+
+    truncated_national = _truncate(mensal_counts.get("national") or {})
+    last_closed_month = max(truncated_national.keys()) if truncated_national else 0
+    return {
+        "last_closed_month": last_closed_month,
+        "national": truncated_national,
+        "by_biome": truncated_by_biome,
+        "by_state": truncated_by_state,
+        "by_state_biome": truncated_by_state_biome,
+    }
+
+
+def _resolve_monthly_start_period(
+    available_periods: list[str],
+    start_year: int,
+    fallback_start: str,
+    fallback_end: str,
+) -> str:
+    min_period = f"{start_year}-01"
+    for period in sorted(available_periods):
+        if period >= min_period and period <= fallback_end:
+            return period
+    return fallback_start
+
+
+def _build_effective_national_monthly_series(
+    monthly_all_df: pd.DataFrame,
+    mensal_counts: dict[str, Any],
+    mensal_is_current: bool,
+    calendar_year: int,
+) -> list[tuple[str, int]]:
+    merged: dict[str, int] = {}
+    if not monthly_all_df.empty:
+        for _, row in monthly_all_df.iterrows():
+            period = str(row["period"])
+            merged[period] = int(row["value"])
+
+    if mensal_is_current:
+        for month, value in (mensal_counts.get("national") or {}).items():
+            period = f"{calendar_year}-{int(month):02d}"
+            merged[period] = int(value)
+
+    sorted_items = sorted(merged.items(), key=lambda item: item[0])
+    return [(period, int(value)) for period, value in sorted_items]
+
+
+def _compute_rolling_12m_metrics(
+    monthly_series: list[tuple[str, int]],
+    latest_period: str,
+) -> dict[str, Any]:
+    if not monthly_series:
+        return {
+            "recent_window_start_period": latest_period,
+            "prior_window_start_period": None,
+            "recent_total": 0,
+            "prior_total": None,
+            "pct_change": None,
+            "has_full_prior_window": False,
+        }
+
+    periods = [period for period, _ in monthly_series]
+    values = [int(value) for _, value in monthly_series]
+    try:
+        end_idx = periods.index(latest_period)
+    except ValueError:
+        end_idx = len(periods) - 1
+
+    series_periods = periods[: end_idx + 1]
+    series_values = values[: end_idx + 1]
+    recent_values = series_values[-12:]
+    prior_values = series_values[-24:-12] if len(series_values) >= 24 else []
+
+    recent_start = series_periods[-len(recent_values)] if recent_values else latest_period
+    prior_start = series_periods[-24] if len(series_values) >= 24 else None
+    recent_total = int(sum(recent_values))
+    prior_total = int(sum(prior_values)) if len(prior_values) == 12 else None
+    return {
+        "recent_window_start_period": recent_start,
+        "prior_window_start_period": prior_start,
+        "recent_total": recent_total,
+        "prior_total": prior_total,
+        "pct_change": _safe_pct_change(recent_total, prior_total) if prior_total is not None else None,
+        "has_full_prior_window": prior_total is not None,
+    }
 
 
 def _load_mensal_counts_for_current_year(

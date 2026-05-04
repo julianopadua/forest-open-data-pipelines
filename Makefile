@@ -114,6 +114,9 @@ build-report-bdqueimadas-no-llm: ## Build BDQueimadas report (current year, dete
 build-report-bdqueimadas-force-no-llm: ## Build BDQueimadas report, full history, no LLM
 	$(FPIPE) build-report bdqueimadas_overview --force --scope full --no-llm
 
+build-report-bdqueimadas-refresh: ## Build BDQueimadas report with refreshed mensal CSVs
+	$(FPIPE) build-report bdqueimadas_overview --force --refresh-mensal --reference-month previous
+
 # ── Audits ────────────────────────────────────────────────────────────────────
 ## Audits
 audit-bdqueimadas: ## Run audit on INPE BDQueimadas focus dataset; output under docs/audits/

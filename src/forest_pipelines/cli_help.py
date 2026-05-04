@@ -111,10 +111,14 @@ Opções relevantes:
   --scope current  Carrega só o ZIP mais recente (rápido, atualização mensal). Pula prompt interativo.
   --scope full     Carrega todo o histórico configurado (lento, primeira execução). Pula prompt interativo.
   --no-llm         Pula a geração via LLM e usa o fallback determinístico, mesmo que llm.enabled=true no config.
+  --reference-month previous|current  Escolhe mês anterior ou vigente para agregados mensais do BDQueimadas.
+  --skip-mensal-download              Não faz HTTP; usa apenas CSVs mensais já presentes no cache local.
+  --refresh-mensal                    Limpa CSVs mensais do ano corrente e baixa novamente antes do build.
 
 Exemplos:
   forest-pipelines build-report bdqueimadas_overview
   forest-pipelines build-report bdqueimadas_overview --force --scope current --no-llm
+  forest-pipelines build-report bdqueimadas_overview --reference-month current --refresh-mensal
   forest-pipelines build-report bdqueimadas_overview --scope full
 """
 

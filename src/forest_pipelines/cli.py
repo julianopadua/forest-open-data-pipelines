@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+from datetime import date
 
 import typer
 
@@ -31,6 +32,67 @@ app = typer.Typer(
     add_completion=False,
     no_args_is_help=True,
 )
+
+_PT_MONTH_NAMES = [
+    "janeiro",
+    "fevereiro",
+    "março",
+    "abril",
+    "maio",
+    "junho",
+    "julho",
+    "agosto",
+    "setembro",
+    "outubro",
+    "novembro",
+    "dezembro",
+]
+
+
+def _normalize_reference_month_option(value: str) -> str:
+    norm = value.strip().lower()
+    if not norm:
+        return ""
+    if norm in {"previous", "anterior", "mes_anterior"}:
+        return "previous"
+    if norm in {"current", "vigente", "mes_vigente"}:
+        return "current"
+    raise typer.BadParameter(
+        "Valor inválido para --reference-month. Use 'previous' ou 'current'."
+    )
+
+
+def _reference_month_labels(today: date | None = None) -> tuple[str, str]:
+    ref = today or date.today()
+    current_label = f"{_PT_MONTH_NAMES[ref.month - 1]} de {ref.year}"
+    if ref.month == 1:
+        previous_month = 12
+        previous_year = ref.year - 1
+    else:
+        previous_month = ref.month - 1
+        previous_year = ref.year
+    previous_label = f"{_PT_MONTH_NAMES[previous_month - 1]} de {previous_year}"
+    return previous_label, current_label
+
+
+def _resolve_reference_month_mode_for_cli(
+    report_id: str,
+    reference_month: str,
+) -> str:
+    explicit = _normalize_reference_month_option(reference_month)
+    if explicit:
+        return explicit
+    if report_id != "bdqueimadas_overview":
+        return "previous"
+
+    previous_label, current_label = _reference_month_labels()
+    typer.echo(
+        "\nEscolha o mês de referência para os dados mensais:\n"
+        f"  [1] Mês anterior — {previous_label}\n"
+        f"  [2] Mês vigente — {current_label}\n"
+    )
+    selected = typer.prompt("Opção (1 ou 2)", default="1").strip()
+    return "current" if selected == "2" else "previous"
 
 
 @app.command(
@@ -267,6 +329,21 @@ def build_report(
         "--no-llm",
         help="Pula a geração via LLM e usa o fallback determinístico, independentemente do config.",
     ),
+    skip_mensal_download: bool = typer.Option(
+        False,
+        "--skip-mensal-download",
+        help="Usa apenas CSVs mensais já existentes em data/.../mensal (sem download HTTP).",
+    ),
+    refresh_mensal: bool = typer.Option(
+        False,
+        "--refresh-mensal",
+        help="Remove CSVs mensais do ano corrente no cache local antes de baixar novamente.",
+    ),
+    reference_month: str = typer.Option(
+        "",
+        "--reference-month",
+        help="Mês de referência para leitura mensal no BDQueimadas: previous ou current. Se omitido, exibe prompt.",
+    ),
 ) -> None:
     settings = load_settings(config_path)
     logger = get_logger(settings.logs_dir, f"reports/{report_id}")
@@ -310,6 +387,15 @@ def build_report(
     if no_llm:
         typer.echo("→ LLM desabilitado: usando fallback determinístico.\n")
 
+    reference_month_mode = _resolve_reference_month_mode_for_cli(
+        report_id=report_id,
+        reference_month=reference_month,
+    )
+    typer.echo(
+        "→ Mês de referência: "
+        f"{'mês vigente' if reference_month_mode == 'current' else 'mês anterior'}.\n"
+    )
+
     runner = get_report_runner(report_id)
     package = runner(
         settings=settings,
@@ -317,6 +403,9 @@ def build_report(
         logger=logger,
         current_year_only=current_year_only,
         skip_llm=no_llm,
+        skip_mensal_download=skip_mensal_download,
+        refresh_mensal=refresh_mensal,
+        reference_month_mode=reference_month_mode,
     )
 
     publication = publish_report_package(
