@@ -467,16 +467,26 @@ def publish_catalog_cmd(
 
     from forest_pipelines.catalog.build import (
         build_catalogs_from_defaults,
+        make_storage_manifest_loader,
         publish_catalogs,
     )
 
     settings = load_settings(config_path)
     logger = get_logger(settings.logs_dir, "catalog/publish")
 
+    #storage is built early so it can also feed the manifest_loader used to
+    #enrich open-data entries with generated_at (avoids N browser fetches in
+    #the portal catalog page). build, then publish.
+    storage = SupabaseStorage.from_env(
+        logger=logger,
+        bucket_open_data=settings.supabase_bucket_open_data,
+    )
+
     override = Path(anp_compact).resolve() if anp_compact else None
     open_envelope, reports_envelope = build_catalogs_from_defaults(
         settings.root,
         anp_compact_override=override,
+        manifest_loader=make_storage_manifest_loader(storage, logger),
     )
 
     logger.info(
@@ -489,11 +499,6 @@ def publish_catalog_cmd(
         "Catálogo reports: %d reports, status=%s",
         len(reports_envelope.get("reports", [])),
         reports_envelope.get("generation_status"),
-    )
-
-    storage = SupabaseStorage.from_env(
-        logger=logger,
-        bucket_open_data=settings.supabase_bucket_open_data,
     )
 
     result = publish_catalogs(
