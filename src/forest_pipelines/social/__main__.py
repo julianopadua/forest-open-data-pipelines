@@ -1,4 +1,4 @@
-"""python -m forest_pipelines.social — gera assets BDQueimadas para social-post-templates."""
+"""python -m forest_pipelines.social - gera assets BDQueimadas para social-post-templates."""
 
 from __future__ import annotations
 

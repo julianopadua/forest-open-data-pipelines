@@ -19,7 +19,7 @@ Para ver o compositor no browser: `cd apps/social-post-templates && npm run dev`
 O comando `python -m forest_pipelines.social` gera **quatro recortes** fixos de série temporal, na ordem:
 
 1. **Nacional** (território Brasil, agregação `monthly_all` dos CSVs anuais em `anual/`).
-2. **Amazônia**, **Cerrado**, **Pantanal** — séries obtidas da agregação `monthly_by_biome` dos mesmos CSVs, filtrando pela chave de bioma INPE (`AMAZÔNIA`, `CERRADO`, `PANTANAL`).
+2. **Amazônia**, **Cerrado**, **Pantanal** - séries obtidas da agregação `monthly_by_biome` dos mesmos CSVs, filtrando pela chave de bioma INPE (`AMAZÔNIA`, `CERRADO`, `PANTANAL`).
 
 Para cada recorte, o ano civil corrente usa os **arquivos mensais** (`focos_mensal_br_YYYYMM.*`) em cache, com contagem de linhas filtrada por bioma quando aplicável (mesma lógica de colunas datetime/estado/bioma/satélite que o agregado nacional).
 

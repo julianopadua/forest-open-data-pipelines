@@ -30,7 +30,7 @@ def build_focos_incendio_llm_payload(
     ``biome``: rótulo do recorte (ex. \"Amazônia\"). Se None, usa ``metadata.biome_label_pt``
     do spec ou \"Brasil (Nacional)\".
 
-    - Mês vs mês: compara o **último mês civil fechado** (``last_closed_month``) —
+    - Mês vs mês: compara o **último mês civil fechado** (``last_closed_month``) -
       ano atual vs ano anterior naquele mês.
     - Acumulado: soma de jan até esse último mês fechado (ano atual, ano anterior,
       soma das médias mensais da janela de 5 anos).

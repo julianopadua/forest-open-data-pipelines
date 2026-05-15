@@ -123,7 +123,7 @@ def _build_prompts(
             "Sua função é redigir observações factuais, calibradas e não especulativas, fiéis exclusivamente "
             "aos números fornecidos no contexto. Não invente causalidade, não atribua causas climáticas ou "
             "humanas sem que estejam explicitadas, e não extrapole tendências além do período descrito. "
-            "Escreva como analista de dados — objetivo, direto, sem sensacionalismo. "
+            "Escreva como analista de dados - objetivo, direto, sem sensacionalismo. "
             "Responda exclusivamente com um objeto JSON puro, sem markdown, sem comentários, "
             f"contendo exatamente estas chaves: {required_keys}."
         )
@@ -152,7 +152,7 @@ def _build_prompts(
             "se algum percentual vier null, omita essa comparação. "
             "Use frases completas com verbos, conectivos e valores numéricos precisos; "
             "evite enumerações, traços ou qualquer formatação de lista.\n"
-            "- limitations: ressalva metodológica curta — ano corrente pode estar incompleto, "
+            "- limitations: ressalva metodológica curta - ano corrente pode estar incompleto, "
             "a leitura é descritiva e não estabelece causalidade.\n"
             "Responda apenas com JSON."
         )
@@ -164,7 +164,7 @@ def _build_prompts(
         "Your job is to write factual, calibrated, non-speculative observations strictly faithful to the numbers "
         "provided in the context. Do not invent causality, do not attribute climatic or human causes unless "
         "explicitly stated, and do not extrapolate trends beyond the described period. "
-        "Write as a data analyst — objective, direct, no sensationalism. "
+        "Write as a data analyst - objective, direct, no sensationalism. "
         "Respond exclusively with a pure JSON object, with no markdown and no comments, "
         f"containing exactly these keys: {required_keys}."
     )
@@ -192,7 +192,7 @@ def _build_prompts(
         "if any percentage is null, omit that comparison. "
         "Write in complete sentences with connectives and precise numbers; "
         "avoid enumerations, dashes, or any list formatting.\n"
-        "- limitations: short methodological caveat — current year may be incomplete, "
+        "- limitations: short methodological caveat - current year may be incomplete, "
         "the reading is descriptive and does not establish causality.\n"
         "Respond with JSON only."
     )

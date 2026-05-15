@@ -1,4 +1,4 @@
-"""Legenda Instagram (post_description) — pt-BR."""
+"""Legenda Instagram (post_description) - pt-BR."""
 
 from __future__ import annotations
 

@@ -559,7 +559,7 @@ def build_year_payload_from_csv(
 ) -> dict[str, Any]:
     """
     Mesmo agregado que _build_year_payload, lendo CSV em disco (ex.: data/inpe_bdqueimadas/anual/).
-    Usa data_pas em ISO (YYYY-MM-DD HH:mm:ss) quando presente — alinhado a contagens SQL no arquivo.
+    Usa data_pas em ISO (YYYY-MM-DD HH:mm:ss) quando presente - alinhado a contagens SQL no arquivo.
     """
     subset, detected_columns = _read_csv_path_subset(
         csv_path,

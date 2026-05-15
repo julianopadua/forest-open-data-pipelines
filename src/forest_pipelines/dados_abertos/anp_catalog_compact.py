@@ -1,6 +1,6 @@
 # src/forest_pipelines/dados_abertos/anp_catalog_compact.py
 """
-Compact ANP catalog JSON for Supabase — field contract (schema_version \"1\").
+Compact ANP catalog JSON for Supabase - field contract (schema_version \"1\").
 
 Dataset-level keys:
   package_id, slug, title, notes_plain, description_html,

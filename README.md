@@ -1,6 +1,6 @@
 # forest-open-data-pipelines
 
-Python monorepo for ingesting open datasets, building structured report packages, and generating social media assets — all published to Supabase Storage for direct consumption by the `forest-portal` frontend.
+Python monorepo for ingesting open datasets, building structured report packages, and generating social media assets - all published to Supabase Storage for direct consumption by the `forest-portal` frontend.
 
 ## Table of contents
 
@@ -61,7 +61,7 @@ dados.gov.br (ANP)  ─────┘
                                for social captions
 ```
 
-The frontend fetches the public `manifest.json` at each dataset prefix directly from Storage — no dedicated download API is needed on the Next.js side.
+The frontend fetches the public `manifest.json` at each dataset prefix directly from Storage - no dedicated download API is needed on the Next.js side.
 
 ---
 
@@ -97,7 +97,7 @@ Copy `.env.example` to `.env` and set:
 | Variable | Required | Purpose |
 | --- | --- | --- |
 | `SUPABASE_URL` | yes | Supabase project URL |
-| `SUPABASE_SERVICE_ROLE_KEY` | yes | Service role key for Storage uploads — keep secret |
+| `SUPABASE_SERVICE_ROLE_KEY` | yes | Service role key for Storage uploads - keep secret |
 | `SUPABASE_BUCKET_OPEN_DATA` | yes | Bucket name, e.g. `open-data` |
 | `GROQ_API_KEY` | for LLM targets only | Required by `bdqueimadas-social-full` and any report using LLM captions |
 
@@ -150,14 +150,14 @@ Run `make` or `make help` to see this list in your terminal.
 | Target | Description |
 | --- | --- |
 | `make anp-catalog` | Scrape full ANP catalog from dados.gov.br (all pages) |
-| `make anp-catalog-smoke` | Quick smoke test — fetch first 5 pages only, no Supabase needed |
+| `make anp-catalog-smoke` | Quick smoke test - fetch first 5 pages only, no Supabase needed |
 
 ### Social media
 
 | Target | Description |
 | --- | --- |
 | `make bdqueimadas-social-assets` | Generate BDQueimadas carousel charts + manifest (no LLM required) |
-| `make bdqueimadas-social-full` | Generate carousel + LLM captions — requires `GROQ_API_KEY` |
+| `make bdqueimadas-social-full` | Generate carousel + LLM captions - requires `GROQ_API_KEY` |
 
 ### Tests and cleanup
 

@@ -21,6 +21,7 @@ from forest_pipelines.datasets.inpe import (
     bdqueimadas_painel_fogo,
 )
 from forest_pipelines.datasets.inmet import dados_historicos
+from forest_pipelines.datasets.mma import cnuc_unidades_conservacao
 from forest_pipelines.datasets.noticias_agricolas.sync import sync as noticias_agricolas_news_sync
 
 DatasetRunner = Callable[..., dict[str, Any]]
@@ -50,6 +51,9 @@ RUNNERS: dict[str, DatasetRunner] = {
 
     # INMET Datasets
     "inmet_dados_historicos": dados_historicos.sync,
+
+    # MMA Datasets
+    "mma_cnuc_unidades_conservacao": cnuc_unidades_conservacao.sync,
 
     # News feeds
     "noticias_agricolas_news": noticias_agricolas_news_sync,

@@ -32,4 +32,12 @@ Thumbs.db
 htmlcov/
 .pytest_cache/
 
-AGENT.md
+AGENTS.md
+
+# Auto-generated docs (forest-pipelines-helper)
+docs/INDEX.md
+docs/src/
+docs/supabase/
+docs/.fphelper/
+# audit output (runtime)
+docs/audits/

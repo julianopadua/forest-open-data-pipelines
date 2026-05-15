@@ -24,7 +24,7 @@ def build_app_help() -> str:
     audits = sorted(AUDIT_RUNNERS.keys())
 
     return f"""\
-forest-open-data-pipelines — CLI para sincronizar datasets abertos, gerar relatórios e auditar fontes.
+forest-open-data-pipelines - CLI para sincronizar datasets abertos, gerar relatórios e auditar fontes.
 
 Comandos estão agrupados por painel no --help. Cada subcomando tem documentação própria.
 
@@ -36,13 +36,13 @@ Requisitos comuns
   • sync, build-report e anp-publish publicam no Storage do Supabase (mesmas envs);
     anp-catalog e anp-compact podem só gerar arquivos locais.
 
-IDs registrados — sync (dataset_id)
+IDs registrados - sync (dataset_id)
 {_bullet_list(datasets)}
 
-IDs registrados — build-report (report_id)
+IDs registrados - build-report (report_id)
 {_bullet_list(reports)}
 
-IDs registrados — audit-dataset (dataset_id)
+IDs registrados - audit-dataset (dataset_id)
 {_bullet_list(audits)}
 """
 
@@ -138,9 +138,9 @@ Gera e publica os catálogos consolidados (open_data_catalog.json e reports_cata
 sob o prefixo catalog/ por padrão. O frontend do portal consome esses JSONs e elimina arrays hardcoded.
 
 Fontes (SSOT):
-  • configs/catalog/open_data.yml — datasets não-ANP (UI metadata: category, segment, subcategory, source)
-  • configs/catalog/reports.yml — catálogo de relatórios (slug, título, layout, hero, etc.)
-  • anp_catalog_compact.json (na raiz do repo) — catálogo ANP já transformado (gerado por anp-compact)
+  • configs/catalog/open_data.yml - datasets não-ANP (UI metadata: category, segment, subcategory, source)
+  • configs/catalog/reports.yml - catálogo de relatórios (slug, título, layout, hero, etc.)
+  • anp_catalog_compact.json (na raiz do repo) - catálogo ANP já transformado (gerado por anp-compact)
 
 Se o arquivo compacto da ANP não existir, o catálogo é publicado sem os datasets ANP e uma warning é
 registrada no envelope (generation_status=success_partial_fallback).

@@ -1,4 +1,4 @@
-"""Texto para acompanhar o gráfico (body_chart) — pt-BR."""
+"""Texto para acompanhar o gráfico (body_chart) - pt-BR."""
 
 from __future__ import annotations
 

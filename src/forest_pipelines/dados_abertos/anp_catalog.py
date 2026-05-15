@@ -250,7 +250,7 @@ def _print_dashboard(
     links_captured: int,
 ) -> None:
     console = Console()
-    table = Table(title="ANP / dados.gov.br — resumo", show_header=True, header_style="bold")
+    table = Table(title="ANP / dados.gov.br - resumo", show_header=True, header_style="bold")
     table.add_column("Métrica", style="cyan")
     table.add_column("Valor", style="white")
 

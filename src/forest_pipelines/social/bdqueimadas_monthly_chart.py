@@ -91,7 +91,7 @@ MONTH_LABELS_PT = [
 ]
 
 def format_published_at_pt(month: int, year: int) -> str:
-    """Ex.: Abr 2026 — alinhado ao último mês civil já encerrado na série atual."""
+    """Ex.: Abr 2026 - alinhado ao último mês civil já encerrado na série atual."""
     if month < 1 or month > 12:
         return f"{year}"
     return f"{MONTH_LABELS_PT[month - 1]} {year}"
@@ -1235,9 +1235,9 @@ def write_bdqueimadas_carousel_manifest(
                 "series_label": "Séries Temporais",
                 "title": "Focos de incêndio no Brasil",
                 "summary": (
-                    f"Brasil, Amazônia, Cerrado e Pantanal — "
+                    f"Brasil, Amazônia, Cerrado e Pantanal - "
                     f"{ly} vs "
-                    f"{py if py is not None else '—'} "
+                    f"{py if py is not None else '-'} "
                     f"e média por mês ({y0}–{y1})."
                 ),
             },

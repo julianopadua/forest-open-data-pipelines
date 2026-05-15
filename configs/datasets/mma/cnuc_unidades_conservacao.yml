@@ -1,0 +1,6 @@
+id: mma_cnuc_unidades_conservacao
+title: "MMA - CNUC - Unidades de Conservação"
+source_url: "https://dados.mma.gov.br/dataset/unidadesdeconservacao"
+bucket_prefix: mma/cnuc/unidades_conservacao
+ckan_package_id: unidadesdeconservacao
+include_meta: false

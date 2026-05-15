@@ -22,7 +22,7 @@ Abrir no browser:
 | `http://localhost:5173/navy/index.html` | Tema Azul Marinho (Ocean) |
 | `http://localhost:5173/white/index.html` | Tema Branco (Clean) |
 
-O canvas (1080 × 1350) é escalado automaticamente para caber na janela — o layout interno permanece em pixels reais.
+O canvas (1080 × 1350) é escalado automaticamente para caber na janela - o layout interno permanece em pixels reais.
 
 ## Tema verde modular
 
@@ -46,7 +46,7 @@ Exemplos de manifest: [`examples/green-manifest.example.json`](examples/green-ma
 
 - `theme`: `"green"`
 - `runId`: nome da pasta de saída em `dist-exports/green/<runId>/`
-- `sizes` (opcional): `{ "topicTagPx", "datePx", "pageNumberPx", "logoHeightPx" }` — números em pixels
+- `sizes` (opcional): `{ "topicTagPx", "datePx", "pageNumberPx", "logoHeightPx" }` - números em pixels
 - `slides`: array ordenado; cada item tem:
   - `type`: `cover` | `body_image_text` | `body_chart` | `body_text` | `cta`
   - `slots`: objeto string → string (conteúdo dos `data-slot`)
@@ -102,7 +102,7 @@ npx playwright install chromium
 
 Com o servidor de desenvolvimento em execução (`npm run dev` em outro terminal):
 
-**Legado** — um PNG por tema (`green` usa a capa verde; navy/white usam as páginas principais):
+**Legado** - um PNG por tema (`green` usa a capa verde; navy/white usam as páginas principais):
 
 ```bash
 npm run export
@@ -110,7 +110,7 @@ npm run export
 
 Saída: `dist-exports/green/card.png`, `dist-exports/navy/card.png`, `dist-exports/white/card.png`.
 
-**Manifest** — sequência de slides verdes:
+**Manifest** - sequência de slides verdes:
 
 ```bash
 npm run export:manifest -- examples/green-manifest.example.json
@@ -181,10 +181,10 @@ Com rede e key válida:
 python -m forest_pipelines.social --data-dir data/inpe_bdqueimadas --emit-manifest --llm
 ```
 
-- **`post_description`** — uma única legenda Instagram para o carrossel inteiro (prompt dedicado; não detalha números por slide).
-- **`graphic_text`** — quatro chamadas, uma por recorte, com payload analítico já filtrado (`focos_incendio_br_v3`).
+- **`post_description`** - uma única legenda Instagram para o carrossel inteiro (prompt dedicado; não detalha números por slide).
+- **`graphic_text`** - quatro chamadas, uma por recorte, com payload analítico já filtrado (`focos_incendio_br_v3`).
 
-Opções: `--as-of YYYY-MM-DD` (define o último mês fechado no gráfico — ex. abril → até março — e o prefixo `[YYYY-MM-DD]` na legenda LLM), `--app-config` (default `<repo>/configs/app.yml`), `--out-social-llm` (default `public/generated/social_llm.json`), `--llm-components post_description,graphic_text` (default: ambos).
+Opções: `--as-of YYYY-MM-DD` (define o último mês fechado no gráfico - ex. abril → até março - e o prefixo `[YYYY-MM-DD]` na legenda LLM), `--app-config` (default `<repo>/configs/app.yml`), `--out-social-llm` (default `public/generated/social_llm.json`), `--llm-components post_description,graphic_text` (default: ambos).
 
 Para rodar **só a legenda do carrossel**:
 
@@ -202,13 +202,13 @@ O arquivo `social_llm.json` usa **`schema_version: 2`**: `post_description`, `po
 
 Saídas extras:
 
-- `public/generated/social_llm.json` — legenda + entradas por escopo (pt-BR).
+- `public/generated/social_llm.json` - legenda + entradas por escopo (pt-BR).
 - Com `--emit-manifest`, cada `body_chart` recebe o texto correspondente em `slots.body_text` (ou mensagem de fallback).
 
 Alvos Make na raiz do repositório:
 
-- `make bdqueimadas-social-assets` — gráficos + manifest **sem** `--llm` (útil sem `GROQ_API_KEY`).
-- `make bdqueimadas-social-full` — inclui `--llm` (legenda única + quatro textos de slide).
+- `make bdqueimadas-social-assets` - gráficos + manifest **sem** `--llm` (útil sem `GROQ_API_KEY`).
+- `make bdqueimadas-social-full` - inclui `--llm` (legenda única + quatro textos de slide).
 
 Isso gera:
 

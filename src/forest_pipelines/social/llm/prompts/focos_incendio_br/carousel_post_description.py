@@ -1,4 +1,4 @@
-"""Legenda única do carrossel (Instagram) — pt-BR, texto curto."""
+"""Legenda única do carrossel (Instagram) - pt-BR, texto curto."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ def build_carousel_post_description_prompts(
     *,
     reference_date: date,
 ) -> tuple[str, str]:
-    """Retorna (system_prompt, user_prompt) — contexto mínimo para uma legenda única."""
+    """Retorna (system_prompt, user_prompt) - contexto mínimo para uma legenda única."""
     d = reference_date.isoformat()
     user = f"""Data (prefixo obrigatório na primeira linha): [{d}]
 

@@ -88,8 +88,8 @@ def _resolve_reference_month_mode_for_cli(
     previous_label, current_label = _reference_month_labels()
     typer.echo(
         "\nEscolha o mês de referência para os dados mensais:\n"
-        f"  [1] Mês anterior — {previous_label}\n"
-        f"  [2] Mês vigente — {current_label}\n"
+        f"  [1] Mês anterior - {previous_label}\n"
+        f"  [2] Mês vigente - {current_label}\n"
     )
     selected = typer.prompt("Opção (1 ou 2)", default="1").strip()
     return "current" if selected == "2" else "previous"
@@ -382,8 +382,8 @@ def build_report(
     else:
         typer.echo(
             "\nEscolha o escopo de carga:\n"
-            "  [1] Apenas ano corrente — carrega só o ZIP mais recente (rápido, ideal p/ atualização mensal)\n"
-            "  [2] Todos os anos configurados — histórico completo (mais lento, recomendado p/ primeira execução)\n"
+            "  [1] Apenas ano corrente - carrega só o ZIP mais recente (rápido, ideal p/ atualização mensal)\n"
+            "  [2] Todos os anos configurados - histórico completo (mais lento, recomendado p/ primeira execução)\n"
         )
         scope_choice = typer.prompt("Opção (1 ou 2)", default="1")
         current_year_only = scope_choice.strip() == "1"
@@ -552,7 +552,7 @@ def _fetch_existing_report_meta(storage: Any, report_id: str, logger: Any) -> di
         from forest_pipelines.reports.definitions.base import load_report_cfg  # noqa: PLC0415
         from pathlib import Path  # noqa: PLC0415
 
-        # We need settings to get reports_dir — load minimal config
+        # We need settings to get reports_dir - load minimal config
         from forest_pipelines.settings import load_settings as _ls  # noqa: PLC0415
         settings = _ls("configs/app.yml")
         cfg = load_report_cfg(settings.reports_dir, report_id)

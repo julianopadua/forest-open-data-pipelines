@@ -18,7 +18,7 @@ def test_monthly_by_biome_payloads_filters_and_dedupes() -> None:
         },
         {
             "monthly_by_biome": [
-                # duplicate period,year for AMAZÔNIA — first wins (same as nacional)
+                # duplicate period,year for AMAZÔNIA - first wins (same as nacional)
                 {"period": "2024-01", "year": 2024, "biome": "AMAZÔNIA", "value": 777},
             ]
         },

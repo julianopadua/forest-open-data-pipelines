@@ -95,6 +95,9 @@ sync-eia: ## Sync EIA weekly petroleum data
 sync-inmet: ## Sync INMET historical weather data
 	$(FPIPE) sync inmet_dados_historicos
 
+sync-mma-cnuc: ## Sync MMA CNUC Unidades de Conservacao (CKAN URL catalog)
+	$(FPIPE) sync mma_cnuc_unidades_conservacao
+
 sync-news: ## Sync Noticias Agricolas news feed
 	$(FPIPE) sync noticias_agricolas_news
 

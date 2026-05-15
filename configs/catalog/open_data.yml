@@ -211,3 +211,17 @@ datasets:
     description: "Conjunto de dados históricos anuais provenientes de estações meteorológicas automáticas, abrangendo todo o território brasileiro com registros de temperatura, umidade e precipitação."
     manifest_path: inmet/dados_historicos/manifest.json
     source_url: "https://portal.inmet.gov.br/dadoshistoricos"
+
+  # =========================================
+  # Meio ambiente -> Areas protegidas -> MMA
+  # =========================================
+  - id: mma_cnuc_unidades_conservacao
+    category_title: "Meio ambiente"
+    subcategory_title: "Áreas protegidas"
+    source_id: mma
+    source_title: MMA
+    slug: mma-cnuc-unidades-conservacao
+    title: "CNUC - Unidades de Conservação"
+    description: "Listagens semestrais e recortes do Cadastro Nacional de Unidades de Conservação (CNUC), polígonos em ZIP/SHP e dicionários em PDF, via Portal de Dados Abertos do MMA (CKAN)."
+    manifest_path: mma/cnuc/unidades_conservacao/manifest.json
+    source_url: "https://dados.mma.gov.br/dataset/unidadesdeconservacao"
