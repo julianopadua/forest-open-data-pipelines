@@ -8,12 +8,18 @@ schema_version: "1.0"
 reports:
   - id: bdqueimadas_overview
     slug: bdqueimadas-overview
-    title: "BDQueimadas - Panorama Sintético de Focos"
+    title: "BDQueimadas - Panorama de Focos"
+    title_en: "BDQueimadas - Hotspots Overview"
     description: |
       Leitura sintética da série histórica de focos de queimadas, com filtros
       por período e bioma, comparação anual e visão comparativa por UF.
+    description_en: |
+      Synthesis of the historical hotspot series, with filters by period and
+      biome, year-over-year comparison, and a comparative view by state.
     source_title: "INPE - Programa Queimadas"
+    source_title_en: "INPE - Queimadas Programme"
     category_title: "Meio ambiente"
+    category_title_en: "Environment"
     manifest_path: reports/bdqueimadas/overview/manifest.json
     stable_report_path: reports/bdqueimadas/overview/report.json
     source_portal_href: "/open-data/inpe/inpe-bdqueimadas-focos"

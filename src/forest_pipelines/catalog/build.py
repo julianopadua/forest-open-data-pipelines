@@ -286,6 +286,10 @@ def _report_entry(raw: dict[str, Any]) -> dict[str, Any]:
         "tags": list(raw.get("tags") or []),
     }
     for optional_key in (
+        "title_en",
+        "description_en",
+        "source_title_en",
+        "category_title_en",
         "source_portal_href",
         "source_dataset_url",
         "layout",
@@ -297,7 +301,8 @@ def _report_entry(raw: dict[str, Any]) -> dict[str, Any]:
         "related_article_label_en",
     ):
         if raw.get(optional_key):
-            entry[optional_key] = raw[optional_key]
+            value = raw[optional_key]
+            entry[optional_key] = str(value).strip() if optional_key == "description_en" else value
     return entry
 
 
