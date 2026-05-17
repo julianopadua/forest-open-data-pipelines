@@ -6,6 +6,7 @@ from pathlib import Path
 
 from forest_pipelines.manifests.build_manifest import build_manifest
 from forest_pipelines.registry.datasets import RUNNERS
+from forest_pipelines.cli import _merge_incremental_manifest_items
 
 
 def test_registered_dataset_runners_do_not_upload_payload_files() -> None:
@@ -61,3 +62,55 @@ def test_manifest_builder_removes_legacy_storage_urls() -> None:
     assert "storage_path" not in item
     assert "public_url" not in metadata_file
     assert "storage_path" not in metadata_file
+
+
+def test_incremental_manifest_merge_retains_existing_source_urls() -> None:
+    class Logger:
+        def info(self, *args: object, **kwargs: object) -> None:
+            return None
+
+    current = build_manifest(
+        "dataset",
+        "Dataset",
+        "https://source.test/page",
+        "source/dataset",
+        [
+            {
+                "kind": "data",
+                "period": "2025",
+                "filename": "new.csv",
+                "source_url": "https://source.test/new.csv",
+                "profile_status": "ok",
+                "profile_warnings": [],
+            }
+        ],
+        meta={},
+    )
+    existing = build_manifest(
+        "dataset",
+        "Dataset",
+        "https://source.test/page",
+        "source/dataset",
+        [
+            {
+                "kind": "data",
+                "period": "2024",
+                "filename": "old.csv",
+                "source_url": "https://source.test/old.csv",
+                "profile_status": "ok",
+                "profile_warnings": [],
+            }
+        ],
+        meta={},
+    )
+
+    merged = _merge_incremental_manifest_items(
+        current_manifest=current,
+        existing_manifest=existing,
+        logger=Logger(),
+    )
+
+    assert [item["source_url"] for item in merged["items"]] == [
+        "https://source.test/new.csv",
+        "https://source.test/old.csv",
+    ]

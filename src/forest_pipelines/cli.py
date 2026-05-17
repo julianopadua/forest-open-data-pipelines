@@ -22,6 +22,7 @@ from forest_pipelines.cli_help import (
     short_command_summary,
 )
 from forest_pipelines.logging_ import get_logger
+from forest_pipelines.manifests.build_manifest import build_manifest
 from forest_pipelines.profiling import profile_cache_from_manifest, use_profile_cache
 from forest_pipelines.registry.datasets import get_dataset_runner
 from forest_pipelines.reports.publish.supabase import publish_report_package
@@ -386,11 +387,14 @@ def _run_dataset_sync(
     existing_manifest_path: str | None,
 ) -> dict[str, Any]:
     runner = get_dataset_runner(dataset_id)
-    profile_cache = _profile_cache_for_manifest(
-        storage=storage,
-        manifest_path=existing_manifest_path,
-        logger=logger,
-    ) if not force_profile else {}
+    existing_manifest = None
+    if not force_profile and existing_manifest_path:
+        existing_manifest = _fetch_existing_dataset_manifest(
+            storage,
+            existing_manifest_path,
+            logger,
+        )
+    profile_cache = profile_cache_from_manifest(existing_manifest)
 
     profile_context: Any
     if profile_cache:
@@ -405,6 +409,13 @@ def _run_dataset_sync(
             storage=storage,
             logger=logger,
             latest_months=latest_months,
+        )
+
+    if existing_manifest is not None:
+        manifest = _merge_incremental_manifest_items(
+            current_manifest=manifest,
+            existing_manifest=existing_manifest,
+            logger=logger,
         )
 
     skip_cli_manifest = bool(manifest.pop("_cli_skip_manifest_upload", False))
@@ -442,18 +453,6 @@ def _catalog_manifest_path_for_dataset(settings: Any, dataset_id: str) -> str | 
     return None
 
 
-def _profile_cache_for_manifest(
-    *,
-    storage: Any,
-    manifest_path: str | None,
-    logger: Any,
-) -> dict[str, dict[str, Any]]:
-    if not manifest_path:
-        return {}
-    existing = _fetch_existing_dataset_manifest(storage, manifest_path, logger)
-    return profile_cache_from_manifest(existing)
-
-
 def _fetch_existing_dataset_manifest(
     storage: Any,
     manifest_path: str,
@@ -468,6 +467,47 @@ def _fetch_existing_dataset_manifest(
     except Exception as exc:
         logger.info("Existing manifest unavailable: %s error=%s", manifest_path, exc)
         return None
+
+
+def _merge_incremental_manifest_items(
+    *,
+    current_manifest: dict[str, Any],
+    existing_manifest: dict[str, Any],
+    logger: Any,
+) -> dict[str, Any]:
+    current_items = current_manifest.get("items")
+    existing_items = existing_manifest.get("items")
+    if not isinstance(current_items, list) or not isinstance(existing_items, list):
+        return current_manifest
+
+    seen = {
+        item.get("source_url")
+        for item in current_items
+        if isinstance(item, dict) and isinstance(item.get("source_url"), str)
+    }
+    retained = [
+        item
+        for item in existing_items
+        if isinstance(item, dict)
+        and isinstance(item.get("source_url"), str)
+        and item.get("source_url") not in seen
+    ]
+    if not retained:
+        return current_manifest
+
+    logger.info("Retained existing source URLs: %d", len(retained))
+    status = current_manifest.get("generation_status")
+    generation_status = status if status in {"success", "success_partial_fallback", "failed"} else "success"
+    return build_manifest(
+        dataset_id=str(current_manifest["dataset_id"]),
+        title=str(current_manifest["title"]),
+        source_dataset_url=str(current_manifest["source_dataset_url"]),
+        bucket_prefix=str(current_manifest["bucket_prefix"]),
+        items=[*current_items, *retained],
+        meta=current_manifest.get("meta"),
+        generation_status=generation_status,
+        warnings=current_manifest.get("warnings") or [],
+    )
 
 
 @app.command(
