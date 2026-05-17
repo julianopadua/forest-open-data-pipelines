@@ -78,7 +78,7 @@ The frontend fetches the public `manifest.json` at each dataset prefix directly 
 | `logs/` | Rotated run logs (gitignored). |
 | `docs/` | Audit outputs and per-module notes. |
 | `apps/social-post-templates/` | Static frontend for rendering social carousel slides (see [apps/ directory](#apps-directory)). |
-| `scripts/` | Optional helpers (e.g., CVM historical backfill). |
+| `scripts/` | Optional operational helpers. |
 | `.github/workflows/` | Scheduled and manual GitHub Actions workflows. |
 
 ---
@@ -259,12 +259,6 @@ Default prefix: `anp/catalog`. Validates the envelope against JSON Schema v1 bef
 | `noticias_agricolas_news` | Noticias Agricolas |
 
 `noticias_agricolas_news` publishes a JSON news feed (not file downloads) under `news/noticias-agricolas/` and does not use `--latest-months`. See [docs/datasets/noticias_agricolas_news.md](docs/datasets/noticias_agricolas_news.md) for contract details.
-
-For a large historical CVM pull, use the backfill script:
-
-```bash
-python scripts/backfill_cvm_inf_diario.py
-```
 
 ---
 

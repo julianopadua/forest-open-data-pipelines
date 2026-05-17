@@ -63,7 +63,8 @@ dev: venv ## Create .venv and install with dev dependencies (includes pytest)
 	$(PYTHON) -m pip install -e ".[dev]"
 
 check-env: ## Verify all required environment variables are set
-	@ok=1; \
+	@set -a; [ ! -f .env ] || . ./.env; set +a; \
+	ok=1; \
 	for var in SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY SUPABASE_BUCKET_OPEN_DATA; do \
 	  if [ -z "$${!var}" ]; then \
 	    printf "  \033[31m✗\033[0m $$var not set\n"; ok=0; \
@@ -72,9 +73,9 @@ check-env: ## Verify all required environment variables are set
 	  fi; \
 	done; \
 	if [ -n "$$GROQ_API_KEY" ]; then \
-	  printf "  \033[32m✓\033[0m GROQ_API_KEY (optional — needed for --llm targets)\n"; \
+	  printf "  \033[32m✓\033[0m GROQ_API_KEY (optional, needed for --llm targets)\n"; \
 	else \
-	  printf "  \033[33m–\033[0m GROQ_API_KEY not set (only required for bdqueimadas-social-full)\n"; \
+	  printf "  \033[33m-\033[0m GROQ_API_KEY not set (only required for bdqueimadas-social-full)\n"; \
 	fi; \
 	[ $$ok -eq 1 ] || exit 1
 
