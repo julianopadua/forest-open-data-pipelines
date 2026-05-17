@@ -8,7 +8,7 @@ from .models import (
     ReportSummary,
 )
 
-__version__ = "0.1.0"
+__version__ = "0.1.0a0"
 __all__ = [
     "Client",
     "DatasetManifest",

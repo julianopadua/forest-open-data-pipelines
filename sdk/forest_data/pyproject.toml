@@ -1,6 +1,6 @@
 [project]
 name = "forest-data"
-version = "0.1.0"
+version = "0.1.0a0"
 description = "Public Python client for the Instituto Forest open-data API."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -27,7 +27,7 @@ dev = ["pytest>=8.0", "respx>=0.21.0"]
 [project.urls]
 Homepage = "https://institutoforest.org"
 Documentation = "https://institutoforest.org/docs/api/v1"
-Repository = "https://github.com/institutoforest/forest-open-data-pipelines"
+Repository = "https://github.com/julianopadua/forest-open-data-pipelines"
 
 [build-system]
 requires = ["setuptools>=69"]

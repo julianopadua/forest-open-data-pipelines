@@ -11,7 +11,7 @@ import httpx
 from .models import DatasetManifest, DatasetSummary, OpenDataItem, ReportSummary
 
 DEFAULT_BASE_URL = "https://institutoforest.org/api/v1"
-USER_AGENT = "forest-data/0.1.0 (+https://institutoforest.org/docs/api/v1)"
+USER_AGENT = "forest-data/0.1.0a0 (+https://institutoforest.org/docs/api/v1)"
 
 
 class ForestDataError(Exception):
