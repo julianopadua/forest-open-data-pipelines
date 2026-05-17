@@ -6,6 +6,19 @@ from typing import Any
 
 
 @dataclass(frozen=True, slots=True)
+class ProfileWarning:
+    code: str
+    message: str
+
+    @classmethod
+    def from_dict(cls, raw: dict[str, Any]) -> "ProfileWarning":
+        return cls(
+            code=str(raw.get("code", "")),
+            message=str(raw.get("message", "")),
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class DatasetSummary:
     id: str
     slug: str
@@ -45,13 +58,22 @@ class OpenDataItem:
     kind: str
     period: str
     filename: str
-    sha256: str
-    size_bytes: int
-    public_url: str
     source_url: str
-    storage_path: str | None = None
+    sha256: str | None = None
+    size_bytes: int | None = None
+    row_count: int | None = None
+    column_count: int | None = None
+    columns: list[str] = field(default_factory=list)
+    content_type: str | None = None
+    format: str | None = None
+    last_modified: str | None = None
+    profiled_at: str | None = None
+    profile_status: str | None = None
+    profile_warnings: list[ProfileWarning] = field(default_factory=list)
+    archive_profile: dict[str, Any] | None = None
     title: str | None = None
     release_time: str | None = None
+    source_page_url: str | None = None
 
     @classmethod
     def from_dict(cls, raw: dict[str, Any]) -> "OpenDataItem":
@@ -59,13 +81,26 @@ class OpenDataItem:
             kind=raw.get("kind", "data"),
             period=raw["period"],
             filename=raw["filename"],
-            sha256=raw["sha256"],
-            size_bytes=int(raw["size_bytes"]),
-            public_url=raw["public_url"],
             source_url=raw["source_url"],
-            storage_path=raw.get("storage_path"),
+            sha256=raw.get("sha256"),
+            size_bytes=int(raw["size_bytes"]) if raw.get("size_bytes") is not None else None,
+            row_count=int(raw["row_count"]) if raw.get("row_count") is not None else None,
+            column_count=int(raw["column_count"]) if raw.get("column_count") is not None else None,
+            columns=[str(col) for col in raw.get("columns", [])],
+            content_type=raw.get("content_type"),
+            format=raw.get("format"),
+            last_modified=raw.get("last_modified"),
+            profiled_at=raw.get("profiled_at"),
+            profile_status=raw.get("profile_status"),
+            profile_warnings=[
+                ProfileWarning.from_dict(w)
+                for w in raw.get("profile_warnings", [])
+                if isinstance(w, dict)
+            ],
+            archive_profile=raw.get("archive_profile"),
             title=raw.get("title"),
             release_time=raw.get("release_time"),
+            source_page_url=raw.get("source_page_url"),
         )
 
 

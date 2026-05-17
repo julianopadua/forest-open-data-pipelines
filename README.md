@@ -1,6 +1,6 @@
 # forest-open-data-pipelines
 
-Python monorepo for ingesting open datasets, building structured report packages, and generating social media assets - all published to Supabase Storage for direct consumption by the `forest-portal` frontend.
+Python monorepo for scraping official open-data source URLs, profiling source resources locally, building structured report packages, and generating social media assets. Dataset payload bytes stay at the official source. Supabase Storage stores manifests, catalogs, report JSON, compact catalogs, and profiling metadata.
 
 ## Table of contents
 
@@ -37,7 +37,7 @@ make sync-inpe
 
 ## What this repo does
 
-**Dataset sync.** Downloads open datasets (CVM, INPE, EIA, INMET, Noticias Agricolas), caches them under `data/`, uploads objects to a Supabase Storage bucket, and publishes a `manifest.json` at each dataset prefix.
+**Dataset sync.** Discovers official source URLs for open datasets (CVM, INPE, EIA, INMET, Noticias Agricolas), downloads resources temporarily for local profiling, deletes temporary payloads by default, and publishes a `manifest.json` at each dataset prefix. Dataset files are not uploaded to Supabase Storage.
 
 **Reports.** Aggregates or transforms data into structured report packages (e.g., BDQueimadas fire overview) and publishes them to Storage, including manifests and public URLs suitable for embedding in the portal.
 
@@ -54,14 +54,14 @@ CVM (CVM Portal)    ─────┐
 INPE (BDQueimadas)  ─────┤
 EIA (API)           ─────┼──► forest-pipelines CLI ──────► public bucket ──────────► Next.js frontend
 INMET (FTP/HTTP)    ─────┤        (Typer)                  manifest.json              fetches manifests
-Noticias Agricolas  ─────┤                                  + objects                  + public URLs
+Noticias Agricolas  ─────┤                                  + profile data             + source URLs
 dados.gov.br (ANP)  ─────┘
                                       │
                                Groq LLM (optional)
                                for social captions
 ```
 
-The frontend fetches the public `manifest.json` at each dataset prefix directly from Storage - no dedicated download API is needed on the Next.js side.
+The frontend fetches the public `manifest.json` at each dataset prefix directly from Storage. Item bytes are fetched by users and SDK clients from item `source_url` values, not from Supabase.
 
 ---
 
@@ -72,9 +72,9 @@ The frontend fetches the public `manifest.json` at each dataset prefix directly 
 | `src/forest_pipelines/` | Package root: CLI, settings, dataset runners, storage client, manifests, reports, audits, LLM, social generation. |
 | `src/forest_pipelines/dados_abertos/` | ANP catalog scraping from dados.gov.br. |
 | `configs/app.yml` | Directory paths, Supabase bucket env var name, LLM defaults. |
-| `configs/datasets/` | One YAML per dataset (source URLs, `bucket_prefix`, sync parameters). |
+| `configs/datasets/` | One YAML per dataset (landing-page source URLs, `bucket_prefix`, sync parameters). |
 | `configs/reports/` | Report definitions consumed by `build-report`. |
-| `data/` | Local download cache (gitignored). |
+| `data/` | Local working directory for selected workflows (gitignored). Dataset profiling uses temporary files by default. |
 | `logs/` | Rotated run logs (gitignored). |
 | `docs/` | Audit outputs and per-module notes. |
 | `apps/social-post-templates/` | Static frontend for rendering social carousel slides (see [apps/ directory](#apps-directory)). |
@@ -105,7 +105,7 @@ Run `make check-env` after editing `.env` to verify all required variables are p
 
 ### Application YAML
 
-`configs/app.yml` controls directory names relative to the repo root, the env var name used to resolve the bucket, and default LLM parameters. Individual dataset YAMLs under `configs/datasets/` supply source URLs, `bucket_prefix`, and parameters such as `latest_months`.
+`configs/app.yml` controls directory names relative to the repo root, the env var name used to resolve the bucket, and default LLM parameters. Individual dataset YAMLs under `configs/datasets/` supply landing-page source URLs, `bucket_prefix`, and parameters such as `latest_months`.
 
 ---
 
@@ -177,7 +177,7 @@ All commands accept `--config-path` (default: `configs/app.yml`).
 
 ### `sync`
 
-Downloads a registered dataset, uploads artifacts to Storage, and publishes `manifest.json`.
+Scrapes a registered dataset, profiles official source URLs locally, and publishes `manifest.json`.
 
 ```
 forest-pipelines sync <dataset_id> [--latest-months N] [--config-path PATH]

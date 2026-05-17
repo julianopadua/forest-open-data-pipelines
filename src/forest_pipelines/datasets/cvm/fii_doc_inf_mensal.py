@@ -11,8 +11,8 @@ import requests
 import yaml
 from bs4 import BeautifulSoup
 
-from forest_pipelines.http import stream_download
 from forest_pipelines.manifests.build_manifest import build_manifest
+from forest_pipelines.profiling import profiled_item, profile_source_url
 
 # Regex para capturar arquivos anuais: inf_mensal_fii_2025.zip
 RE_ZIP = re.compile(r"inf_mensal_fii_(\d{4})\.zip$", re.IGNORECASE)
@@ -117,57 +117,25 @@ def sync(
 
     items: list[dict[str, Any]] = []
 
-    # Processa Arquivos de Dados
     for period, url in zip_urls:
         filename = url.split("/")[-1]
-        local_folder = settings.data_dir / "cvm_fii_doc_inf_mensal"
-        local_folder.mkdir(parents=True, exist_ok=True)
-        local = local_folder / filename
-
-        logger.info("Download: %s", url)
-        dl = stream_download(url, local)
-
-        object_path = f"{cfg.bucket_prefix}/data/{period}/{filename}"
-        storage.upload_file(object_path, str(dl.file_path), "application/zip", upsert=True)
-        public_url = storage.public_url(object_path)
-
         items.append(
-            {
-                "kind": "data",
-                "period": period,
-                "filename": filename,
-                "sha256": dl.sha256,
-                "size_bytes": dl.size_bytes,
-                "storage_path": object_path,
-                "public_url": public_url,
-                "source_url": url,
-            }
+            profiled_item(
+                source_url=url,
+                filename=filename,
+                period=period,
+                logger=logger,
+            )
         )
 
-    # Processa Metadados (ZIP)
     meta_obj: dict[str, Any] | None = None
     if meta_url:
         filename = meta_url.split("/")[-1]
-        local_folder = settings.data_dir / "cvm_fii_doc_inf_mensal"
-        local_folder.mkdir(parents=True, exist_ok=True)
-        local = local_folder / filename
-
-        logger.info("Download meta: %s", meta_url)
-        dl = stream_download(meta_url, local)
-
-        object_path = f"{cfg.bucket_prefix}/meta/{filename}"
-        # ATENÇÃO: Meta aqui é application/zip, não text/plain
-        storage.upload_file(object_path, str(dl.file_path), "application/zip", upsert=True)
-        public_url = storage.public_url(object_path)
-
         meta_obj = {
             "kind": "meta",
             "filename": filename,
-            "sha256": dl.sha256,
-            "size_bytes": dl.size_bytes,
-            "storage_path": object_path,
-            "public_url": public_url,
             "source_url": meta_url,
+            **profile_source_url(meta_url, filename=filename, logger=logger),
         }
 
     manifest = build_manifest(

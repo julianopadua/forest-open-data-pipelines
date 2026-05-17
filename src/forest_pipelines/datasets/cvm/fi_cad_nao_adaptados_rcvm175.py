@@ -9,8 +9,8 @@ import requests
 import yaml
 from bs4 import BeautifulSoup
 
-from forest_pipelines.http import stream_download
 from forest_pipelines.manifests.build_manifest import build_manifest
+from forest_pipelines.profiling import profiled_item, profile_source_url
 
 
 @dataclass(frozen=True)
@@ -94,43 +94,20 @@ def sync(
 
     items: list[dict[str, Any]] = []
 
-    local = settings.data_dir / "cvm_fi_cad_nao_adaptados_rcvm175" / data_filename
-    logger.info("Download: %s", data_url)
-    dl = stream_download(data_url, local)
-
-    object_path = f"{cfg.bucket_prefix}/data/atual/{data_filename}"
-    storage.upload_file(object_path, str(dl.file_path), "text/csv; charset=utf-8", upsert=True)
-    public_url = storage.public_url(object_path)
-
     items.append(
-        {
-            "kind": "data",
-            "period": "Atual",
-            "filename": data_filename,
-            "sha256": dl.sha256,
-            "size_bytes": dl.size_bytes,
-            "storage_path": object_path,
-            "public_url": public_url,
-            "source_url": data_url,
-        }
+        profiled_item(
+            source_url=data_url,
+            filename=data_filename,
+            period="Atual",
+            logger=logger,
+        )
     )
-
-    meta_local = settings.data_dir / "cvm_fi_cad_nao_adaptados_rcvm175" / meta_filename
-    logger.info("Download meta: %s", meta_url)
-    meta_dl = stream_download(meta_url, meta_local)
-
-    meta_path = f"{cfg.bucket_prefix}/meta/{meta_filename}"
-    storage.upload_file(meta_path, str(meta_dl.file_path), "text/plain; charset=utf-8", upsert=True)
-    meta_public_url = storage.public_url(meta_path)
 
     meta_obj = {
         "kind": "meta",
         "filename": meta_filename,
-        "sha256": meta_dl.sha256,
-        "size_bytes": meta_dl.size_bytes,
-        "storage_path": meta_path,
-        "public_url": meta_public_url,
         "source_url": meta_url,
+        **profile_source_url(meta_url, filename=meta_filename, logger=logger),
     }
 
     manifest = build_manifest(

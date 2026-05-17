@@ -13,6 +13,7 @@ import requests
 import yaml
 from bs4 import BeautifulSoup
 from forest_pipelines.manifests.build_manifest import build_manifest
+from forest_pipelines.profiling import profiled_item
 
 @dataclass(frozen=True)
 class DatasetCfg:
@@ -118,23 +119,16 @@ def sync(settings: Any, storage: Any, logger: Any, **kwargs) -> dict[str, Any]:
                 logger.warning(f"No XLS link for: {display_title}")
                 continue
 
-            # Metadata head request
-            size_bytes = 0
-            try:
-                h = safe_head(direct_url, logger)
-                size_bytes = int(h.headers.get("Content-Length", 0))
-            except Exception:
-                logger.warning(f"Size unknown for {direct_url}")
-
-            items.append({
-                "kind": "data",
-                "title": display_title,
-                "filename": direct_url.split("/")[-1],
-                "sha256": "external",
-                "size_bytes": size_bytes,
-                "public_url": direct_url,
-                "source_url": sub_page_url
-            })
+            items.append(
+                profiled_item(
+                    source_url=direct_url,
+                    filename=direct_url.split("/")[-1],
+                    period="current",
+                    title=display_title,
+                    logger=logger,
+                    extra={"source_page_url": sub_page_url},
+                )
+            )
         except Exception as e:
             logger.error(f"Dataset '{display_title}' failed: {e}")
             continue 

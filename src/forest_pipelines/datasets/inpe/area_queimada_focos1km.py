@@ -12,6 +12,7 @@ import requests
 import yaml
 from bs4 import BeautifulSoup
 from forest_pipelines.manifests.build_manifest import build_manifest
+from forest_pipelines.profiling import profiled_item
 
 # Regex para capturar ano e mês: focos1km_202401.tif
 RE_TIF_PERIOD = re.compile(r"focos1km_(\d{4})(\d{2})\.tif$", re.IGNORECASE)
@@ -87,30 +88,17 @@ def sync(
             period = f"{year}-{month}"
             full_url = urljoin(cfg.source_url, href)
             
-            # HEAD request para metadados reais
-            remote_meta = get_remote_metadata(full_url, logger)
-            
-            # Verificação de mudança
-            existing = existing_items.get(period)
-            if existing and existing.get("size_bytes") == remote_meta["size"]:
-                logger.info(f"[-] {period}: Sem alterações detectadas.")
-                items.append(existing)
-                continue
-
-            # Novo item ou item atualizado
             has_changes = True
             logger.info(f"[+] {period}: Novo link indexado ({filename}).")
-            
-            items.append({
-                "kind": "data",
-                "period": period,
-                "filename": filename,
-                "sha256": "external", 
-                "size_bytes": remote_meta["size"],
-                "public_url": full_url,
-                "source_url": full_url,
-                "updated_at": datetime.utcnow().isoformat()
-            })
+            items.append(
+                profiled_item(
+                    source_url=full_url,
+                    filename=filename,
+                    period=period,
+                    logger=logger,
+                    extra={"updated_at": datetime.utcnow().isoformat()},
+                )
+            )
 
     # 4. Finalização
     if not has_changes and current_manifest:

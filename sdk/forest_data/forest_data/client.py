@@ -96,6 +96,14 @@ class Client:
         body = self._get(f"/datasets/{id_or_slug}/items")
         return [OpenDataItem.from_dict(it) for it in body.get("items", [])]
 
+    def get_source_urls(self, id_or_slug: str) -> list[str]:
+        """Return official source URLs for every item in a dataset."""
+        return [item.source_url for item in self.get_dataset_items(id_or_slug)]
+
+    def iter_items(self, id_or_slug: str):
+        """Yield item records with source URLs and profile metadata."""
+        yield from self.get_dataset_items(id_or_slug)
+
     def download(
         self,
         id_or_slug: str,
@@ -104,7 +112,12 @@ class Client:
         verify_sha256: bool = True,
         chunk_size: int = 1024 * 1024,
     ) -> list[Path]:
-        """Download every file in a dataset to `path`. Returns the local file paths."""
+        """Download every item from its official `source_url`.
+
+        When `verify_sha256` is true, verification is applied only to items that
+        include a sha256 value in the manifest. Items without a checksum are
+        still downloaded, because official sources do not always publish one.
+        """
         manifest = self.get_dataset(id_or_slug)
         target = Path(path) / manifest.dataset_id
         target.mkdir(parents=True, exist_ok=True)
@@ -125,7 +138,7 @@ class Client:
         chunk_size: int,
     ) -> None:
         h = hashlib.sha256()
-        with self._client.stream("GET", item.public_url) as resp:
+        with self._client.stream("GET", item.source_url) as resp:
             if resp.status_code != 200:
                 raise UpstreamError(
                     f"download failed for {item.filename}: HTTP {resp.status_code}"
@@ -133,9 +146,9 @@ class Client:
             with local.open("wb") as fh:
                 for chunk in resp.iter_bytes(chunk_size):
                     fh.write(chunk)
-                    if verify_sha256:
+                    if verify_sha256 and item.sha256:
                         h.update(chunk)
-        if verify_sha256 and h.hexdigest() != item.sha256:
+        if verify_sha256 and item.sha256 and h.hexdigest() != item.sha256:
             local.unlink(missing_ok=True)
             raise ForestDataError(
                 f"sha256 mismatch for {item.filename}: "

@@ -11,8 +11,8 @@ import requests
 import yaml
 from bs4 import BeautifulSoup
 
-from forest_pipelines.http import stream_download
 from forest_pipelines.manifests.build_manifest import build_manifest
+from forest_pipelines.profiling import profiled_item
 
 # Regex para capturar o ano: focos_br_ref_2024.zip
 RE_ZIP_YEAR = re.compile(r"focos_br_ref_(\d{4})\.zip$", re.IGNORECASE)
@@ -75,25 +75,14 @@ def sync(
     # 3. Processamento de Downloads e Uploads
     for year, url in selected_resources:
         filename = url.split("/")[-1]
-        local_path = settings.data_dir / "inpe_bdqueimadas" / filename
-        
-        logger.info(f"Baixando Focos Ano {year}: {filename}")
-        dl = stream_download(url, local_path)
-        
-        # Path no bucket: inpe/bdqueimadas/focos_br_ref/data/2024/focos_br_ref_2024.zip
-        object_path = f"{cfg.bucket_prefix}/data/{year}/{filename}"
-        
-        storage.upload_file(object_path, str(dl.file_path), "application/zip", upsert=True)
-        
-        items.append({
-            "kind": "data",
-            "period": year,
-            "filename": filename,
-            "sha256": dl.sha256,
-            "size_bytes": dl.size_bytes,
-            "public_url": storage.public_url(object_path),
-            "source_url": url
-        })
+        items.append(
+            profiled_item(
+                source_url=url,
+                filename=filename,
+                period=year,
+                logger=logger,
+            )
+        )
 
     # 4. Manifesto de Saída (para o portal web ler automaticamente)
     return build_manifest(

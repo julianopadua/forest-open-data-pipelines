@@ -12,8 +12,8 @@ import requests
 import yaml
 from bs4 import BeautifulSoup
 
-from forest_pipelines.http import stream_download
 from forest_pipelines.manifests.build_manifest import build_manifest
+from forest_pipelines.profiling import profiled_item
 
 @dataclass(frozen=True)
 class DatasetCfg:
@@ -110,22 +110,15 @@ def sync(settings: Any, storage: Any, logger: Any, **kwargs) -> dict[str, Any]:
                 continue
                 
             download_url = urljoin(combo["url"], xls_link["href"])
-            local_path = settings.data_dir / "eia_heating_oil" / combo["filename"]
-            dl = stream_download(download_url, local_path)
-            
-            # Caminho: eia/heating_oil_propane/data/YYYY-MM-DD/serie_periodo.xls
-            object_path = f"{cfg.bucket_prefix}/data/{meta_dates['release_date']}/{combo['filename']}"
-            storage.upload_file(object_path, str(dl.file_path), "application/vnd.ms-excel", upsert=True)
-            
-            items.append({
-                "kind": "data",
-                "title": combo["display_name"],
-                "filename": combo["filename"],
-                "sha256": dl.sha256,
-                "size_bytes": dl.size_bytes,
-                "public_url": storage.public_url(object_path),
-                "source_url": download_url
-            })
+            items.append(
+                profiled_item(
+                    source_url=download_url,
+                    filename=combo["filename"],
+                    period=meta_dates["release_date"] or "current",
+                    title=combo["display_name"],
+                    logger=logger,
+                )
+            )
         except Exception as e:
             logger.error("Falha em %s: %s", combo["display_name"], str(e))
 

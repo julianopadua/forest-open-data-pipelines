@@ -11,6 +11,7 @@ import requests
 import yaml
 
 from forest_pipelines.manifests.build_manifest import build_manifest
+from forest_pipelines.profiling import profiled_item, profile_source_url
 
 CKAN_SHOW_TMPL = "https://dados.mma.gov.br/api/3/action/package_show?id={package_id}"
 ALLOWED_NETLOC = "dados.mma.gov.br"
@@ -105,6 +106,7 @@ def build_manifest_items(
     resources: list[dict[str, Any]],
     *,
     skip_urls: set[str],
+    logger: Any,
 ) -> list[dict[str, Any]]:
     items: list[dict[str, Any]] = []
     for res in resources:
@@ -116,16 +118,13 @@ def build_manifest_items(
         filename = Path(unquote(urlparse(url).path)).name or "download"
         title = str(res.get("name") or filename).strip() or filename
         items.append(
-            {
-                "kind": "data",
-                "period": period_from_resource(res),
-                "filename": filename,
-                "title": title,
-                "sha256": "external",
-                "size_bytes": int(res.get("size") or 0),
-                "public_url": url,
-                "source_url": url,
-            }
+            profiled_item(
+                source_url=url,
+                filename=filename,
+                period=period_from_resource(res),
+                title=title,
+                logger=logger,
+            )
         )
     #mais recente primeiro (portal ordena por periodo; iso ajuda)
     items.sort(key=lambda it: it["period"], reverse=True)
@@ -169,11 +168,11 @@ def sync(
         skip_urls.add(durl)
         metadata_file = {
             "filename": dname,
-            "public_url": durl,
             "source_url": durl,
+            **profile_source_url(durl, filename=dname, logger=logger),
         }
 
-    items = build_manifest_items(allowed, skip_urls=skip_urls)
+    items = build_manifest_items(allowed, skip_urls=skip_urls, logger=logger)
 
     if not items and not metadata_file:
         raise RuntimeError("Nenhum recurso publico dados.mma.gov.br encontrado no pacote CKAN.")

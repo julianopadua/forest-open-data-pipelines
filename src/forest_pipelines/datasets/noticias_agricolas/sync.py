@@ -20,6 +20,7 @@ from forest_pipelines.datasets.noticias_agricolas.merge import merge_listings_by
 from forest_pipelines.datasets.noticias_agricolas.models import CategoryConfig, MergedListing
 from forest_pipelines.datasets.noticias_agricolas.text_cleanup import first_useful_paragraph
 from forest_pipelines.datasets.noticias_agricolas.validation import validate_feed_for_stable_publish
+from forest_pipelines.manifests.build_manifest import build_manifest
 
 
 @dataclass(frozen=True)
@@ -95,7 +96,12 @@ def _build_item_dict(
     scraped_at: str,
 ) -> dict[str, Any]:
     aid = extract_source_article_id(merged.url)
+    period = published_at[:10] if published_at else scraped_at[:10]
     return {
+        "kind": "data",
+        "period": period,
+        "filename": f"{aid or normalize_url_key(merged.url).split('/')[-1] or 'article'}.html",
+        "source_url": merged.url,
         "source": cfg.source_key,
         "source_name": cfg.source_display_name,
         "source_article_id": aid or "",
@@ -107,11 +113,18 @@ def _build_item_dict(
         "published_at": published_at,
         "lead": lead or "",
         "excerpt": excerpt,
-        "content_text": content_text,
         "image_url": image_url,
         "tags": tags,
         "scraped_at": scraped_at,
         "rank_within_category": merged.rank_within_category,
+        "profiled_at": scraped_at,
+        "profile_status": "skipped",
+        "profile_warnings": [
+            {
+                "code": "unsupported_format",
+                "message": "News articles are indexed as source URLs, not profiled as tabular data.",
+            }
+        ],
     }
 
 
@@ -222,17 +235,13 @@ def sync(
         logger.error("Validação falhou; manifest estável não será atualizado: %s", msg)
         raise RuntimeError(f"Validação do feed: {msg}")
 
-    manifest_body: dict[str, Any] = {
-        "schema_version": "1.0",
-        "dataset_id": cfg.id,
-        "title": cfg.title,
-        "source_dataset_url": cfg.source_dataset_url,
-        "bucket_prefix": cfg.bucket_prefix,
-        "generated_at": generated_at,
-        "generation_status": "success",
-        "warnings": [],
-        "items": items,
-        "meta": {
+    manifest_body = build_manifest(
+        dataset_id=cfg.id,
+        title=cfg.title,
+        source_dataset_url=cfg.source_dataset_url,
+        bucket_prefix=cfg.bucket_prefix,
+        items=items,
+        meta={
             "source_agency": cfg.source_display_name,
             "custom_tags": {
                 "source_key": cfg.source_key,
@@ -242,7 +251,7 @@ def sync(
                 ],
             },
         },
-    }
+    )
 
     raw_bytes = json.dumps(manifest_body, ensure_ascii=False, indent=2).encode("utf-8")
     try:

@@ -12,6 +12,7 @@ import yaml
 from bs4 import BeautifulSoup
 
 from forest_pipelines.manifests.build_manifest import build_manifest
+from forest_pipelines.profiling import profiled_item
 
 RE_YEAR_DIR = re.compile(r"^(19|20)\d{2}$")
 RE_BOLETIM_PDF = re.compile(r"(?P<month>0[1-9]|1[0-2])_(?P<year>(19|20)\d{2})\.pdf$", re.IGNORECASE)
@@ -136,16 +137,13 @@ def sync(
         logger.info("Indexando URL do boletim integrado %s: %s", resource.period, resource.url)
 
         items.append(
-            {
-                "kind": "data",
-                "period": resource.period,
-                "filename": resource.filename,
-                "title": f"Boletim integrado {resource.month}/{resource.year}",
-                "sha256": "external",
-                "size_bytes": 0,
-                "public_url": resource.url,
-                "source_url": resource.url,
-            }
+            profiled_item(
+                source_url=resource.url,
+                filename=resource.filename,
+                period=resource.period,
+                title=f"Boletim integrado {resource.month}/{resource.year}",
+                logger=logger,
+            )
         )
 
     return build_manifest(

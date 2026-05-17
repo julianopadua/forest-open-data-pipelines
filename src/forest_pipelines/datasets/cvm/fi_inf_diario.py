@@ -10,8 +10,8 @@ import requests
 import yaml
 from bs4 import BeautifulSoup
 
-from forest_pipelines.http import stream_download
 from forest_pipelines.manifests.build_manifest import build_manifest
+from forest_pipelines.profiling import profiled_item, profile_source_url
 
 RE_ZIP = re.compile(r"inf_diario_fi_(\d{6})\.zip$", re.IGNORECASE)
 
@@ -134,48 +134,23 @@ def sync(
 
     for period, url in zip_urls:
         filename = url.split("/")[-1]
-        local = settings.data_dir / "cvm_fi_inf_diario" / filename
-
-        logger.info("Download: %s", url)
-        dl = stream_download(url, local)
-
-        object_path = f"{cfg.bucket_prefix}/data/{period}/{filename}"
-        storage.upload_file(object_path, str(dl.file_path), "application/zip", upsert=True)
-        public_url = storage.public_url(object_path)
-
         items.append(
-            {
-                "kind": "data",
-                "period": period,
-                "filename": filename,
-                "sha256": dl.sha256,
-                "size_bytes": dl.size_bytes,
-                "storage_path": object_path,
-                "public_url": public_url,
-                "source_url": url,
-            }
+            profiled_item(
+                source_url=url,
+                filename=filename,
+                period=period,
+                logger=logger,
+            )
         )
 
     meta_obj: dict[str, Any] | None = None
     if meta_url:
         filename = meta_url.split("/")[-1]
-        local = settings.data_dir / "cvm_fi_inf_diario" / filename
-
-        logger.info("Download meta: %s", meta_url)
-        dl = stream_download(meta_url, local)
-
-        object_path = f"{cfg.bucket_prefix}/meta/{filename}"
-        storage.upload_file(object_path, str(dl.file_path), "text/plain; charset=utf-8", upsert=True)
-        public_url = storage.public_url(object_path)
-
         meta_obj = {
             "kind": "meta",
             "filename": filename,
-            "sha256": dl.sha256,
-            "size_bytes": dl.size_bytes,
-            "storage_path": object_path,
-            "public_url": public_url,
             "source_url": meta_url,
+            **profile_source_url(meta_url, filename=filename, logger=logger),
         }
 
     manifest = build_manifest(

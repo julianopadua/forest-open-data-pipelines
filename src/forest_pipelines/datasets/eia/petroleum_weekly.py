@@ -13,8 +13,8 @@ import requests
 import yaml
 from bs4 import BeautifulSoup
 
-from forest_pipelines.http import stream_download
 from forest_pipelines.manifests.build_manifest import build_manifest
+from forest_pipelines.profiling import profiled_item
 
 @dataclass(frozen=True)
 class DatasetCfg:
@@ -119,32 +119,17 @@ def sync(settings: Any, storage: Any, logger: Any, **kwargs) -> dict[str, Any]:
 
     items = []
     for f in scraped["files"]:
-        # Download
-        local_path = settings.data_dir / "eia" / f["fixed_name"]
-        dl = stream_download(f["url"], local_path)
+        items.append(
+            profiled_item(
+                source_url=f["url"],
+                filename=f["fixed_name"],
+                period=release_date or "current",
+                title=f["display_title"],
+                release_time=f["release_time"],
+                logger=logger,
+            )
+        )
 
-        # Storage Path: eia/petroleum_weekly/data/2025-12-31/10-30/us_petroleum_balance_sheet.csv
-        time_folder = f["release_time"].replace(":", "-")
-        object_path = f"{cfg.bucket_prefix}/data/{release_date}/{time_folder}/{f['fixed_name']}"
-        
-        # Determinar Content-Type
-        ctype = "application/pdf" if f["fixed_name"].endswith(".pdf") else "application/octet-stream"
-        if f["fixed_name"].endswith(".csv"): ctype = "text/csv"
-        
-        storage.upload_file(object_path, str(dl.file_path), ctype, upsert=True)
-        
-        items.append({
-            "kind": "data",
-            "title": f["display_title"],
-            "filename": f["fixed_name"],
-            "release_time": f["release_time"],
-            "sha256": dl.sha256,
-            "size_bytes": dl.size_bytes,
-            "public_url": storage.public_url(object_path),
-            "source_url": f["url"]
-        })
-
-    # Manifesto Final (Aparece no Front automaticamente)
     return build_manifest(
         dataset_id=cfg.id,
         title=cfg.title,

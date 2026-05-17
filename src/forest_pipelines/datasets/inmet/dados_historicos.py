@@ -12,6 +12,7 @@ import requests
 import yaml
 from bs4 import BeautifulSoup
 from forest_pipelines.manifests.build_manifest import build_manifest
+from forest_pipelines.profiling import profiled_item
 
 RE_ZIP_YEAR = re.compile(r"(\d{4})\.zip$", re.IGNORECASE)
 
@@ -67,19 +68,15 @@ def sync(
             year = match.group(1)
             full_url = urljoin(cfg.source_url, href)
             
-            logger.info(f"Obtendo metadados do arquivo de {year}...")
-            # Pega o tamanho real via HEAD request
-            size_bytes = get_remote_file_size(full_url, logger)
-            
-            items.append({
-                "kind": "data",
-                "period": year,
-                "filename": filename,
-                "sha256": "external", 
-                "size_bytes": size_bytes, # Agora com o valor real!
-                "public_url": full_url,
-                "source_url": full_url
-            })
+            logger.info(f"Profiling arquivo de {year}...")
+            items.append(
+                profiled_item(
+                    source_url=full_url,
+                    filename=filename,
+                    period=year,
+                    logger=logger,
+                )
+            )
 
     # Ordena para o mais recente ficar no topo
     items.sort(key=lambda x: x["period"], reverse=True)

@@ -10,8 +10,8 @@ import requests
 import yaml
 from bs4 import BeautifulSoup
 
-from forest_pipelines.http import stream_download
 from forest_pipelines.manifests.build_manifest import build_manifest
+from forest_pipelines.profiling import profiled_item, profile_source_url
 
 RE_YEAR_CSV = re.compile(r"extrato_fi_(\d{4})\.csv$", re.IGNORECASE)
 
@@ -137,55 +137,23 @@ def sync(
 
     for period, url in items_urls:
         filename = url.split("/")[-1].split("?")[0]
-        local = settings.data_dir / "cvm_fi_doc_extrato" / filename
-
-        logger.info("Download: %s", url)
-        dl = stream_download(url, local)
-
-        folder = "atual" if period == "Atual" else period
-        object_path = f"{cfg.bucket_prefix}/data/{folder}/{filename}"
-
-        storage.upload_file(
-            object_path,
-            str(dl.file_path),
-            "text/csv; charset=utf-8",
-            upsert=True,
-        )
-        public_url = storage.public_url(object_path)
-
         items.append(
-            {
-                "kind": "data",
-                "period": period,
-                "filename": filename,
-                "sha256": dl.sha256,
-                "size_bytes": dl.size_bytes,
-                "storage_path": object_path,
-                "public_url": public_url,
-                "source_url": url,
-            }
+            profiled_item(
+                source_url=url,
+                filename=filename,
+                period=period,
+                logger=logger,
+            )
         )
 
     meta_obj: dict[str, Any] | None = None
     if meta_url:
         filename = meta_url.split("/")[-1].split("?")[0]
-        local = settings.data_dir / "cvm_fi_doc_extrato" / filename
-
-        logger.info("Download meta: %s", meta_url)
-        dl = stream_download(meta_url, local)
-
-        object_path = f"{cfg.bucket_prefix}/meta/{filename}"
-        storage.upload_file(object_path, str(dl.file_path), "text/plain; charset=utf-8", upsert=True)
-        public_url = storage.public_url(object_path)
-
         meta_obj = {
             "kind": "meta",
             "filename": filename,
-            "sha256": dl.sha256,
-            "size_bytes": dl.size_bytes,
-            "storage_path": object_path,
-            "public_url": public_url,
             "source_url": meta_url,
+            **profile_source_url(meta_url, filename=filename, logger=logger),
         }
 
     manifest = build_manifest(

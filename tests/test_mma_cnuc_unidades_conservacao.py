@@ -36,10 +36,11 @@ def test_build_manifest_items_skips_urls_in_skip_set() -> None:
             "size": 0,
         },
     ]
-    items = module.build_manifest_items(res, skip_urls={res[1]["url"]})
+    logger = SimpleNamespace(info=lambda *a, **k: None, warning=lambda *a, **k: None)
+    items = module.build_manifest_items(res, skip_urls={res[1]["url"]}, logger=logger)
     assert len(items) == 1
     assert items[0]["filename"] == "a.csv"
-    assert items[0]["public_url"] == res[0]["url"]
+    assert items[0]["source_url"] == res[0]["url"]
 
 
 def test_sync_indexes_external_urls_without_upload(monkeypatch, tmp_path) -> None:
@@ -86,6 +87,30 @@ def test_sync_indexes_external_urls_without_upload(monkeypatch, tmp_path) -> Non
     }
 
     monkeypatch.setattr(module, "fetch_ckan_package", lambda package_id: package)
+    monkeypatch.setattr(
+        module,
+        "profiled_item",
+        lambda **kw: {
+            "kind": "data",
+            "period": kw["period"],
+            "filename": kw["filename"],
+            "source_url": kw["source_url"],
+            "sha256": "abc",
+            "size_bytes": 10,
+            "profile_status": "ok",
+            "profile_warnings": [],
+        },
+    )
+    monkeypatch.setattr(
+        module,
+        "profile_source_url",
+        lambda *a, **k: {
+            "sha256": "abc",
+            "size_bytes": 10,
+            "profile_status": "ok",
+            "profile_warnings": [],
+        },
+    )
 
     class FakeStorage:
         def __init__(self) -> None:
@@ -104,7 +129,7 @@ def test_sync_indexes_external_urls_without_upload(monkeypatch, tmp_path) -> Non
     assert manifest["generation_status"] == "success_partial_fallback"
     assert any("omitido" in w for w in manifest["warnings"])
     assert len(manifest["items"]) == 1
-    assert manifest["items"][0]["sha256"] == "external"
+    assert manifest["items"][0]["sha256"] == "abc"
     assert manifest["items"][0]["filename"] == "cnuc.csv"
     assert manifest["meta"]["metadata_file"]["filename"] == "dicionario.pdf"
     assert storage.uploads == []

@@ -83,6 +83,21 @@ def test_sync_indexes_source_urls_without_uploading_pdfs(monkeypatch, tmp_path) 
         )
     ]
     monkeypatch.setattr(module, "extract_pdf_urls", lambda source_url: resources)
+    monkeypatch.setattr(
+        module,
+        "profiled_item",
+        lambda **kw: {
+            "kind": "data",
+            "period": kw["period"],
+            "filename": kw["filename"],
+            "title": kw["title"],
+            "source_url": kw["source_url"],
+            "sha256": "abc",
+            "size_bytes": 10,
+            "profile_status": "ok",
+            "profile_warnings": [],
+        },
+    )
 
     class FakeStorage:
         def __init__(self) -> None:
@@ -108,9 +123,8 @@ def test_sync_indexes_source_urls_without_uploading_pdfs(monkeypatch, tmp_path) 
     assert manifest["items"][0]["period"] == "2025-02"
     assert manifest["items"][0]["kind"] == "data"
     assert manifest["items"][0]["title"] == "Boletim integrado 02/2025"
-    assert manifest["items"][0]["sha256"] == "external"
-    assert manifest["items"][0]["size_bytes"] == 0
-    assert manifest["items"][0]["public_url"] == "https://example.test/boletins/2025/02_2025.pdf"
+    assert manifest["items"][0]["sha256"] == "abc"
+    assert manifest["items"][0]["size_bytes"] == 10
     assert manifest["items"][0]["source_url"] == "https://example.test/boletins/2025/02_2025.pdf"
     assert storage.uploads == []
 
