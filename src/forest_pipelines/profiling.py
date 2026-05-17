@@ -5,10 +5,12 @@ import hashlib
 import json
 import tempfile
 import zipfile
+from contextlib import contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Iterator, Literal
 from urllib.parse import unquote, urlparse
 
 import pandas as pd
@@ -23,6 +25,26 @@ JSON_SUFFIXES = {".json", ".geojson"}
 XML_SUFFIXES = {".xml"}
 PDF_SUFFIXES = {".pdf"}
 GEOSPATIAL_SUFFIXES = {".tif", ".tiff", ".shp", ".gpkg", ".kml"}
+
+PROFILE_CACHE_FIELDS = {
+    "size_bytes",
+    "sha256",
+    "row_count",
+    "column_count",
+    "columns",
+    "content_type",
+    "format",
+    "last_modified",
+    "profiled_at",
+    "profile_status",
+    "profile_warnings",
+    "archive_profile",
+}
+
+_PROFILE_CACHE: ContextVar[dict[str, dict[str, Any]] | None] = ContextVar(
+    "forest_profile_cache",
+    default=None,
+)
 
 
 @dataclass(frozen=True)
@@ -47,6 +69,51 @@ def filename_from_url(url: str, fallback: str = "download") -> str:
 
 def warning(code: str, message: str) -> dict[str, str]:
     return {"code": code, "message": message}
+
+
+def profile_cache_from_manifest(manifest: dict[str, Any] | None) -> dict[str, dict[str, Any]]:
+    if not isinstance(manifest, dict):
+        return {}
+
+    candidates: list[dict[str, Any]] = []
+    items = manifest.get("items")
+    if isinstance(items, list):
+        candidates.extend(item for item in items if isinstance(item, dict))
+
+    meta = manifest.get("meta")
+    if isinstance(meta, dict) and isinstance(meta.get("metadata_file"), dict):
+        candidates.append(meta["metadata_file"])
+
+    cache: dict[str, dict[str, Any]] = {}
+    for raw in candidates:
+        source_url = raw.get("source_url")
+        if not isinstance(source_url, str) or not source_url.strip():
+            continue
+        profile = {
+            key: value
+            for key, value in raw.items()
+            if key in PROFILE_CACHE_FIELDS and value is not None
+        }
+        if profile:
+            cache[source_url] = profile
+    return cache
+
+
+@contextmanager
+def use_profile_cache(cache: dict[str, dict[str, Any]] | None) -> Iterator[None]:
+    token = _PROFILE_CACHE.set(dict(cache) if cache else None)
+    try:
+        yield
+    finally:
+        _PROFILE_CACHE.reset(token)
+
+
+def _profile_cache_hit(source_url: str) -> dict[str, Any] | None:
+    cache = _PROFILE_CACHE.get()
+    if not cache:
+        return None
+    profile = cache.get(source_url)
+    return dict(profile) if isinstance(profile, dict) else None
 
 
 def _format_from_filename(filename: str) -> str:
@@ -307,6 +374,12 @@ def profile_source_url(
     logger: Any = None,
     options: ProfileOptions | None = None,
 ) -> dict[str, Any]:
+    cached = _profile_cache_hit(source_url)
+    if cached is not None:
+        if logger:
+            logger.info("Profile cache hit: %s", source_url)
+        return cached
+
     opts = options or ProfileOptions()
     name = filename or filename_from_url(source_url)
     tmp_path: Path | None = None

@@ -29,7 +29,7 @@ endif
 
 .PHONY: help
 .PHONY: venv install dev check-env
-.PHONY: sync-cvm sync-inpe sync-inpe-boletins sync-eia sync-inmet sync-news sync-all
+.PHONY: sync sync-force sync-cvm sync-inpe sync-inpe-boletins sync-eia sync-inmet sync-news sync-all
 .PHONY: build-report-bdqueimadas build-report-bdqueimadas-force
 .PHONY: build-report-bdqueimadas-no-llm build-report-bdqueimadas-force-no-llm
 .PHONY: audit-bdqueimadas
@@ -81,6 +81,12 @@ check-env: ## Verify all required environment variables are set
 
 # ── Dataset Sync ──────────────────────────────────────────────────────────────
 ## Dataset Sync
+sync: check-env ## Sync all public API datasets incrementally
+	$(FPIPE) sync-all
+
+sync-force: check-env ## Sync all public API datasets and reprofile every source URL
+	$(FPIPE) sync-all --force
+
 sync-cvm: ## Sync CVM daily fund information (last 12 months)
 	$(FPIPE) sync cvm_fi_inf_diario --latest-months 12
 
@@ -102,7 +108,7 @@ sync-mma-cnuc: ## Sync MMA CNUC Unidades de Conservacao (CKAN URL catalog)
 sync-news: ## Sync Noticias Agricolas news feed
 	$(FPIPE) sync noticias_agricolas_news
 
-sync-all: sync-cvm sync-inpe sync-eia sync-news ## Sync all primary datasets sequentially
+sync-all: sync ## Alias for make sync
 
 # ── Reports ───────────────────────────────────────────────────────────────────
 ## Reports

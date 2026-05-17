@@ -88,16 +88,18 @@ Exemplos:
 
 
 SYNC_DOC = """\
-Executa o pipeline registrado para o dataset_id: download/transformação conforme a fonte (EIA, INPE, CVM, INMET, feeds),
-upload dos artefatos para o bucket Supabase configurado e publicação de manifest.json no prefixo do dataset.
+Executa o pipeline registrado para o dataset_id: descobre URLs oficiais, perfila recursos localmente quando necessário
+e publica manifest.json no prefixo do dataset.
 
-Tipos de arquivo variam por fonte: comuns são CSV, ZIP e XLS no storage; feeds podem publicar JSON.
-O manifest.json descreve o pacote publicado no prefixo do bucket.
+O contrato de datasets e URL-only. Arquivos brutos de datasets nao sao enviados ao Supabase.
+Quando um item source_url ja existe no manifest publicado, o sync reutiliza os metadados de perfil existentes.
+Use --force para baixar e perfilar todos os source_url novamente.
 
-Opção --latest-months: repassada ao runner quando suportada (janela temporal); ignorada se o dataset não usar.
+Opção --latest-months: repassada ao runner quando suportada. Ignorada se o dataset não usar.
 
 Exemplos:
   forest-pipelines sync eia_petroleum_weekly
+  forest-pipelines sync eia_petroleum_weekly --force
   forest-pipelines sync inpe_bdqueimadas_focos --config-path configs/app.yml
   forest-pipelines sync noticias_agricolas_news --latest-months 3
 """

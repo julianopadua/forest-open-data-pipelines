@@ -2,9 +2,12 @@
 from __future__ import annotations
 
 import json
+from contextlib import nullcontext
 from datetime import date
+from typing import Any
 
 import typer
+import yaml
 
 from forest_pipelines.audits.registry import get_audit_runner
 from forest_pipelines.cli_help import (
@@ -19,6 +22,7 @@ from forest_pipelines.cli_help import (
     short_command_summary,
 )
 from forest_pipelines.logging_ import get_logger
+from forest_pipelines.profiling import profile_cache_from_manifest, use_profile_cache
 from forest_pipelines.registry.datasets import get_dataset_runner
 from forest_pipelines.reports.publish.supabase import publish_report_package
 from forest_pipelines.reports.registry.reports import get_report_runner
@@ -262,6 +266,11 @@ def sync(
         "--latest-months",
         help="Recorte temporal em meses quando o runner do dataset suporta; caso contrário é ignorado.",
     ),
+    force: bool = typer.Option(
+        False,
+        "--force",
+        help="Reprocessa todos os source_url encontrados, ignorando metadados de perfil já publicados.",
+    ),
 ) -> None:
     settings = load_settings(config_path)
     logger = get_logger(settings.logs_dir, dataset_id)
@@ -271,14 +280,132 @@ def sync(
         bucket_open_data=settings.supabase_bucket_open_data,
     )
 
-    runner = get_dataset_runner(dataset_id)
-
-    manifest = runner(
+    manifest_path = _catalog_manifest_path_for_dataset(settings, dataset_id)
+    _run_dataset_sync(
+        dataset_id=dataset_id,
         settings=settings,
         storage=storage,
         logger=logger,
         latest_months=latest_months,
+        force_profile=force,
+        existing_manifest_path=manifest_path,
     )
+
+
+@app.command(
+    "sync-all",
+    rich_help_panel="Pipelines e storage",
+    help="Sincroniza todos os datasets registrados no catálogo público de open data.",
+    short_help="Sincroniza todos os datasets públicos.",
+)
+def sync_all(
+    config_path: str = typer.Option(
+        "configs/app.yml",
+        "--config-path",
+        help="YAML principal: diretórios de dados, logs, datasets_dir, bucket Supabase.",
+    ),
+    force: bool = typer.Option(
+        False,
+        "--force",
+        help="Reprocessa todos os source_url encontrados, ignorando metadados de perfil já publicados.",
+    ),
+    publish_catalog: bool = typer.Option(
+        True,
+        "--publish-catalog/--no-publish-catalog",
+        help="Publica catalog/open_data_catalog.json e catalog/reports_catalog.json ao final.",
+    ),
+) -> None:
+    settings = load_settings(config_path)
+    logger = get_logger(settings.logs_dir, "sync/all")
+
+    storage = SupabaseStorage.from_env(
+        logger=logger,
+        bucket_open_data=settings.supabase_bucket_open_data,
+    )
+
+    entries = _catalog_dataset_entries(settings)
+    if not entries:
+        raise typer.BadParameter("Nenhum dataset encontrado em configs/catalog/open_data.yml")
+
+    failures: list[tuple[str, str]] = []
+    completed = 0
+    for entry in entries:
+        dataset_id = str(entry.get("id") or "").strip()
+        if not dataset_id:
+            continue
+        try:
+            logger.info("Sync dataset: %s", dataset_id)
+            _run_dataset_sync(
+                dataset_id=dataset_id,
+                settings=settings,
+                storage=storage,
+                logger=get_logger(settings.logs_dir, dataset_id),
+                latest_months=None,
+                force_profile=force,
+                existing_manifest_path=str(entry.get("manifest_path") or "").strip() or None,
+            )
+            completed += 1
+        except Exception as exc:
+            failures.append((dataset_id, f"{type(exc).__name__}: {exc}"))
+            logger.exception("Sync failed for %s", dataset_id)
+
+    if publish_catalog:
+        from forest_pipelines.catalog.build import (
+            build_catalogs_from_defaults,
+            make_storage_manifest_loader,
+            publish_catalogs,
+        )
+
+        open_envelope, reports_envelope = build_catalogs_from_defaults(
+            settings.root,
+            manifest_loader=make_storage_manifest_loader(storage, logger),
+        )
+        publish_catalogs(
+            storage=storage,
+            open_data_envelope=open_envelope,
+            reports_envelope=reports_envelope,
+            bucket_prefix="catalog",
+            logger=logger,
+        )
+
+    logger.info("Sync all finished: completed=%d failed=%d", completed, len(failures))
+    if failures:
+        for dataset_id, error in failures:
+            logger.error("Dataset failed: %s error=%s", dataset_id, error)
+        raise typer.Exit(code=1)
+
+
+def _run_dataset_sync(
+    *,
+    dataset_id: str,
+    settings: Any,
+    storage: Any,
+    logger: Any,
+    latest_months: int | None,
+    force_profile: bool,
+    existing_manifest_path: str | None,
+) -> dict[str, Any]:
+    runner = get_dataset_runner(dataset_id)
+    profile_cache = _profile_cache_for_manifest(
+        storage=storage,
+        manifest_path=existing_manifest_path,
+        logger=logger,
+    ) if not force_profile else {}
+
+    profile_context: Any
+    if profile_cache:
+        logger.info("Profile cache loaded: %d source URLs", len(profile_cache))
+        profile_context = use_profile_cache(profile_cache)
+    else:
+        profile_context = nullcontext()
+
+    with profile_context:
+        manifest = runner(
+            settings=settings,
+            storage=storage,
+            logger=logger,
+            latest_months=latest_months,
+        )
 
     skip_cli_manifest = bool(manifest.pop("_cli_skip_manifest_upload", False))
 
@@ -295,6 +422,52 @@ def sync(
 
     logger.info("Manifest publicado: %s", storage.public_url(manifest_path))
     logger.info("Sincronização concluída com sucesso!")
+    return manifest
+
+
+def _catalog_dataset_entries(settings: Any) -> list[dict[str, Any]]:
+    path = settings.root / "configs" / "catalog" / "open_data.yml"
+    raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    datasets = raw.get("datasets")
+    if not isinstance(datasets, list):
+        return []
+    return [entry for entry in datasets if isinstance(entry, dict)]
+
+
+def _catalog_manifest_path_for_dataset(settings: Any, dataset_id: str) -> str | None:
+    for entry in _catalog_dataset_entries(settings):
+        if entry.get("id") == dataset_id:
+            path = str(entry.get("manifest_path") or "").strip()
+            return path or None
+    return None
+
+
+def _profile_cache_for_manifest(
+    *,
+    storage: Any,
+    manifest_path: str | None,
+    logger: Any,
+) -> dict[str, dict[str, Any]]:
+    if not manifest_path:
+        return {}
+    existing = _fetch_existing_dataset_manifest(storage, manifest_path, logger)
+    return profile_cache_from_manifest(existing)
+
+
+def _fetch_existing_dataset_manifest(
+    storage: Any,
+    manifest_path: str,
+    logger: Any,
+) -> dict[str, Any] | None:
+    try:
+        raw = storage.download_bytes(manifest_path)
+        if raw is None:
+            return None
+        manifest = json.loads(raw)
+        return manifest if isinstance(manifest, dict) else None
+    except Exception as exc:
+        logger.info("Existing manifest unavailable: %s error=%s", manifest_path, exc)
+        return None
 
 
 @app.command(

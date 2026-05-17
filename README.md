@@ -28,7 +28,7 @@ python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\Act
 make dev
 cp .env.example .env   # then fill in credentials
 make check-env
-make sync-inpe
+make sync
 ```
 
 `make dev` installs the package and dev dependencies in editable mode. `make check-env` confirms all required environment variables are present before you run anything.
@@ -126,12 +126,14 @@ Run `make` or `make help` to see this list in your terminal.
 
 | Target | Description |
 | --- | --- |
+| `make sync` | Sync every public API dataset incrementally, then publish the catalog |
+| `make sync-force` | Sync every public API dataset and reprofile every source URL |
 | `make sync-cvm` | Sync CVM daily fund information (last 12 months) |
 | `make sync-inpe` | Sync INPE BDQueimadas fire focus data |
 | `make sync-eia` | Sync EIA weekly petroleum data |
 | `make sync-inmet` | Sync INMET historical weather data |
 | `make sync-news` | Sync Noticias Agricolas news feed |
-| `make sync-all` | Run all primary syncs sequentially |
+| `make sync-all` | Alias for `make sync` |
 
 ### Reports
 
@@ -254,8 +256,11 @@ Default prefix: `anp/catalog`. Validates the envelope against JSON Schema v1 bef
 | `eia_heating_oil_propane` | EIA |
 | `eia_petroleum_monthly` | EIA |
 | `inpe_bdqueimadas_focos` | INPE |
+| `inpe_bdqueimadas_boletins_integrados` | INPE |
+| `inpe_bdqueimadas_painel_fogo` | INPE |
 | `inpe_area_queimada_focos1km` | INPE |
 | `inmet_dados_historicos` | INMET |
+| `mma_cnuc_unidades_conservacao` | MMA |
 | `noticias_agricolas_news` | Noticias Agricolas |
 
 `noticias_agricolas_news` publishes a JSON news feed (not file downloads) under `news/noticias-agricolas/` and does not use `--latest-months`. See [docs/datasets/noticias_agricolas_news.md](docs/datasets/noticias_agricolas_news.md) for contract details.
@@ -276,7 +281,7 @@ Default prefix: `anp/catalog`. Validates the envelope against JSON Schema v1 bef
 
 ## Module documentation
 
-Per-module notes live under `docs/src/`, mirroring the `src/forest_pipelines/` tree. See [docs/INDEX.md](docs/INDEX.md) for the full index.
+The `docs/` directory contains active operational notes for datasets, integrations, and social LLM flows. Generated or stale module indexes are not part of the current documentation contract.
 
 ---
 
