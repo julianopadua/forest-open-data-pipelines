@@ -29,7 +29,7 @@ endif
 
 .PHONY: help
 .PHONY: venv install dev check-env
-.PHONY: sync sync-force sync-cvm sync-inpe sync-inpe-boletins sync-eia sync-inmet sync-news sync-all
+.PHONY: sync sync-force sync-cvm sync-inpe sync-inpe-boletins sync-eia sync-inmet sync-mma-cnuc sync-news sync-all
 .PHONY: build-report-bdqueimadas build-report-bdqueimadas-force
 .PHONY: build-report-bdqueimadas-no-llm build-report-bdqueimadas-force-no-llm
 .PHONY: audit-bdqueimadas
@@ -118,7 +118,7 @@ build-report-bdqueimadas: ## Build and publish BDQueimadas report (prompts for s
 build-report-bdqueimadas-force: ## Build and publish BDQueimadas report, overwriting without prompt
 	$(FPIPE) build-report bdqueimadas_overview --force
 
-build-report-bdqueimadas-no-llm: ## Build BDQueimadas report (current year, deterministic fallback — no LLM)
+build-report-bdqueimadas-no-llm: ## Build BDQueimadas report (current year, deterministic fallback, no LLM)
 	$(FPIPE) build-report bdqueimadas_overview --force --scope current --no-llm
 
 build-report-bdqueimadas-force-no-llm: ## Build BDQueimadas report, full history, no LLM
@@ -137,7 +137,7 @@ audit-bdqueimadas: ## Run audit on INPE BDQueimadas focus dataset; output under 
 anp-catalog: ## Scrape full ANP catalog from dados.gov.br (all pages)
 	$(FPIPE) anp-catalog
 
-anp-catalog-smoke: ## Quick smoke test — fetch first 5 pages only (no SUPABASE needed)
+anp-catalog-smoke: ## Quick smoke test, fetch first 5 pages only (no SUPABASE needed)
 	$(FPIPE) anp-catalog --limit 5
 
 # ── Portal Catalog (SSOT) ─────────────────────────────────────────────────────
@@ -149,7 +149,7 @@ publish-catalog: ## Build + upload catalog/open_data_catalog.json and catalog/re
 bdqueimadas-social-assets: ## Generate BDQueimadas carousel charts + manifest (no LLM required)
 	$(PYTHON) -m forest_pipelines.social --data-dir data/inpe_bdqueimadas --emit-manifest
 
-bdqueimadas-social-full: ## Generate carousel + LLM captions — requires GROQ_API_KEY in .env
+bdqueimadas-social-full: ## Generate carousel + LLM captions, requires GROQ_API_KEY in .env
 	$(PYTHON) -m forest_pipelines.social --data-dir data/inpe_bdqueimadas --emit-manifest --llm
 
 # ── Tests ─────────────────────────────────────────────────────────────────────

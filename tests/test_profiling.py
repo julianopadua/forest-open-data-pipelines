@@ -9,8 +9,11 @@ import pytest
 
 import forest_pipelines.profiling as profiling_module
 from forest_pipelines.profiling import (
+    profile_cache_from_manifest,
     profile_downloaded_file,
     profile_source_url,
+    profiled_item,
+    use_profile_cache,
 )
 
 
@@ -109,3 +112,63 @@ def test_profile_source_url_deletes_temp_file(tmp_path: Path, monkeypatch: pytes
     assert profile["profile_status"] == "ok"
     assert created
     assert not created[0].exists()
+
+
+def test_profile_source_url_uses_manifest_cache(monkeypatch: pytest.MonkeyPatch) -> None:
+    def fail_get(*args, **kwargs):
+        raise AssertionError("network should not be used")
+
+    monkeypatch.setattr(profiling_module.requests, "get", fail_get)
+    manifest = {
+        "items": [
+            {
+                "source_url": "https://example.test/cached.csv",
+                "filename": "cached.csv",
+                "size_bytes": 12,
+                "sha256": "a" * 64,
+                "row_count": 2,
+                "profile_status": "ok",
+                "profile_warnings": [],
+            }
+        ]
+    }
+
+    with use_profile_cache(profile_cache_from_manifest(manifest)):
+        profile = profile_source_url("https://example.test/cached.csv", filename="cached.csv")
+
+    assert profile["size_bytes"] == 12
+    assert profile["row_count"] == 2
+    assert profile["profile_status"] == "ok"
+
+
+def test_profiled_item_keeps_current_identity_with_cached_profile(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fail_get(*args, **kwargs):
+        raise AssertionError("network should not be used")
+
+    monkeypatch.setattr(profiling_module.requests, "get", fail_get)
+    manifest = {
+        "items": [
+            {
+                "kind": "data",
+                "period": "2024",
+                "filename": "old.csv",
+                "source_url": "https://example.test/cached.csv",
+                "row_count": 9,
+                "profile_status": "ok",
+                "profile_warnings": [],
+            }
+        ]
+    }
+
+    with use_profile_cache(profile_cache_from_manifest(manifest)):
+        item = profiled_item(
+            source_url="https://example.test/cached.csv",
+            filename="new.csv",
+            period="2025",
+        )
+
+    assert item["filename"] == "new.csv"
+    assert item["period"] == "2025"
+    assert item["row_count"] == 9

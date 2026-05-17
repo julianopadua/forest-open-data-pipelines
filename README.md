@@ -39,6 +39,8 @@ make sync
 
 **Dataset sync.** Discovers official source URLs for open datasets (CVM, INPE, EIA, INMET, Noticias Agricolas), downloads resources temporarily for local profiling, deletes temporary payloads by default, and publishes a `manifest.json` at each dataset prefix. Dataset files are not uploaded to Supabase Storage.
 
+`make sync` reads `configs/catalog/open_data.yml` and syncs every registered dataset exposed by the public API. Before profiling a discovered item, the CLI reads the existing published `manifest.json`. If the item `source_url` is already present, the previous profile metadata is reused and the resource is not downloaded again. New source URLs are profiled and added to the next manifest. Use `make sync-force` when all source URLs must be downloaded and profiled again.
+
 **Reports.** Aggregates or transforms data into structured report packages (e.g., BDQueimadas fire overview) and publishes them to Storage, including manifests and public URLs suitable for embedding in the portal.
 
 **Social media generation.** Generates Instagram carousel charts and LLM-written captions from INPE fire data. Charts are Vega-Lite specs; captions are produced via Groq.
