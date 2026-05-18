@@ -7,7 +7,7 @@ import httpx
 import pytest
 import respx
 
-from forest_data import Client, NotFoundError
+from forest_data import Client, NotFoundError, UnsafeFilenameError
 
 
 CATALOG_BODY = {
@@ -164,3 +164,40 @@ def test_download_verifies_sha256(tmp_path):
     paths = client.download("inpe_bdqueimadas_focos", path=tmp_path)
     assert len(paths) == 1
     assert paths[0].read_bytes() == body
+
+
+@respx.mock
+@pytest.mark.parametrize(
+    "evil_filename",
+    [
+        "../escape.txt",
+        "../../escape.txt",
+        "/tmp/forest_pentest_escape.txt",
+        "nested/../../escape.txt",
+        "",
+    ],
+)
+def test_download_rejects_unsafe_filename(tmp_path, evil_filename):
+    manifest_payload = {
+        **MANIFEST_BODY_TEMPLATE,
+        "manifest": {
+            **MANIFEST_BODY_TEMPLATE["manifest"],
+            "items": [
+                {
+                    "kind": "data",
+                    "period": "2024",
+                    "filename": evil_filename,
+                    "source_url": "https://files.test/x",
+                    "profile_status": "ok",
+                    "profile_warnings": [],
+                }
+            ],
+        },
+    }
+    respx.get("https://example.test/api/v1/datasets/x").mock(
+        return_value=httpx.Response(200, json=manifest_payload),
+    )
+
+    client = Client(base_url="https://example.test/api/v1")
+    with pytest.raises(UnsafeFilenameError):
+        client.download("x", path=tmp_path)

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import os
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 import httpx
@@ -11,7 +11,7 @@ import httpx
 from .models import DatasetManifest, DatasetSummary, OpenDataItem, ReportSummary
 
 DEFAULT_BASE_URL = "https://institutoforest.org/api/v1"
-USER_AGENT = "forest-data/0.1.0a0 (+https://institutoforest.org/docs/api/v1)"
+USER_AGENT = "forest-data/0.1.0a1 (+https://institutoforest.org/docs/api/v1)"
 
 
 class ForestDataError(Exception):
@@ -24,6 +24,34 @@ class NotFoundError(ForestDataError):
 
 class UpstreamError(ForestDataError):
     """Raised when the API or storage layer is unavailable."""
+
+
+class UnsafeFilenameError(ForestDataError):
+    """Raised when a manifest item filename would escape the target directory."""
+
+
+def _safe_target_path(target: Path, filename: str) -> Path:
+    # A manifest is untrusted input. We must contain every write below the
+    # target dataset directory, even when filename is absolute, contains "..",
+    # or uses Windows-style drive letters.
+    if not filename:
+        raise UnsafeFilenameError("manifest item has empty filename")
+
+    raw = PurePosixPath(filename.replace("\\", "/"))
+    if raw.is_absolute() or raw.drive:
+        raise UnsafeFilenameError(f"filename is absolute: {filename!r}")
+    if any(part in ("", "..") for part in raw.parts):
+        raise UnsafeFilenameError(f"filename contains traversal: {filename!r}")
+
+    target_resolved = target.resolve()
+    candidate = (target_resolved / Path(*raw.parts)).resolve()
+    try:
+        candidate.relative_to(target_resolved)
+    except ValueError as exc:
+        raise UnsafeFilenameError(
+            f"filename resolves outside target: {filename!r}"
+        ) from exc
+    return candidate
 
 
 def _check(resp: httpx.Response) -> dict[str, Any]:
@@ -124,7 +152,8 @@ class Client:
 
         out: list[Path] = []
         for item in manifest.items:
-            local = target / item.filename
+            local = _safe_target_path(target, item.filename)
+            local.parent.mkdir(parents=True, exist_ok=True)
             self._download_one(item, local, verify_sha256=verify_sha256, chunk_size=chunk_size)
             out.append(local)
         return out
@@ -137,6 +166,12 @@ class Client:
         verify_sha256: bool,
         chunk_size: int,
     ) -> None:
+        # Defense in depth: even if a caller skips download() and invokes us
+        # directly, refuse to write when item.filename would escape local's
+        # parent. _safe_target_path() raises UnsafeFilenameError on absolute
+        # paths, traversal segments, or drive letters.
+        _safe_target_path(local.parent, item.filename)
+
         h = hashlib.sha256()
         with self._client.stream("GET", item.source_url) as resp:
             if resp.status_code != 200:

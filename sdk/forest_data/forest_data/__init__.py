@@ -1,5 +1,11 @@
 """forest-data: public Python client for the Instituto Forest open-data API."""
-from .client import Client, ForestDataError, NotFoundError, UpstreamError
+from .client import (
+    Client,
+    ForestDataError,
+    NotFoundError,
+    UnsafeFilenameError,
+    UpstreamError,
+)
 from .models import (
     DatasetManifest,
     DatasetSummary,
@@ -8,7 +14,7 @@ from .models import (
     ReportSummary,
 )
 
-__version__ = "0.1.0a0"
+__version__ = "0.1.0a1"
 __all__ = [
     "Client",
     "DatasetManifest",
@@ -18,6 +24,7 @@ __all__ = [
     "OpenDataItem",
     "ProfileWarning",
     "ReportSummary",
+    "UnsafeFilenameError",
     "UpstreamError",
     "__version__",
 ]
