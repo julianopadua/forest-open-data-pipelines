@@ -71,6 +71,24 @@ def warning(code: str, message: str) -> dict[str, str]:
     return {"code": code, "message": message}
 
 
+def _is_url_only_sentinel(profile: dict[str, Any]) -> bool:
+    # Items emitted by the legacy URL-only contract carry sentinel checksums
+    # and zero sizes. They are not a real profile; reusing them across syncs
+    # would suppress every subsequent reprofile and freeze the cache to
+    # placeholder data. Treat them as a cache miss so the runner downloads
+    # the resource and produces real profile_status, sha256, size_bytes,
+    # content_type, format, last_modified, profiled_at, and where applicable
+    # row_count / column_count / columns / archive_profile.
+    sha = profile.get("sha256")
+    if isinstance(sha, str) and sha.strip().lower() == "external":
+        return True
+    if profile.get("size_bytes") == 0 and not profile.get("sha256"):
+        return True
+    if profile.get("profile_status") == "skipped" and not profile.get("profiled_at"):
+        return True
+    return False
+
+
 def profile_cache_from_manifest(manifest: dict[str, Any] | None) -> dict[str, dict[str, Any]]:
     if not isinstance(manifest, dict):
         return {}
@@ -94,8 +112,11 @@ def profile_cache_from_manifest(manifest: dict[str, Any] | None) -> dict[str, di
             for key, value in raw.items()
             if key in PROFILE_CACHE_FIELDS and value is not None
         }
-        if profile:
-            cache[source_url] = profile
+        if not profile:
+            continue
+        if _is_url_only_sentinel(profile):
+            continue
+        cache[source_url] = profile
     return cache
 
 

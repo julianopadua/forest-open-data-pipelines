@@ -172,3 +172,37 @@ def test_profiled_item_keeps_current_identity_with_cached_profile(
     assert item["filename"] == "new.csv"
     assert item["period"] == "2025"
     assert item["row_count"] == 9
+
+
+def test_profile_cache_skips_url_only_sentinels() -> None:
+    # Legacy URL-only manifests carry sha256="external" and size_bytes=0.
+    # Reusing them across syncs would freeze the cache to placeholder data
+    # and suppress every subsequent reprofile.
+    manifest = {
+        "items": [
+            {
+                "source_url": "https://example.test/legacy.pdf",
+                "filename": "legacy.pdf",
+                "size_bytes": 0,
+                "sha256": "external",
+            },
+            {
+                "source_url": "https://example.test/skipped.csv",
+                "filename": "skipped.csv",
+                "size_bytes": 0,
+                "profile_status": "skipped",
+            },
+            {
+                "source_url": "https://example.test/real.csv",
+                "filename": "real.csv",
+                "size_bytes": 42,
+                "sha256": "f" * 64,
+                "profile_status": "ok",
+            },
+        ]
+    }
+
+    cache = profile_cache_from_manifest(manifest)
+    assert "https://example.test/legacy.pdf" not in cache
+    assert "https://example.test/skipped.csv" not in cache
+    assert cache["https://example.test/real.csv"]["sha256"] == "f" * 64
