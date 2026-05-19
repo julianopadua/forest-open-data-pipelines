@@ -1288,16 +1288,16 @@ def write_bdqueimadas_carousel_manifest(
             "slots": {
                 "topic_tag": "Queimadas & Focos",
                 "published_at": published_at,
-                "cta_kicker": "Continua acompanhando",
+                "cta_kicker": "Quer continuar acompanhando?",
                 "cta_headline": "Mais análises e dados",
                 "cta_subline": "Acesse o portal de dados abertos do instituto.",
-                "cta_url": "www.instituto-exemplo.org",
+                "cta_url": "institutoforest.org",
             },
         },
     )
 
     manifest: dict[str, Any] = {
-        "theme": "green",
+        "theme": "red",
         "runId": "bdqueimadas-social",
         "sizes": {
             "topicTagPx": 24,

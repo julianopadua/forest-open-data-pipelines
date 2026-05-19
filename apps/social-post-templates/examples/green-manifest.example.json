@@ -43,10 +43,10 @@
       "slots": {
         "topic_tag": "Queimadas & Focos",
         "published_at": "Abr 2026",
-        "cta_kicker": "Continua acompanhando",
+        "cta_kicker": "Quer continuar acompanhando?",
         "cta_headline": "Gostou do conteúdo?",
         "cta_subline": "Acesse o site do instituto para mais análises, dados abertos e atualizações.",
-        "cta_url": "www.instituto-exemplo.org"
+        "cta_url": "institutoforest.org"
       }
     }
   ]
