@@ -15,12 +15,25 @@ Abrir no browser:
 
 | URL | Descrição |
 |-----|-----------|
-| `http://localhost:5173/` | Seletor de temas |
+| `http://localhost:5173/` | Seletor com os quatro temas (Verde · Vermelho · Branco · Azul Marinho) |
 | `http://localhost:5173/green/index.html` | Hub do tema verde (links para slides + compositor) |
-| `http://localhost:5173/green/composer.html` | Compositor: montar sequência e gerar `manifest.json` |
-| `http://localhost:5173/green/composer.html?preset=bdqueimadas` | Compositor com deck de exemplo (BDQueimadas) já carregado |
-| `http://localhost:5173/navy/index.html` | Tema Azul Marinho (Ocean) |
-| `http://localhost:5173/white/index.html` | Tema Branco (Clean) |
+| `http://localhost:5173/green/composer.html` | Compositor do tema verde |
+| `http://localhost:5173/red/index.html` | Hub do tema vermelho — host atual do deck BDQueimadas |
+| `http://localhost:5173/red/composer.html?preset=bdqueimadas` | Compositor com deck BDQueimadas pré-carregado |
+| `http://localhost:5173/white/index.html` | Hub do tema branco — host do deck de pesquisa |
+| `http://localhost:5173/white/composer.html?preset=research-trends` | Compositor com deck Research Trends pré-carregado |
+| `http://localhost:5173/navy/index.html` | Hub do tema azul marinho |
+
+### Temas
+
+| Tema | Cor de destaque | Caso de uso | Preset automático |
+|------|-----------------|-------------|-------------------|
+| Verde (Forest) | `#2ECC9A` | Conteúdo geral, séries de análise | — |
+| Vermelho (Wildfire) | `#E53E3E` | Queimadas e focos de calor | `preset=bdqueimadas` (Python: `python -m forest_pipelines.social`) |
+| Branco (Research) | `#0B7B56` | Indicadores de pesquisa | `preset=research-trends` (Python: `python -m forest_pipelines.social.research_trends`) |
+| Azul Marinho (Ocean) | `#4A9EFF` | Monitoramento ambiental | — |
+
+Todos os temas usam a mesma estrutura modular: `<theme>/{index,composer}.html` + `<theme>/slides/{cover,body-image-text,body-chart,body-text,cta}.html`. Tokens de cor em `src/<theme>/theme.css`. Scripts compartilhados em [`src/shared/`](src/shared/).
 
 O canvas (1080 × 1350) é escalado automaticamente para caber na janela - o layout interno permanece em pixels reais.
 
@@ -67,15 +80,21 @@ O canto inferior esquerdo mostra só o logo (sem texto “ForestLab” ao lado).
 ## Estrutura geral
 
 ```
-green/index.html          ← hub do verde
-green/composer.html       ← UI do deck + JSON
-green/slides/*.html       ← slides atômicos
-src/green/theme.css       ← tokens do verde
-src/green/slots.js        ← applySlots + query string
-src/chrome/sizes.js       ← tamanhos do chrome (preview + PNG)
-navy/index.html
-white/index.html
-src/style.css             ← Tailwind + canvas / grid
+index.html                  ← landing page com os 4 temas
+green/{index,composer}.html ← hub + compositor verde
+green/slides/*.html         ← slides atômicos
+red/{index,composer}.html   ← hub + compositor vermelho (host BDQueimadas)
+red/slides/*.html
+white/{index,composer}.html ← hub + compositor branco (host research-trends)
+white/slides/*.html
+navy/{index,composer}.html  ← hub + compositor azul marinho
+navy/slides/*.html
+src/<theme>/theme.css       ← tokens do tema (4 arquivos)
+src/shared/slots.js         ← applySlots + query string (compartilhado)
+src/shared/fit-canvas.js    ← scaling responsivo (compartilhado)
+src/shared/composerZipExport.js ← ZIP export client-side (compartilhado)
+src/chrome/sizes.js         ← tamanhos do chrome (preview + PNG)
+src/style.css               ← Tailwind + canvas / grid
 ```
 
 Comentários `<!-- slot: name -->` marcam áreas lógicas; elementos editáveis usam `data-slot="name"`.

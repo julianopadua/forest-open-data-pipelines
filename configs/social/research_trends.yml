@@ -1,0 +1,36 @@
+# Configuration reference for the research-trends social deck pipeline.
+#
+# The pipeline currently reads its primary settings from CLI flags (see
+#   python -m forest_pipelines.social.research_trends --help
+# ). This file documents the intended defaults and how to tweak the OpenAlex
+# query for a future seed topic without editing Python.
+
+mailto_env: FOREST_POLITE_EMAIL
+mailto_default: julianofpadua@gmail.com
+
+openalex:
+  base_url: https://api.openalex.org
+  filter:
+    concepts:
+      - C2776775217   # Wildfire
+      - C84111414     # Forest fire
+    institutions_country: BR
+    from_publication_date: "2000-01-01"
+  per_page: 200
+  max_pages: null   # null = follow cursor to the end
+
+crossref:
+  sample_top_cited: 20
+
+google_trends:
+  geo: BR
+  timeframe: "today 10-y"
+  terms:
+    - queimadas
+    - wildfire Brazil
+
+output:
+  charts_dir: apps/social-post-templates/public/generated
+  manifest: apps/social-post-templates/examples/research-trends.manifest.json
+  public_manifest: apps/social-post-templates/public/examples/research-trends.manifest.json
+  cache_dir: data/research_trends/cache

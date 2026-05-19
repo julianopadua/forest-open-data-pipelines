@@ -434,9 +434,9 @@ def render_chart_png(
     from matplotlib.ticker import MaxNLocator
 
     _WHITE = "#ffffff"
-    _CUR = "#2ecc9a"
-    _PREV = "#94a3b8"
-    _AVG_FILL = "#1a7a5e"
+    _CUR = "#ff6b3d"
+    _PREV = "#cbd5e1"
+    _AVG_FILL = "#7a1f1a"
 
     labels = spec["month_labels"]
     cur_raw = spec["series"]["current"]["values"]
@@ -544,7 +544,7 @@ def render_chart_png(
     ax.legend(
         handles=legend_handles,
         frameon=True,
-        facecolor=(0.1, 0.14, 0.12),
+        facecolor=(0.18, 0.05, 0.05),
         edgecolor=(0.0, 0.0, 0.0, 0.0),
         fontsize=11,
         loc="upper right",

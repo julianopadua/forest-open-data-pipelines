@@ -19,6 +19,7 @@ dependencies = [
   "rich>=13.0",
   "jsonschema>=4.21.0",
   "matplotlib>=3.8.0",
+  "pytrends>=4.9.2",
 ]
 
 [project.optional-dependencies]
