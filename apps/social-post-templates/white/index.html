@@ -3,100 +3,43 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Template Branco</title>
+  <title>Tema Branco · Slides</title>
   <link rel="stylesheet" href="../src/style.css" />
-  <link rel="stylesheet" href="../src/chrome/chrome-ui.css" />
+  <link rel="stylesheet" href="../src/white/theme.css" />
   <style>
-    :root {
-      --bg:            #FFFFFF;
-      --bg-secondary:  #F4F9F6;
-      --accent:        #0B7B56;
-      --accent-muted:  #D4EDE4;
-      --text-primary:  #0B1F17;
-      --text-secondary:#2C5F47;
-      --text-muted:    #8ABAAA;
-      --grid-color:    rgba(11, 123, 86, 0.10);
-      --grid-line-w:   1.5px;
-      --canvas-scale:  0.48;
+    body { background: #f1f5f9; min-height: 100vh; font-family: system-ui, sans-serif; color: #0f172a; }
+    .wrap { max-width: 720px; margin: 0 auto; padding: 2.5rem 1.25rem; }
+    h1 { font-size: 1.75rem; font-weight: 900; margin-bottom: 0.5rem; }
+    p.lead { color: #64748b; margin-bottom: 2rem; }
+    ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.75rem; }
+    a.row {
+      display: block; padding: 1rem 1.25rem; border-radius: 0.75rem; text-decoration: none; font-weight: 700;
+      background: var(--bg); color: var(--accent); border: 1px solid var(--accent-muted);
     }
+    a.row:hover { filter: brightness(1.08); }
+    a.composer {
+      display: inline-block; margin-top: 2rem; padding: 0.75rem 1.25rem; border-radius: 0.75rem;
+      background: #0f172a; color: #f8fafc; font-weight: 700; text-decoration: none;
+    }
+    a.composer:hover { background: #1e293b; }
+    .muted { font-size: 0.85rem; color: #94a3b8; margin-top: 2rem; }
   </style>
 </head>
-<body style="background: #e2e8f0;">
-  <div class="canvas-scaler">
-    <div id="card" class="post-canvas grid-cross" style="background-color: var(--bg); border: 1px solid #e2e8f0;">
-
-      <!-- ── Top accent band ─────────────────────────────────── -->
-      <div class="absolute top-0 left-0 right-0 h-2" style="background: var(--accent);"></div>
-
-      <!-- ── Top bar ─────────────────────────────────────────── -->
-      <div class="absolute left-0 right-0 flex items-center justify-between px-12 pt-10" style="top: 8px;">
-        <span class="chrome-topic tracking-widest uppercase font-semibold" style="color: var(--accent);">
-          <!-- slot: topic_tag -->
-          Agro &amp; Floresta
-        </span>
-        <span class="chrome-date font-medium" style="color: var(--text-muted);">
-          <!-- slot: published_at -->
-          Abr 2026
-        </span>
-      </div>
-
-      <!-- ── Large title block (left, upper half) ─────────────── -->
-      <div class="absolute" style="top: 140px; left: 48px; right: 48px;">
-        <p class="text-sm font-semibold mb-5 tracking-widest uppercase" style="color: var(--accent);">
-          <!-- slot: series_label -->
-          Relatório semanal
-        </p>
-        <h1 class="font-black leading-none" style="font-size: 90px; color: var(--text-primary); letter-spacing: -2.5px;">
-          <!-- slot: title -->
-          Alertas de desmatamento em alta no Cerrado
-        </h1>
-      </div>
-
-      <!-- ── Decorative rule ─────────────────────────────────── -->
-      <div class="absolute left-12" style="top: 675px; width: 60px; height: 3px; background: var(--accent);"></div>
-
-      <!-- ── Summary block (lower half) ─────────────────────── -->
-      <div class="absolute" style="top: 720px; left: 48px; right: 48px;">
-        <p class="leading-relaxed mb-8" style="font-size: 36px; color: var(--text-secondary);">
-          <!-- slot: summary -->
-          Novos dados do INPE indicam aumento de 12% em relação ao mesmo período do ano anterior, com Mato Grosso liderando registros.
-        </p>
-        <p class="leading-relaxed" style="font-size: 32px; color: var(--text-muted);">
-          <!-- slot: key_point_1 -->
-          Tendência de alta se mantém por três trimestres consecutivos.
-        </p>
-      </div>
-
-      <!-- ── Footer ──────────────────────────────────────────── -->
-      <div class="absolute bottom-0 left-0 right-0 flex items-end justify-between px-12 pb-10">
-        <img
-          class="footer-brand-logo"
-          src="/images/logos/002-big-logo.png"
-          alt="Instituto Forest"
-          width="280"
-          height="80"
-        />
-        <span class="chrome-page font-semibold tabular-nums" style="color: var(--accent);">
-          <!-- slot: card_number -->
-          01 / 05
-        </span>
-      </div>
-
-    </div>
+<body>
+  <div class="wrap">
+    <h1>Tema Branco</h1>
+    <p class="lead">Slides atômicos 1080 × 1350 px. Use o compositor para montar o deck e exportar PNGs via script.</p>
+    <ul>
+      <li><a class="row" href="./composer.html">Compositor (montar sequência + manifest)</a></li>
+      <li><a class="row" href="./composer.html?preset=research-trends">Preview · deck Pesquisa em queimadas (preset)</a></li>
+      <li><a class="row" href="./slides/cover.html">Capa</a></li>
+      <li><a class="row" href="./slides/body-image-text.html">Corpo · imagem + texto</a></li>
+      <li><a class="row" href="./slides/body-chart.html">Corpo · gráfico + texto</a></li>
+      <li><a class="row" href="./slides/body-text.html">Corpo · só texto</a></li>
+      <li><a class="row" href="./slides/cta.html">Encerramento · CTA</a></li>
+    </ul>
+    <a class="composer" href="../index.html">← Voltar aos temas</a>
+    <p class="muted">Canvas fixo 1080 × 1350 · exportação: <code style="color:#64748b">npm run export:manifest</code> com servidor em execução.</p>
   </div>
-
-  <script>
-    function fitCanvas() {
-      const vw = window.innerWidth;
-      const scale = Math.min((vw - 64) / 1080, 0.85);
-      document.documentElement.style.setProperty("--canvas-scale", scale);
-    }
-    fitCanvas();
-    window.addEventListener("resize", fitCanvas);
-  </script>
-  <script type="module">
-    import { applyChromeFromQuery } from "../src/chrome/sizes.js";
-    applyChromeFromQuery();
-  </script>
 </body>
 </html>

@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Compositor · Verde</title>
+  <title>Compositor · Branco</title>
   <link rel="stylesheet" href="../src/style.css" />
   <style>
-    :root { --panel: #0f172a; --muted: #94a3b8; --line: #334155; --accent: #2ecc9a; }
+    :root { --panel: #0f172a; --muted: #94a3b8; --line: #334155; --accent: #0B7B56; }
     body { margin: 0; font-family: system-ui, sans-serif; background: #f1f5f9; color: #0f172a; min-height: 100vh; }
     .layout { display: grid; grid-template-columns: minmax(320px, 1fr) minmax(360px, 1.1fr); gap: 0; min-height: 100vh; }
     @media (max-width: 960px) { .layout { grid-template-columns: 1fr; } }
@@ -22,7 +22,7 @@
       background: #334155; color: #f1f5f9;
     }
     button:hover, .btn:hover { background: #475569; }
-    button.primary { background: var(--accent); color: #0b3d2e; }
+    button.primary { background: var(--accent); color: #ffffff; }
     button.primary:hover { filter: brightness(1.05); }
     button.danger { background: #7f1d1d; }
     .slide-block {
@@ -41,16 +41,16 @@
       background: #0c1222; color: #cbd5e1; border: 1px solid var(--line); border-radius: 0.5rem; padding: 0.75rem; box-sizing: border-box;
     }
     .hint { font-size: 0.75rem; color: var(--muted); margin-top: 0.75rem; line-height: 1.45; }
-    a.back { color: #5eead4; font-size: 0.85rem; text-decoration: none; }
+    a.back { color: #0B7B56; font-size: 0.85rem; text-decoration: none; }
     a.back:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
   <div class="layout">
     <div class="panel">
-      <h1>Compositor · tema verde</h1>
+      <h1>Compositor · tema branco</h1>
       <p class="sub">Monte a sequência de slides, gere o <code>manifest.json</code> e baixe um <strong>ZIP com as imagens</strong> (PNG 1080×1350) direto no browser — ou use o script Playwright para PNGs idênticos ao servidor de preview.</p>
-      <p><a class="back" href="./index.html">← Hub do tema verde</a></p>
+      <p><a class="back" href="./index.html">← Hub do tema branco</a></p>
 
       <div class="toolbar">
         <button type="button" class="primary" id="btnAddCover">+ Capa</button>
@@ -177,15 +177,15 @@
     };
 
     const PATHS = {
-      cover: "/green/slides/cover.html",
-      body_image_text: "/green/slides/body-image-text.html",
-      body_chart: "/green/slides/body-chart.html",
-      body_text: "/green/slides/body-text.html",
-      cta: "/green/slides/cta.html",
+      cover: "/white/slides/cover.html",
+      body_image_text: "/white/slides/body-image-text.html",
+      body_chart: "/white/slides/body-chart.html",
+      body_text: "/white/slides/body-text.html",
+      cta: "/white/slides/cta.html",
     };
 
     let state = {
-      theme: "green",
+      theme: "white",
       runId: "my-run",
       slides: [],
       chromeSizes: { ...DEFAULT_CHROME },
@@ -194,7 +194,7 @@
     let previewIndex = 0;
 
     const DEFAULT_EXAMPLE = {
-      theme: "green",
+      theme: "white",
       runId: "example-run",
       sizes: { topicTagPx: 24, datePx: 26, pageNumberPx: 24, logoHeightPx: 54 },
       slides: [
@@ -261,7 +261,7 @@
     function buildManifestObject() {
       const runId = document.getElementById("runId").value.trim() || "run";
       return {
-        theme: "green",
+        theme: "white",
         runId,
         sizes: { ...state.chromeSizes },
         slides: state.slides.map((s) => {
@@ -518,20 +518,20 @@
       let slides = JSON.parse(JSON.stringify(DEFAULT_EXAMPLE.slides));
       let chromeSizes = { ...(DEFAULT_EXAMPLE.sizes || DEFAULT_CHROME) };
       const params = new URLSearchParams(window.location.search);
-      if (params.get("preset") === "bdqueimadas") {
+      if (params.get("preset") === "research-trends") {
         try {
-          const r = await fetch("/examples/bdqueimadas-social.manifest.json");
+          const r = await fetch("/examples/research-trends.manifest.json");
           if (!r.ok) throw new Error(r.statusText);
           const data = await r.json();
           runId = data.runId;
           slides = data.slides;
           chromeSizes = { ...DEFAULT_CHROME, ...(data.sizes || {}) };
         } catch (e) {
-          console.warn("Preset bdqueimadas indisponível, usando exemplo padrão.", e);
+          console.warn("Preset research-trends indisponível, usando exemplo padrão.", e);
         }
       }
       state = {
-        theme: "green",
+        theme: "white",
         runId,
         slides,
         chromeSizes,

@@ -3,114 +3,43 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Template Azul Marinho</title>
+  <title>Tema Azul Marinho · Slides</title>
   <link rel="stylesheet" href="../src/style.css" />
-  <link rel="stylesheet" href="../src/chrome/chrome-ui.css" />
+  <link rel="stylesheet" href="../src/navy/theme.css" />
   <style>
-    :root {
-      --bg:            #0D1B2E;
-      --bg-secondary:  #112240;
-      --accent:        #4A9EFF;
-      --accent-muted:  #1C4A80;
-      --text-primary:  #F0F6FF;
-      --text-secondary:#90B8E8;
-      --text-muted:    #4A6FA5;
-      --grid-color:    rgba(74, 158, 255, 0.14);
-      --grid-line-w:   1.5px;
-      --canvas-scale:  0.48;
+    body { background: #f1f5f9; min-height: 100vh; font-family: system-ui, sans-serif; color: #0f172a; }
+    .wrap { max-width: 720px; margin: 0 auto; padding: 2.5rem 1.25rem; }
+    h1 { font-size: 1.75rem; font-weight: 900; margin-bottom: 0.5rem; }
+    p.lead { color: #64748b; margin-bottom: 2rem; }
+    ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.75rem; }
+    a.row {
+      display: block; padding: 1rem 1.25rem; border-radius: 0.75rem; text-decoration: none; font-weight: 700;
+      background: var(--bg); color: var(--accent); border: 1px solid var(--accent-muted);
     }
+    a.row:hover { filter: brightness(1.08); }
+    a.composer {
+      display: inline-block; margin-top: 2rem; padding: 0.75rem 1.25rem; border-radius: 0.75rem;
+      background: #0f172a; color: #f8fafc; font-weight: 700; text-decoration: none;
+    }
+    a.composer:hover { background: #1e293b; }
+    .muted { font-size: 0.85rem; color: #94a3b8; margin-top: 2rem; }
   </style>
 </head>
 <body>
-  <div class="canvas-scaler">
-    <div id="card" class="post-canvas grid-cross" style="background-color: var(--bg);">
-
-      <!-- ── Top bar ─────────────────────────────────────────── -->
-      <div class="absolute top-0 left-0 right-0 flex items-center justify-between px-12 pt-10">
-        <span class="chrome-topic tracking-widest uppercase font-semibold" style="color: var(--accent);">
-          <!-- slot: topic_tag -->
-          Dados &amp; Território
-        </span>
-        <span class="chrome-date font-medium" style="color: var(--text-muted);">
-          <!-- slot: published_at -->
-          Abr 2026
-        </span>
-      </div>
-
-      <!-- ── Decorative accent dot cluster ───────────────────── -->
-      <div class="absolute" style="top: 80px; left: 48px; display: flex; gap: 8px;">
-        <div class="w-3 h-3 rounded-full" style="background: var(--accent);"></div>
-        <div class="w-3 h-3 rounded-full" style="background: var(--accent); opacity: 0.4;"></div>
-        <div class="w-3 h-3 rounded-full" style="background: var(--accent); opacity: 0.15;"></div>
-      </div>
-
-      <!-- ── Cover title (centered, spanning full width) ──────── -->
-      <div class="absolute flex flex-col items-center text-center"
-           style="top: 180px; left: 48px; right: 48px;">
-        <p class="text-sm font-semibold mb-5 tracking-widest uppercase" style="color: var(--accent);">
-          <!-- slot: series_label -->
-          Monitoramento ambiental
-        </p>
-        <h1 class="font-black leading-none" style="font-size: 88px; color: var(--text-primary); letter-spacing: -2px;">
-          <!-- slot: title -->
-          Nova brigada comunitária inicia treina&shy;mento
-        </h1>
-      </div>
-
-      <!-- ── Horizontal divider ──────────────────────────────── -->
-      <div class="absolute left-12 right-12 h-px" style="top: 675px; background: var(--accent-muted);"></div>
-
-      <!-- ── Key bullet points (lower half) ──────────────────── -->
-      <div class="absolute flex flex-col gap-5" style="top: 710px; left: 48px; right: 48px;">
-        <div class="flex items-start gap-4">
-          <div class="mt-2 w-2 h-2 rounded-full flex-shrink-0" style="background: var(--accent);"></div>
-          <p style="font-size: 34px; color: var(--text-secondary); line-height: 1.4;">
-            <!-- slot: key_point_1 -->
-            Treinamento abrange monitoramento e ação rápida em áreas de risco.
-          </p>
-        </div>
-        <div class="flex items-start gap-4">
-          <div class="mt-2 w-2 h-2 rounded-full flex-shrink-0" style="background: var(--accent); opacity: 0.5;"></div>
-          <p style="font-size: 34px; color: var(--text-muted); line-height: 1.4;">
-            <!-- slot: key_point_2 -->
-            Programa local amplia capacidade de resposta nos períodos críticos.
-          </p>
-        </div>
-      </div>
-
-      <!-- ── Footer ──────────────────────────────────────────── -->
-      <div class="absolute bottom-0 left-0 right-0 flex items-end justify-between px-12 pb-10">
-        <img
-          class="footer-brand-logo"
-          src="/images/logos/002-wbig-logo.png"
-          alt="Instituto Forest"
-          width="280"
-          height="80"
-        />
-        <span class="chrome-page font-semibold tabular-nums" style="color: var(--accent);">
-          <!-- slot: card_number -->
-          01 / 05
-        </span>
-      </div>
-
-      <!-- ── Bottom border stripe ────────────────────────────── -->
-      <div class="absolute bottom-0 left-0 right-0 h-1" style="background: var(--accent);"></div>
-
-    </div>
+  <div class="wrap">
+    <h1>Tema Azul Marinho</h1>
+    <p class="lead">Slides atômicos 1080 × 1350 px. Use o compositor para montar o deck e exportar PNGs via script.</p>
+    <ul>
+      <li><a class="row" href="./composer.html">Compositor (montar sequência + manifest)</a></li>
+      
+      <li><a class="row" href="./slides/cover.html">Capa</a></li>
+      <li><a class="row" href="./slides/body-image-text.html">Corpo · imagem + texto</a></li>
+      <li><a class="row" href="./slides/body-chart.html">Corpo · gráfico + texto</a></li>
+      <li><a class="row" href="./slides/body-text.html">Corpo · só texto</a></li>
+      <li><a class="row" href="./slides/cta.html">Encerramento · CTA</a></li>
+    </ul>
+    <a class="composer" href="../index.html">← Voltar aos temas</a>
+    <p class="muted">Canvas fixo 1080 × 1350 · exportação: <code style="color:#64748b">npm run export:manifest</code> com servidor em execução.</p>
   </div>
-
-  <script>
-    function fitCanvas() {
-      const vw = window.innerWidth;
-      const scale = Math.min((vw - 64) / 1080, 0.85);
-      document.documentElement.style.setProperty("--canvas-scale", scale);
-    }
-    fitCanvas();
-    window.addEventListener("resize", fitCanvas);
-  </script>
-  <script type="module">
-    import { applyChromeFromQuery } from "../src/chrome/sizes.js";
-    applyChromeFromQuery();
-  </script>
 </body>
 </html>

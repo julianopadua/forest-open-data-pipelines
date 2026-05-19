@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Verde · Texto</title>
+  <title>Branco · Capa</title>
   <link rel="stylesheet" href="../../src/style.css" />
-  <link rel="stylesheet" href="../../src/green/theme.css" />
+  <link rel="stylesheet" href="../../src/white/theme.css" />
 </head>
 <body>
   <div class="canvas-scaler">
     <div id="card" class="post-canvas grid-cross" style="background-color: var(--bg);">
 
-      <div class="absolute top-0 left-0 right-0 flex items-center justify-between px-12 pt-10 z-10">
+      <div class="absolute top-0 left-0 right-0 flex items-center justify-between px-12 pt-10">
         <span class="chrome-topic tracking-widest uppercase font-semibold" style="color: var(--accent);" data-slot="topic_tag">
           <!-- slot: topic_tag -->
           Queimadas &amp; Focos
@@ -22,28 +22,40 @@
         </span>
       </div>
 
-      <div class="absolute top-28 bottom-28 left-12 right-12" data-body-text data-cols="2">
-        <p class="leading-relaxed" style="font-size: 30px; color: var(--text-secondary);" data-slot="text_col_1">
-          <!-- slot: text_col_1 -->
-          Primeira coluna: argumento, dado ou parágrafo mais longo para leitura em duas vias paralelas no layout editorial.
+      <div class="absolute top-16 left-12 w-0.5 h-24" style="background: var(--accent); opacity: 0.6;"></div>
+
+      <div class="absolute flex flex-col items-end text-right"
+           style="top: 220px; right: 48px; width: 600px;">
+        <p class="font-semibold mb-4 tracking-widest uppercase" style="font-size: 22px; color: var(--accent); line-height: 1.25;" data-slot="series_label">
+          <!-- slot: series_label -->
+          Análise de dados
         </p>
-        <p class="leading-relaxed" style="font-size: 30px; color: var(--text-muted);" data-slot="text_col_2">
-          <!-- slot: text_col_2 -->
-          Segunda coluna: continuação, contraste ou detalhe complementar ao bloco ao lado.
+        <h1 class="font-black leading-none" style="font-size: 144px; color: var(--text-primary); letter-spacing: -2px;" data-slot="title">
+          <!-- slot: title -->
+          Seca prolonga&shy;da aumenta risco de queima&shy;das
+        </h1>
+      </div>
+
+      <div class="absolute left-0 right-0 h-px" style="top: 675px; background: var(--accent-muted);"></div>
+
+      <div class="absolute" style="bottom: 220px; left: 48px; width: 520px;">
+        <p class="leading-relaxed" style="font-size: 34px; color: var(--text-secondary);" data-slot="summary">
+          <!-- slot: summary -->
+          Meteorologia indica baixa umidade em várias regiões e alerta para aumento no número de focos ativos no território nacional.
         </p>
       </div>
 
       <div class="absolute bottom-0 left-0 right-0 flex items-end justify-between px-12 pb-10">
         <img
           class="footer-brand-logo"
-          src="/images/logos/002-wbig-logo.png"
+          src="/images/logos/002-big-logo.png"
           alt="Instituto Forest"
           width="280"
           height="80"
         />
         <span class="chrome-page font-semibold tabular-nums" style="color: var(--accent);" data-slot="card_number">
           <!-- slot: card_number -->
-          03 / 05
+          01 / 05
         </span>
       </div>
 

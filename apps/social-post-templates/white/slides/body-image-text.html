@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Verde · Gráfico + texto</title>
+  <title>Branco · Imagem + texto</title>
   <link rel="stylesheet" href="../../src/style.css" />
-  <link rel="stylesheet" href="../../src/green/theme.css" />
+  <link rel="stylesheet" href="../../src/white/theme.css" />
 </head>
 <body>
   <div class="canvas-scaler">
@@ -13,40 +13,47 @@
 
       <div class="absolute top-0 left-0 right-0 flex items-center justify-between px-12 pt-10 z-10">
         <span class="chrome-topic tracking-widest uppercase font-semibold" style="color: var(--accent);" data-slot="topic_tag">
+          <!-- slot: topic_tag -->
           Queimadas &amp; Focos
         </span>
         <span class="chrome-date font-medium" style="color: var(--text-muted);" data-slot="published_at">
-          Dados abertos
+          <!-- slot: published_at -->
+          Abr 2026
         </span>
       </div>
 
-      <div class="absolute top-28 bottom-28 left-12 right-12 flex flex-col gap-4" data-body-chart>
-        <div class="body-chart-frame">
+      <div class="absolute top-28 bottom-28 left-12 right-12" data-body-image-text data-side="left">
+        <div class="body-image-frame" style="min-height: 420px;">
           <img
             data-slot="image_url"
-            src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1080' height='620'%3E%3Crect fill='%230E4D39' width='100%25' height='100%25'/%3E%3Ctext x='50%25' y='50%25' fill='%232ECC9A' font-size='22' text-anchor='middle' dominant-baseline='middle' font-family='system-ui'%3EGráfico%3C/text%3E%3C/svg%3E"
+            src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='480' height='640'%3E%3Crect fill='%23F4F9F6' width='100%25' height='100%25'/%3E%3Ctext x='50%25' y='50%25' fill='%230B7B56' font-size='22' text-anchor='middle' dominant-baseline='middle' font-family='system-ui'%3EImagem%3C/text%3E%3C/svg%3E"
             alt=""
           />
         </div>
-        <div class="body-chart-copy">
-          <p class="leading-snug font-semibold mb-2 text-sm uppercase tracking-widest" style="color: var(--accent); white-space: pre-line;" data-slot="caption">
-            Focos por mês (Brasil) · BDQueimadas, publicado pelo INPE
-          </p>
-          <p class="leading-relaxed" style="font-size: 30px; color: var(--text-secondary);" data-slot="body_text">
-            Texto de contexto sobre o gráfico e a leitura dos dados.
-          </p>
+        <div class="body-text-col">
+          <div>
+            <p class="leading-snug font-semibold mb-3 text-sm uppercase tracking-widest" style="color: var(--accent); white-space: pre-line;" data-slot="caption">
+              <!-- slot: caption -->
+              Destaque · BDQueimadas, publicado pelo INPE
+            </p>
+            <p class="leading-relaxed" style="font-size: 32px; color: var(--text-secondary);" data-slot="body_text">
+              <!-- slot: body_text -->
+              Texto de apoio ao lado da imagem: contexto, explicação ou insight principal do slide.
+            </p>
+          </div>
         </div>
       </div>
 
       <div class="absolute bottom-0 left-0 right-0 flex items-end justify-between px-12 pb-10">
         <img
           class="footer-brand-logo"
-          src="/images/logos/002-wbig-logo.png"
+          src="/images/logos/002-big-logo.png"
           alt="Instituto Forest"
           width="280"
           height="80"
         />
         <span class="chrome-page font-semibold tabular-nums" style="color: var(--accent);" data-slot="card_number">
+          <!-- slot: card_number -->
           02 / 05
         </span>
       </div>

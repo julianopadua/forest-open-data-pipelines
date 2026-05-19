@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Verde · Texto</title>
+  <title>Branco · CTA</title>
   <link rel="stylesheet" href="../../src/style.css" />
-  <link rel="stylesheet" href="../../src/green/theme.css" />
+  <link rel="stylesheet" href="../../src/white/theme.css" />
 </head>
 <body>
   <div class="canvas-scaler">
     <div id="card" class="post-canvas grid-cross" style="background-color: var(--bg);">
 
-      <div class="absolute top-0 left-0 right-0 flex items-center justify-between px-12 pt-10 z-10">
+      <div class="absolute top-0 left-0 right-0 flex items-center justify-between px-12 pt-10">
         <span class="chrome-topic tracking-widest uppercase font-semibold" style="color: var(--accent);" data-slot="topic_tag">
           <!-- slot: topic_tag -->
           Queimadas &amp; Focos
@@ -22,28 +22,37 @@
         </span>
       </div>
 
-      <div class="absolute top-28 bottom-28 left-12 right-12" data-body-text data-cols="2">
-        <p class="leading-relaxed" style="font-size: 30px; color: var(--text-secondary);" data-slot="text_col_1">
-          <!-- slot: text_col_1 -->
-          Primeira coluna: argumento, dado ou parágrafo mais longo para leitura em duas vias paralelas no layout editorial.
+      <div class="absolute left-12 right-12 flex flex-col items-center text-center justify-center"
+           style="top: 200px; bottom: 200px;">
+        <p class="text-sm font-semibold mb-6 tracking-widest uppercase" style="color: var(--accent);" data-slot="cta_kicker">
+          <!-- slot: cta_kicker -->
+          Quer continuar acompanhando?
         </p>
-        <p class="leading-relaxed" style="font-size: 30px; color: var(--text-muted);" data-slot="text_col_2">
-          <!-- slot: text_col_2 -->
-          Segunda coluna: continuação, contraste ou detalhe complementar ao bloco ao lado.
+        <h2 class="font-black leading-tight mb-10 px-4" style="font-size: 64px; color: var(--text-primary); letter-spacing: -1px;" data-slot="cta_headline">
+          <!-- slot: cta_headline -->
+          Gostou do conteúdo?
+        </h2>
+        <p class="leading-relaxed max-w-xl mb-6" style="font-size: 28px; color: var(--text-secondary);" data-slot="cta_subline">
+          <!-- slot: cta_subline -->
+          Acesse o site do instituto para mais análises, dados abertos e atualizações.
+        </p>
+        <p class="text-lg font-semibold break-all px-4" style="color: var(--accent);" data-slot="cta_url">
+          <!-- slot: cta_url -->
+          institutoforest.org
         </p>
       </div>
 
       <div class="absolute bottom-0 left-0 right-0 flex items-end justify-between px-12 pb-10">
         <img
           class="footer-brand-logo"
-          src="/images/logos/002-wbig-logo.png"
+          src="/images/logos/002-big-logo.png"
           alt="Instituto Forest"
           width="280"
           height="80"
         />
         <span class="chrome-page font-semibold tabular-nums" style="color: var(--accent);" data-slot="card_number">
           <!-- slot: card_number -->
-          03 / 05
+          05 / 05
         </span>
       </div>
 
