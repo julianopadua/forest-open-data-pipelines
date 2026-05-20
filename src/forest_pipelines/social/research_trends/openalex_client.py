@@ -105,3 +105,42 @@ class OpenAlexClient:
             json.dumps({"meta": meta, "works": all_works}, ensure_ascii=False, indent=2)
         )
         yield from all_works
+
+    def count_by_year(
+        self,
+        *,
+        search: str | None = None,
+        filter_str: str | None = None,
+        cache_key: str,
+    ) -> dict[int, int]:
+        """Return {year: total works} via OpenAlex group_by — one cheap request.
+
+        Use this when you need the long-term yearly trend without paging through
+        every work. Independent of `iter_works` cache.
+        """
+        cache = self._cache_path(f"groupby_{cache_key}")
+        if cache.exists():
+            raw = json.loads(cache.read_text())
+            return {int(k): int(v) for k, v in raw.items()}
+
+        params: dict[str, Any] = {"group_by": "publication_year", "per-page": 200}
+        if search:
+            params["search"] = search
+        if filter_str:
+            params["filter"] = filter_str
+        payload = self._get("/works", params)
+        result: dict[int, int] = {}
+        for group in payload.get("group_by") or []:
+            key = group.get("key")
+            try:
+                year = int(key)
+            except (TypeError, ValueError):
+                continue
+            if year < 1900 or year > 3000:
+                continue
+            result[year] = int(group.get("count") or 0)
+        cache.write_text(
+            json.dumps({str(k): v for k, v in sorted(result.items())}, indent=2)
+        )
+        LOG.info("openalex.group_by_year key=%s years=%d", cache_key, len(result))
+        return result

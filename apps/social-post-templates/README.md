@@ -290,38 +290,89 @@ A legenda para colar no Instagram está em `social_llm.json` → `post_descripti
 
 ## Pipeline Research Trends (carrossel sobre pesquisa, tema branco)
 
-Deck automático com base em **OpenAlex** (fonte analítica primária, busca de trabalhos sobre queimadas com afiliação institucional no Brasil), **Crossref** (validação dos DOIs mais citados) e **Google Trends** (interesse público comparado à produção científica). Saída na **white** theme; preset em `white/composer.html?preset=research-trends`.
+Deck automático no tema **white**; preset em `white/composer.html?preset=research-trends`. Fontes:
 
-Estrutura paralela ao pipeline BDQueimadas:
+- **OpenAlex** (fonte analítica primária, busca por DOI/título/abstract com filtros de país e data).
+- **Crossref** (validação dos DOIs mais citados, sem peso analítico).
+- **Google Trends** via `pytrends` (overlay opcional, comparando busca pública com produção científica).
 
-- Cliente HTTP: [`src/forest_pipelines/social/research_trends/openalex_client.py`](../../src/forest_pipelines/social/research_trends/openalex_client.py), [`crossref_client.py`](../../src/forest_pipelines/social/research_trends/crossref_client.py), [`google_trends_client.py`](../../src/forest_pipelines/social/research_trends/google_trends_client.py).
-- Renderização: [`charts.py`](../../src/forest_pipelines/social/research_trends/charts.py) (matplotlib, PNGs 1080×620 alinhados ao slot `body-chart-frame`).
-- Orquestrador: [`pipeline.py`](../../src/forest_pipelines/social/research_trends/pipeline.py).
-- Configuração documentada: [`configs/social/research_trends.yml`](../../configs/social/research_trends.yml).
-- Cache: `data/research_trends/cache/` (respostas brutas de cada API).
+### Dois modos
 
-**Como rodar** (com venv ativo e `pip install -e .`):
+| Modo | Sort default | Quando usar |
+|------|--------------|-------------|
+| `historical` | `cited_by_count:desc` | Retrospectivas de longo prazo (séries desde 2000) |
+| `recent` | `publication_date:desc` | Post semanal/mensal — últimos 7/30/90 dias |
+
+Cada modo escreve um cache separado em `data/research_trends/cache/openalex_<topic>_<mode>_<from>_<to>_<sort>.json`. A chave de cache inclui topic + janela + sort, portanto janelas diferentes não compartilham cache.
+
+### Como rodar
+
+Pré-requisitos: venv ativo, `pip install -e .` na raiz do pipeline.
+
+Modo recent (default para post semanal/mensal, gera deck dos últimos 30 dias):
+
+```bash
+make research-social-recent
+# ou: python -m forest_pipelines.social.research_trends --mode recent --window-days 30 --verbose
+```
+
+Modo weekly (últimos 7 dias):
+
+```bash
+make research-social-weekly
+```
+
+Modo historical (série desde 2000, ordenada por citação):
 
 ```bash
 make research-social-assets
-# ou: python -m forest_pipelines.social.research_trends --verbose
+# ou: python -m forest_pipelines.social.research_trends --mode historical --verbose
 ```
 
-Forçar atualização de cache:
+Atalhos de janela:
+
+```bash
+# Janela arbitrária
+python -m forest_pipelines.social.research_trends --mode recent --from-date 2026-01-01 --to-date 2026-05-19
+
+# Apenas últimos 90 dias
+python -m forest_pipelines.social.research_trends --mode recent --window-days 90
+```
+
+Forçar nova consulta (apaga só o cache do topic/modo/janela atual):
 
 ```bash
 make research-social-refresh
+# ou: python -m forest_pipelines.social.research_trends --refresh --mode recent --window-days 30
 ```
 
-**O que sai:**
+### Trocar de tema (queimadas → ML em meio ambiente etc.)
 
-- `public/generated/research-<key>.png` (6 charts: `publications-per-year`, `google-trends`, `top-institutions`, `top-concepts`, `top-venues`, `open-access-share`).
-- `public/generated/chart_spec-research-<key>.json` (séries agregadas, para reprodutibilidade).
-- `examples/research-trends.manifest.json` + cópia em `public/examples/` para o preset.
-- `data/research_trends/cache/crossref_validation.json` (auditoria DOI-a-DOI dos top citados).
+Temas são definidos em `pipeline.TOPICS` como instâncias de `TopicConfig`. Já vem dois:
 
-**Sem chave de API.** OpenAlex e Crossref usam o "polite pool" só com header `mailto`. Defina `FOREST_POLITE_EMAIL` no `.env` ou passe `--mailto`. Default: `julianofpadua@gmail.com`.
+- `brazil-wildfire` (default): queimadas com afiliação no Brasil
+- `ml-environment`: machine learning em estudos ambientais
 
-**Google Trends** usa a biblioteca não-oficial `pytrends`. Se o Google bloquear ou estiver fora do ar, o pipeline registra um warning e **pula só o slide `google-trends`**. Para desabilitar explicitamente: `--skip-google-trends`.
+Para usar outro:
 
-**Tópico atual:** queimadas/incêndios florestais com afiliação no Brasil (`concepts.id:C2776775217|C84111414` + `authorships.institutions.country_code:BR`, desde 2000). Trocar o tópico significa editar o filtro em `pipeline.DEFAULT_OPENALEX_FILTER` ou parametrizar.
+```bash
+python -m forest_pipelines.social.research_trends --topic ml-environment --mode recent --window-days 30
+```
+
+Para adicionar um tema novo, copie `TOPIC_BRAZIL_WILDFIRE` em `pipeline.py`, ajuste `slug`, `search_query`, `extra_filters`, `cover_title`, `body_subject_phrase` e `google_trends_terms`, e registre em `TOPICS`. Não precisa mexer em mais nada.
+
+### O que sai
+
+- `public/generated/research-<key>.png` (5 charts: `publications-per-year`, `google-trends`, `top-institutions`, `top-concepts`, `top-venues`).
+- `public/generated/chart_spec-research-<key>.json` + `chart_spec-research-top-cited-works.json` (séries agregadas e top 5 trabalhos citados).
+- `examples/research-trends.manifest.json` + cópia em `public/examples/` para o preset. O manifest inclui um bloco `query` com `mode`, `from_date`, `to_date`, `sort`, `total_works` e `generated_at` para auditoria.
+- `data/research_trends/cache/crossref_validation_<topic>_<mode>.json` (auditoria DOI a DOI dos top citados).
+
+Os slides de **instituições**, **conceitos** e **veículos** incluem agora os 5 trabalhos mais citados no `body_text`, com a instituição/conceito/veículo principal de cada um. Não há mais slide de Open Access.
+
+### Notas metodológicas
+
+- Os textos dizem "trabalhos indexados pelo OpenAlex pela estratégia de busca atual" deliberadamente. A busca é por correspondência textual e país de afiliação, não por curadoria, então pode haver falsos positivos no recorte recent (ex.: paper que mencionou "wildfire" em metadado mas não é sobre).
+- **Sem chave de API.** OpenAlex e Crossref usam o "polite pool" só com header `mailto`. Defina `FOREST_POLITE_EMAIL` no `.env` ou passe `--mailto`. Default: `julianofpadua@gmail.com`.
+- **Google Trends** usa `pytrends` (não-oficial). Se o Google bloquear, o pipeline registra warning e **pula só o slide `google-trends`**. Para desabilitar explicitamente: `--skip-google-trends`.
+- **Pages cap.** Sem `--max-openalex-pages` o modo historical baixa o catálogo todo (37k+ works para queimadas BR, ~6 min). Use `--max-openalex-pages 5` para uma amostra rápida durante desenvolvimento.

@@ -50,18 +50,64 @@ def _save(fig, out: Path) -> None:
 
 
 def render_publications_per_year(
-    series: list[dict[str, Any]], out: Path, *, title: str
+    yearly_counts: dict[int, int],
+    out: Path,
+    *,
+    title: str,
+    highlight_year: int,
+    window: int = 10,
 ) -> None:
+    """Histogram of yearly publication counts over the last `window` years.
+
+    `yearly_counts` is a {year: count} mapping. Missing years pad with zero so
+    the x-axis is always full. `highlight_year` gets a stronger accent so it
+    visually pops out of the bar series.
+    """
     fig, ax = _new_fig()
-    if not series:
+    if not yearly_counts:
         _draw_empty(ax, title)
         _save(fig, out)
         return
-    xs = [int(row["year"]) for row in series]
-    ys = [int(row["count"]) for row in series]
-    ax.fill_between(xs, ys, color=ACCENT_FILL, alpha=0.9, linewidth=0)
-    ax.plot(xs, ys, color=ACCENT, linewidth=2.6)
-    ax.scatter([xs[-1]], [ys[-1]], color=ACCENT, s=46, zorder=5)
+    end_year = max(highlight_year, max(yearly_counts.keys()))
+    years = list(range(end_year - (window - 1), end_year + 1))
+    counts = [int(yearly_counts.get(y, 0)) for y in years]
+
+    bar_colors = [ACCENT if y == highlight_year else ACCENT_FILL for y in years]
+    bar_edges = [ACCENT if y == highlight_year else "none" for y in years]
+    bars = ax.bar(
+        years,
+        counts,
+        color=bar_colors,
+        edgecolor=bar_edges,
+        linewidth=1.5,
+        width=0.72,
+    )
+
+    max_val = max(counts) if counts else 1
+    headroom = max(max_val * 0.10, 1)
+    ax.set_ylim(0, max_val + headroom)
+
+    for year, bar, val in zip(years, bars, counts):
+        if val <= 0:
+            continue
+        is_highlight = year == highlight_year
+        ax.text(
+            bar.get_x() + bar.get_width() / 2,
+            bar.get_height() + headroom * 0.18,
+            f"{val:,}".replace(",", "."),
+            ha="center",
+            va="bottom",
+            color=ACCENT if is_highlight else TEXT_SECONDARY,
+            fontsize=11 if is_highlight else 10,
+            fontweight="bold" if is_highlight else "normal",
+        )
+
+    ax.set_xticks(years)
+    ax.set_xticklabels([str(y) for y in years], color=TEXT_SECONDARY)
+    if highlight_year in years:
+        idx = years.index(highlight_year)
+        ax.get_xticklabels()[idx].set_color(ACCENT)
+        ax.get_xticklabels()[idx].set_fontweight("bold")
     ax.set_title(title, color=TEXT_PRIMARY, fontsize=15, fontweight="bold", loc="left", pad=12)
     ax.set_ylabel("Trabalhos publicados", color=TEXT_SECONDARY, fontsize=11, labelpad=6)
     ax.margins(x=0.02)
