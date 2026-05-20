@@ -1,52 +1,52 @@
 [
   {
-    "id": "C86803240",
-    "label": "Biology",
-    "count": 45
-  },
-  {
-    "id": "C18903297",
-    "label": "Ecology",
-    "count": 44
-  },
-  {
     "id": "C205649164",
     "label": "Geography",
-    "count": 42
+    "count": 13
   },
   {
     "id": "C39432304",
     "label": "Environmental science",
-    "count": 34
+    "count": 12
   },
   {
-    "id": "C130217890",
-    "label": "Biodiversity",
-    "count": 26
+    "id": "C62649853",
+    "label": "Remote sensing",
+    "count": 8
+  },
+  {
+    "id": "C18903297",
+    "label": "Ecology",
+    "count": 7
+  },
+  {
+    "id": "C86803240",
+    "label": "Biology",
+    "count": 7
   },
   {
     "id": "C41008148",
     "label": "Computer science",
-    "count": 26
+    "count": 7
   },
   {
-    "id": "C144024400",
-    "label": "Sociology",
-    "count": 23
+    "id": "C153294291",
+    "label": "Meteorology",
+    "count": 7
   },
   {
-    "id": "C110872660",
-    "label": "Ecosystem",
-    "count": 22
+    "id": "C2779343474",
+    "label": "Context (archaeology)",
+    "count": 6
   },
   {
-    "id": "C15708023",
-    "label": "Humanities",
-    "count": 21
+    "id": "C97137747",
+    "label": "Forestry",
+    "count": 6
   },
   {
-    "id": "C17744445",
-    "label": "Political science",
-    "count": 20
+    "id": "C2777601987",
+    "label": "Disturbance (geology)",
+    "count": 5
   }
 ]

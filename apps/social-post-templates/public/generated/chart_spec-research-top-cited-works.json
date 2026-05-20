@@ -1,24 +1,6 @@
 [
   {
-    "title": "Bottle Roll Tests for Kinetic Evaluation of Nickel Ores: Capabilities, Limitations, and M…",
-    "year": 2026,
-    "citations": 3,
-    "primary_institution": "Universidade Federal de Minas Gerais",
-    "primary_concept": "Bottle",
-    "primary_venue": "Revista Multidisciplinar do Nordeste Mineiro",
-    "doi": "10.66104/z4cay337"
-  },
-  {
-    "title": "Non-invasive intracranial pressure estimation in the intensive care unit: narrative revie…",
-    "year": 2026,
-    "citations": 1,
-    "primary_institution": "Universidade de São Paulo",
-    "primary_concept": "Medicine",
-    "primary_venue": "Intensive Care Medicine",
-    "doi": "10.1007/s00134-026-08420-7"
-  },
-  {
-    "title": "Short-Term Effects of Wildfire on Bird Assemblages in a Core Area of the Pantanal Biosphe…",
+    "title": "Short-Term Effects of Wildfire on Bird Assemblages in a Core Area of the Pantanal Biosphere Reserve",
     "year": 2026,
     "citations": 0,
     "primary_institution": "Universidade do Estado de Mato Grosso",
@@ -27,21 +9,39 @@
     "doi": "10.1007/s13157-026-02071-6"
   },
   {
-    "title": "The Comrades Marathon: a narrative review of physiological responses and health implicati…",
+    "title": "Xingu Integration Region Fire Regime Analysis 1985-2024: Code and Data",
     "year": 2026,
     "citations": 0,
-    "primary_institution": "Universidade do Estado do Pará",
-    "primary_concept": "Narrative review",
-    "primary_venue": "Frontiers in Physiology",
-    "doi": "10.3389/fphys.2026.1811456"
+    "primary_institution": "Universidade Federal do Pará",
+    "primary_concept": "Amazon rainforest",
+    "primary_venue": "Open MIND",
+    "doi": "10.5281/zenodo.20192547"
   },
   {
-    "title": "Tripping time optimization through drill pipe velocity control",
+    "title": "efeitos do fogo sobre habitats e comunidades de aves: bacia do rio culuene no território indígena do xingu",
     "year": 2026,
     "citations": 0,
-    "primary_institution": "Universidade Tecnológica Federal do Paraná",
-    "primary_concept": "Tripping",
-    "primary_venue": "Journal of the Brazilian Society of Mechanical Sciences and Engineering",
-    "doi": "10.1007/s40430-026-06381-y"
+    "primary_institution": "Instituto Nacional de Pesquisas da Amazônia",
+    "primary_concept": "Geography",
+    "primary_venue": "Zenodo (CERN European Organization for Nuclear Research)",
+    "doi": "10.5281/zenodo.20213169"
+  },
+  {
+    "title": "Xingu Integration Region Fire Regime Analysis 1985-2024: Code and Data",
+    "year": 2026,
+    "citations": 0,
+    "primary_institution": "Universidade Federal do Pará",
+    "primary_concept": "Amazon rainforest",
+    "primary_venue": "Zenodo (CERN European Organization for Nuclear Research)",
+    "doi": "10.5281/zenodo.20192548"
+  },
+  {
+    "title": "efeitos do fogo sobre habitats e comunidades de aves: bacia do rio culuene no território indígena do xingu",
+    "year": 2026,
+    "citations": 0,
+    "primary_institution": "Instituto Nacional de Pesquisas da Amazônia",
+    "primary_concept": "Geography",
+    "primary_venue": "Zenodo (CERN European Organization for Nuclear Research)",
+    "doi": "10.5281/zenodo.20213168"
   }
 ]

@@ -58,6 +58,11 @@ class TopicConfig:
 
     Add a new instance to TOPICS to drive a different deck without changing the
     rest of the code. `slug` is also baked into the cache key.
+
+    `required_terms` is a topical guardrail: after OpenAlex returns works, we
+    drop any whose title and abstract contain NONE of these terms. This
+    prevents off-topic works (Nickel Ores, intracranial pressure, ...) from
+    sneaking in via tangential keyword mentions in the API's broad search.
     """
 
     slug: str
@@ -70,6 +75,7 @@ class TopicConfig:
     extra_filters: list[str] = field(default_factory=list)  # filter clauses (no date filters here)
     excluded_concepts: frozenset[str] = frozenset()
     google_trends_terms: tuple[str, ...] = ()
+    required_terms: tuple[str, ...] = ()  # post-filter on title + abstract (any-of, case-insensitive)
 
 
 TOPIC_BRAZIL_WILDFIRE = TopicConfig(
@@ -79,10 +85,24 @@ TOPIC_BRAZIL_WILDFIRE = TopicConfig(
     cover_series_label="Tendências de pesquisa",
     body_subject_short="queimadas",
     body_subject_phrase="queimadas no Brasil",
-    search_query="wildfire OR queimadas OR forest fire",
+    search_query="wildfire OR queimadas OR forest fire OR bushfire",
     extra_filters=["authorships.institutions.country_code:BR"],
     excluded_concepts=frozenset({CONCEPT_WILDFIRE, CONCEPT_FOREST_FIRE}),
     google_trends_terms=("queimadas",),
+    required_terms=(
+        "wildfire",
+        "wildfires",
+        "forest fire",
+        "forest fires",
+        "bushfire",
+        "queimada",
+        "queimadas",
+        "incêndio florestal",
+        "incêndios florestais",
+        "fire regime",
+        "burned area",
+        "biomass burning",
+    ),
 )
 
 TOPIC_ML_ENVIRONMENT = TopicConfig(
@@ -96,6 +116,15 @@ TOPIC_ML_ENVIRONMENT = TopicConfig(
     extra_filters=[],
     excluded_concepts=frozenset(),
     google_trends_terms=("machine learning environment",),
+    required_terms=(
+        "machine learning",
+        "deep learning",
+        "neural network",
+        "neural networks",
+        "random forest",
+        "convolutional",
+        "transformer",
+    ),
 )
 
 TOPICS: dict[str, TopicConfig] = {
@@ -157,6 +186,40 @@ def _cache_key(
     return "_".join(parts)
 
 
+# ── Topical post-filter ──────────────────────────────────────────────────────
+
+
+def _reconstruct_abstract(work: dict[str, Any]) -> str:
+    """OpenAlex stores abstracts as an inverted index. Reconstruct a flat string."""
+    idx = work.get("abstract_inverted_index") or {}
+    if not idx:
+        return ""
+    # idx is {word: [positions]} — we just need the unique tokens for membership tests.
+    return " ".join(idx.keys())
+
+
+def _topical_filter(
+    works: list[dict[str, Any]], required_terms: tuple[str, ...]
+) -> list[dict[str, Any]]:
+    """Drop works whose title and abstract don't mention any of the required terms.
+
+    Case-insensitive substring match. This is the safety net that catches
+    works the OpenAlex `search=` parameter returned for tangential reasons
+    (references list, related-work mentions, etc.) when sorted by date.
+    """
+    if not required_terms:
+        return works
+    terms_lower = tuple(t.lower() for t in required_terms)
+    kept: list[dict[str, Any]] = []
+    for work in works:
+        title = (work.get("title") or "").lower()
+        abstract = _reconstruct_abstract(work).lower()
+        haystack = f"{title} {abstract}"
+        if any(t in haystack for t in terms_lower):
+            kept.append(work)
+    return kept
+
+
 # ── Aggregations ─────────────────────────────────────────────────────────────
 
 
@@ -201,13 +264,8 @@ def _primary_venue(work: dict[str, Any]) -> str:
     return host.get("display_name") or "veículo não informado"
 
 
-def _short_title(work: dict[str, Any], limit: int = 90) -> str:
-    title = (work.get("title") or "").strip()
-    if not title:
-        return "trabalho sem título"
-    if len(title) > limit:
-        return title[: limit - 1].rstrip() + "…"
-    return title
+def _full_title(work: dict[str, Any]) -> str:
+    return (work.get("title") or "").strip() or "trabalho sem título"
 
 
 def _aggregate(works: list[dict[str, Any]], topic: TopicConfig) -> Aggregation:
@@ -280,7 +338,7 @@ def _aggregate(works: list[dict[str, Any]], topic: TopicConfig) -> Aggregation:
     )[:5]
     top_cited_works = [
         {
-            "title": _short_title(w),
+            "title": _full_title(w),
             "year": w.get("publication_year"),
             "citations": int(w.get("cited_by_count") or 0),
             "primary_institution": _primary_brazilian_institution(w),
@@ -408,10 +466,9 @@ def _format_top_cited_lines(
 ) -> str:
     """Render the top-cited works as a multi-line list.
 
-    Each line is short enough to fit the body-chart slot at ~22px font. Title
-    is truncated; year and the side field (institution/concept/venue) are
-    joined with commas. The slide CSS must use white-space: pre-line so the
-    newlines survive into the rendered post.
+    Each line uses the full title, paired with year and the side field (e.g.
+    institution / concept / venue) joined with a comma. The slide CSS uses
+    `white-space: pre-line` so the line breaks survive into the rendered PNG.
     """
     if not items:
         return ""
@@ -419,8 +476,7 @@ def _format_top_cited_lines(
     for i, item in enumerate(items[:limit], 1):
         right = item.get(field_key) or ""
         year = item.get("year") or "s/d"
-        title = item.get("title") or ""
-        title = title if len(title) <= 60 else title[:59].rstrip() + "..."
+        title = (item.get("title") or "").strip() or "trabalho sem título"
         lines.append(f"{i}. {title} ({year}), {right}")
     return "\n".join(lines)
 
@@ -676,7 +732,7 @@ def run(config: PipelineConfig) -> None:
     )
     filter_str = _build_filter(config.topic, config.from_date, config.to_date)
 
-    works = list(
+    raw_works = list(
         openalex.iter_works(
             search=config.topic.search_query,
             filter_str=filter_str,
@@ -685,13 +741,22 @@ def run(config: PipelineConfig) -> None:
             max_pages=config.max_openalex_pages,
         )
     )
-    LOG.info("research_trends.openalex_loaded count=%d", len(works))
+    LOG.info("research_trends.openalex_loaded count=%d", len(raw_works))
+    works = _topical_filter(raw_works, config.topic.required_terms)
+    dropped = len(raw_works) - len(works)
+    if dropped > 0:
+        LOG.info(
+            "research_trends.topical_filter kept=%d dropped=%d (off-topic by title/abstract)",
+            len(works),
+            dropped,
+        )
     if not works:
         LOG.warning(
-            "research_trends.no_results — OpenAlex returned 0 works for "
-            "search=%r filter=%r. Tente ampliar a janela de data ou conferir o tema.",
+            "research_trends.no_results — 0 works after topical filter (raw=%d). "
+            "Conferir search=%r e required_terms=%s do tópico.",
+            len(raw_works),
             config.topic.search_query,
-            filter_str,
+            list(config.topic.required_terms),
         )
 
     agg = _aggregate(works, config.topic)

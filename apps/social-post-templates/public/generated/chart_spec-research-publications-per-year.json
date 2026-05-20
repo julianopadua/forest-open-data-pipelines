@@ -1,52 +1,52 @@
 [
   {
     "year": 2017,
-    "count": 1758,
+    "count": 7752,
     "highlight": false
   },
   {
     "year": 2018,
-    "count": 2081,
+    "count": 9338,
     "highlight": false
   },
   {
     "year": 2019,
-    "count": 2282,
+    "count": 9858,
     "highlight": false
   },
   {
     "year": 2020,
-    "count": 2870,
+    "count": 11900,
     "highlight": false
   },
   {
     "year": 2021,
-    "count": 3271,
+    "count": 12890,
     "highlight": false
   },
   {
     "year": 2022,
-    "count": 3053,
+    "count": 12583,
     "highlight": false
   },
   {
     "year": 2023,
-    "count": 4027,
+    "count": 16210,
     "highlight": false
   },
   {
     "year": 2024,
-    "count": 3172,
+    "count": 13777,
     "highlight": false
   },
   {
     "year": 2025,
-    "count": 3138,
+    "count": 14441,
     "highlight": false
   },
   {
     "year": 2026,
-    "count": 1041,
+    "count": 5306,
     "highlight": true
   }
 ]

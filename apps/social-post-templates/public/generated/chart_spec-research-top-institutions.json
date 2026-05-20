@@ -1,52 +1,52 @@
 [
   {
-    "id": "https://openalex.org/I122558511",
-    "label": "Universidade Federal de Mato Grosso do Sul",
-    "count": 34
-  },
-  {
-    "id": "https://openalex.org/I879563668",
-    "label": "Universidade Estadual Paulista (Unesp)",
-    "count": 19
-  },
-  {
-    "id": "https://openalex.org/I110200422",
-    "label": "Universidade Federal de Minas Gerais",
-    "count": 19
-  },
-  {
     "id": "https://openalex.org/I3017928408",
     "label": "Universidade do Estado de Mato Grosso",
-    "count": 18
+    "count": 7
   },
   {
-    "id": "https://openalex.org/I150729083",
-    "label": "Universidade de Brasília",
-    "count": 18
+    "id": "https://openalex.org/I80849659",
+    "label": "Instituto Nacional de Pesquisas Espaciais",
+    "count": 7
   },
   {
-    "id": "https://openalex.org/I51235708",
-    "label": "Universidade Federal do Espírito Santo",
-    "count": 13
+    "id": "https://openalex.org/I59606676",
+    "label": "Universidade Federal do Pará",
+    "count": 6
   },
   {
-    "id": "https://openalex.org/I41455075",
-    "label": "Universidade Federal de Campina Grande",
-    "count": 13
+    "id": "https://openalex.org/I1317776637",
+    "label": "Universidade Federal do Acre",
+    "count": 6
   },
   {
-    "id": "https://openalex.org/I181391015",
-    "label": "Universidade Estadual de Campinas (UNICAMP)",
-    "count": 13
+    "id": "https://openalex.org/I190085865",
+    "label": "Universidade Federal de Sergipe",
+    "count": 4
   },
   {
-    "id": "https://openalex.org/I80850581",
-    "label": "Universidade Federal de Uberlândia",
-    "count": 12
+    "id": "https://openalex.org/I4210147594",
+    "label": "Universidade do Estado do Amazonas",
+    "count": 4
   },
   {
-    "id": "https://openalex.org/I177909021",
-    "label": "Universidade Federal de São Carlos",
-    "count": 11
+    "id": "https://openalex.org/I3130004620",
+    "label": "Universidade Federal da Fronteira Sul",
+    "count": 4
+  },
+  {
+    "id": "https://openalex.org/I4210161302",
+    "label": "Vale Technological Institute",
+    "count": 4
+  },
+  {
+    "id": "https://openalex.org/I4210122360",
+    "label": "Instituto de Pesquisa Ambiental da Amazônia",
+    "count": 3
+  },
+  {
+    "id": "https://openalex.org/I44202434",
+    "label": "Fundação Getulio Vargas",
+    "count": 3
   }
 ]

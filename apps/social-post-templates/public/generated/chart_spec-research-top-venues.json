@@ -2,51 +2,51 @@
   {
     "id": "https://openalex.org/S4306400562",
     "label": "Zenodo (CERN European Organization for Nuclear Research)",
-    "count": 14
+    "count": 9
   },
   {
-    "id": "https://openalex.org/S4306525896",
-    "label": "Research Square",
-    "count": 8
-  },
-  {
-    "id": "https://openalex.org/S4404661896",
-    "label": "Revista Tópicos.",
-    "count": 4
-  },
-  {
-    "id": "https://openalex.org/S2254258",
-    "label": "Annals of Botany",
-    "count": 3
+    "id": "https://openalex.org/S127668553",
+    "label": "Wetlands",
+    "count": 1
   },
   {
     "id": "https://openalex.org/S4406922384",
     "label": "Open MIND",
-    "count": 2
+    "count": 1
   },
   {
-    "id": "https://openalex.org/S196734849",
-    "label": "Scientific Reports",
-    "count": 2
+    "id": "https://openalex.org/S4210216705",
+    "label": "FLORESTA",
+    "count": 1
   },
   {
-    "id": "https://openalex.org/S4210198021",
-    "label": "Alceu",
-    "count": 2
+    "id": "https://openalex.org/S2738661068",
+    "label": "Toxics",
+    "count": 1
   },
   {
-    "id": "https://openalex.org/S4210222087",
-    "label": "Soils and Rocks",
-    "count": 2
+    "id": "https://openalex.org/S60406085",
+    "label": "Geoscientific model development",
+    "count": 1
   },
   {
-    "id": "https://openalex.org/S87561820",
-    "label": "Environmental Science and Pollution Research",
-    "count": 2
+    "id": "https://openalex.org/S4210194378",
+    "label": "Environmental Challenges",
+    "count": 1
   },
   {
-    "id": "https://openalex.org/S10134376",
-    "label": "Sustainability",
-    "count": 2
+    "id": "https://openalex.org/S201530359",
+    "label": "Environmental Pollution",
+    "count": 1
+  },
+  {
+    "id": "https://openalex.org/S43295729",
+    "label": "Remote Sensing",
+    "count": 1
+  },
+  {
+    "id": "https://openalex.org/S4210235664",
+    "label": "Journal of Atmospheric Science Research",
+    "count": 1
   }
 ]
