@@ -111,6 +111,29 @@ Comentários `<!-- slot: name -->` marcam áreas lógicas; elementos editáveis 
 
 **CTA:** `topic_tag`, `published_at`, `cta_kicker`, `cta_headline`, `cta_subline`, `cta_url`, `card_number`
 
+## Tamanhos default de texto e logo
+
+Dois níveis de configuração de tamanho convivem nos slides:
+
+**1. Chrome metadata (tópico, data, número da página, altura do logo).** Ajuste por slide no compositor (painel "Metadados · tamanhos") ou via objeto `sizes` no manifest: `{ "topicTagPx", "datePx", "pageNumberPx", "logoHeightPx" }`. Implementação em [`src/chrome/sizes.js`](src/chrome/sizes.js); aplicado em runtime via CSS variables. Default em `DEFAULT_CHROME` (mesmo arquivo). Querystring equivalente: `?chrome_topic=24&chrome_date=26&chrome_page=24&chrome_logo=54`.
+
+**2. Fonte e tamanho do corpo do slide (título, CTA, body_text, etc.).** Estão inline no HTML de cada slide (`<theme>/slides/*.html`), em `style="font-size: NNpx"`. Para mudar global, edite o slide HTML do tema; o mesmo `font-size` propaga via Tailwind/inline para todas as ocorrências do `data-slot`. Locais relevantes:
+
+| Slot | Onde está | Default |
+|------|-----------|---------|
+| `title` (cover) | `<theme>/slides/cover.html` | `font-size: 144px` |
+| `summary` (cover) | `<theme>/slides/cover.html` | `font-size: 34px` |
+| `body_text` (body_chart) | `<theme>/slides/body-chart.html` | `font-size: 30px` |
+| `body_text` (body_image_text) | `<theme>/slides/body-image-text.html` | `font-size: 32px` |
+| `cta_kicker` | `<theme>/slides/cta.html` | `font-size: 30px` |
+| `cta_headline` | `<theme>/slides/cta.html` | `font-size: 64px` |
+| `cta_subline` | `<theme>/slides/cta.html` | `font-size: 28px` |
+| `cta_url` | `<theme>/slides/cta.html` | `font-size: 36px` |
+
+Mudar um default num único tema: edite o `font-size` direto no HTML correspondente. Para mudar global, faça o mesmo nos quatro temas (`green/`, `red/`, `white/`, `navy/`).
+
+**3. Paleta do tema** (background, accent, text-primary/secondary/muted): tokens em `src/<theme>/theme.css`. Trocar o accent muda automaticamente a cor do CTA kicker, URL, gráficos placeholder, bordas.
+
 ## Exportar PNGs (Playwright)
 
 Instalação única do Chromium para o Playwright:
@@ -143,7 +166,34 @@ MANIFEST=examples/green-manifest.example.json npm run export:manifest
 
 Saída: `dist-exports/green/<runId>/01-cover.png`, `02-body_image_text.png`, … (pasta `dist-exports/` está no `.gitignore`).
 
-## Pipeline BDQueimadas (carrossel 6 slides + biomas)
+## Pipeline BDQueimadas (carrossel 6 slides + biomas, tema vermelho)
+
+> Desde a virada para o tema vermelho, o pipeline emite `theme: "red"` no manifest e o preset é servido em `red/composer.html?preset=bdqueimadas`. Tudo abaixo continua funcionando como antes; só o tema do preview mudou.
+
+### Quick start (gera o deck completo com textos LLM)
+
+Pré-requisitos: `GROQ_API_KEY` no `.env` na raiz do `forest-open-data-pipelines/`. Depois, na mesma raiz:
+
+```bash
+make bdqueimadas-social-full
+```
+
+Equivale a `python -m forest_pipelines.social --data-dir data/inpe_bdqueimadas --emit-manifest --llm`. Produz:
+
+- 4 charts PNG por bioma em `apps/social-post-templates/public/generated/`
+- `examples/bdqueimadas-social.manifest.json` (e cópia em `public/examples/`) com 6 slides
+- `public/generated/social_llm.json` com a legenda do carrossel (`post_description`) e os quatro textos de slide (`graphic_text`)
+
+Para gerar sem LLM (só os charts + manifest com texto placeholder):
+
+```bash
+make bdqueimadas-social-assets
+```
+
+Variantes mais granulares (só legenda, só textos por slide, recorte de data) estão documentadas em [Textos com LLM (Groq)](#textos-com-llm-groq) abaixo.
+
+
+
 
 Na **raiz do repositório** `forest-open-data-pipelines`, com venv ativo e `pip install -e .`:
 
@@ -160,7 +210,7 @@ O pipeline gera **quatro recortes** na ordem fixa: **Nacional**, **Amazônia**, 
 make bdqueimadas-social-full
 ```
 
-Depois, para o preview no compositor: `cd apps/social-post-templates && npm run dev` e abrir `http://localhost:5173/green/composer.html?preset=bdqueimadas`. Equivale a `python -m forest_pipelines.social --data-dir data/inpe_bdqueimadas --emit-manifest --llm`; também existe [`scripts/bdqueimadas-social-full.sh`](../../scripts/bdqueimadas-social-full.sh) com verificação de `GROQ_API_KEY`.
+Depois, para o preview no compositor: `cd apps/social-post-templates && npm run dev` e abrir `http://localhost:5173/red/composer.html?preset=bdqueimadas`. Equivale a `python -m forest_pipelines.social --data-dir data/inpe_bdqueimadas --emit-manifest --llm`; também existe [`scripts/bdqueimadas-social-full.sh`](../../scripts/bdqueimadas-social-full.sh) com verificação de `GROQ_API_KEY`.
 
 Só dados e artefatos estáticos (sem LLM / sem rede para Groq):
 
@@ -237,3 +287,41 @@ Isso gera:
 Depois: `npm run dev` neste app; export Playwright opcional: `npm run export:manifest -- examples/bdqueimadas-social.manifest.json`.
 
 A legenda para colar no Instagram está em `social_llm.json` → `post_description` quando você roda o pipeline com `--llm` e inclui `post_description` em `--llm-components`.
+
+## Pipeline Research Trends (carrossel sobre pesquisa, tema branco)
+
+Deck automático com base em **OpenAlex** (fonte analítica primária, busca de trabalhos sobre queimadas com afiliação institucional no Brasil), **Crossref** (validação dos DOIs mais citados) e **Google Trends** (interesse público comparado à produção científica). Saída na **white** theme; preset em `white/composer.html?preset=research-trends`.
+
+Estrutura paralela ao pipeline BDQueimadas:
+
+- Cliente HTTP: [`src/forest_pipelines/social/research_trends/openalex_client.py`](../../src/forest_pipelines/social/research_trends/openalex_client.py), [`crossref_client.py`](../../src/forest_pipelines/social/research_trends/crossref_client.py), [`google_trends_client.py`](../../src/forest_pipelines/social/research_trends/google_trends_client.py).
+- Renderização: [`charts.py`](../../src/forest_pipelines/social/research_trends/charts.py) (matplotlib, PNGs 1080×620 alinhados ao slot `body-chart-frame`).
+- Orquestrador: [`pipeline.py`](../../src/forest_pipelines/social/research_trends/pipeline.py).
+- Configuração documentada: [`configs/social/research_trends.yml`](../../configs/social/research_trends.yml).
+- Cache: `data/research_trends/cache/` (respostas brutas de cada API).
+
+**Como rodar** (com venv ativo e `pip install -e .`):
+
+```bash
+make research-social-assets
+# ou: python -m forest_pipelines.social.research_trends --verbose
+```
+
+Forçar atualização de cache:
+
+```bash
+make research-social-refresh
+```
+
+**O que sai:**
+
+- `public/generated/research-<key>.png` (6 charts: `publications-per-year`, `google-trends`, `top-institutions`, `top-concepts`, `top-venues`, `open-access-share`).
+- `public/generated/chart_spec-research-<key>.json` (séries agregadas, para reprodutibilidade).
+- `examples/research-trends.manifest.json` + cópia em `public/examples/` para o preset.
+- `data/research_trends/cache/crossref_validation.json` (auditoria DOI-a-DOI dos top citados).
+
+**Sem chave de API.** OpenAlex e Crossref usam o "polite pool" só com header `mailto`. Defina `FOREST_POLITE_EMAIL` no `.env` ou passe `--mailto`. Default: `julianofpadua@gmail.com`.
+
+**Google Trends** usa a biblioteca não-oficial `pytrends`. Se o Google bloquear ou estiver fora do ar, o pipeline registra um warning e **pula só o slide `google-trends`**. Para desabilitar explicitamente: `--skip-google-trends`.
+
+**Tópico atual:** queimadas/incêndios florestais com afiliação no Brasil (`concepts.id:C2776775217|C84111414` + `authorships.institutions.country_code:BR`, desde 2000). Trocar o tópico significa editar o filtro em `pipeline.DEFAULT_OPENALEX_FILTER` ou parametrizar.

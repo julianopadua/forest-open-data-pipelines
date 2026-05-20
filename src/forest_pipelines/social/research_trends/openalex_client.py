@@ -49,13 +49,16 @@ class OpenAlexClient:
         *,
         search: str | None = None,
         filter_str: str | None = None,
+        sort: str | None = None,
         cache_key: str,
         max_pages: int | None = None,
     ) -> Iterator[dict[str, Any]]:
         """Yield Work records page-by-page using cursor pagination.
 
         Caches the assembled list of works to disk so reruns are cheap and the
-        pipeline is reproducible offline.
+        pipeline is reproducible offline. The cache key MUST encode every
+        request parameter that affects the result set (search, filter, sort,
+        date window); otherwise stale caches will mask updated data.
         """
         cache = self._cache_path(cache_key)
         if cache.exists():
@@ -78,6 +81,8 @@ class OpenAlexClient:
                 params["search"] = search
             if filter_str:
                 params["filter"] = filter_str
+            if sort:
+                params["sort"] = sort
             payload = self._get("/works", params)
             results = payload.get("results", []) or []
             meta = payload.get("meta", meta) or meta

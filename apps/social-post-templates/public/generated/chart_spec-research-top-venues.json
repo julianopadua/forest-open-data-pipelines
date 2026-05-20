@@ -1,0 +1,52 @@
+[
+  {
+    "id": "https://openalex.org/S195255895",
+    "label": "Forest Ecology and Management",
+    "count": 15
+  },
+  {
+    "id": "https://openalex.org/S91660768",
+    "label": "Philosophical Transactions of the Royal Society B Biological Sciences",
+    "count": 9
+  },
+  {
+    "id": "https://openalex.org/S137773608",
+    "label": "Nature",
+    "count": 7
+  },
+  {
+    "id": "https://openalex.org/S74970393",
+    "label": "Global Change Biology",
+    "count": 6
+  },
+  {
+    "id": "https://openalex.org/S196734849",
+    "label": "Scientific Reports",
+    "count": 6
+  },
+  {
+    "id": "https://openalex.org/S185004651",
+    "label": "Flora",
+    "count": 6
+  },
+  {
+    "id": "https://openalex.org/S125754415",
+    "label": "Proceedings of the National Academy of Sciences",
+    "count": 5
+  },
+  {
+    "id": "https://openalex.org/S98137347",
+    "label": "Conservation Biology",
+    "count": 5
+  },
+  {
+    "id": "https://openalex.org/S166870025",
+    "label": "Ecological Applications",
+    "count": 5
+  },
+  {
+    "id": "https://openalex.org/S162708223",
+    "label": "Atmospheric chemistry and physics",
+    "count": 5
+  }
+]

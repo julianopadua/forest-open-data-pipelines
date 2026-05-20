@@ -1,0 +1,152 @@
+[
+  {
+    "year": 2000,
+    "oa_pct": 0.0,
+    "oa": 0,
+    "total": 3
+  },
+  {
+    "year": 2001,
+    "oa_pct": 0.0,
+    "oa": 0,
+    "total": 2
+  },
+  {
+    "year": 2002,
+    "oa_pct": 25.0,
+    "oa": 1,
+    "total": 4
+  },
+  {
+    "year": 2003,
+    "oa_pct": 25.0,
+    "oa": 1,
+    "total": 4
+  },
+  {
+    "year": 2004,
+    "oa_pct": 80.0,
+    "oa": 4,
+    "total": 5
+  },
+  {
+    "year": 2005,
+    "oa_pct": 18.18,
+    "oa": 2,
+    "total": 11
+  },
+  {
+    "year": 2006,
+    "oa_pct": 28.57,
+    "oa": 2,
+    "total": 7
+  },
+  {
+    "year": 2007,
+    "oa_pct": 77.78,
+    "oa": 7,
+    "total": 9
+  },
+  {
+    "year": 2008,
+    "oa_pct": 50.0,
+    "oa": 3,
+    "total": 6
+  },
+  {
+    "year": 2009,
+    "oa_pct": 20.0,
+    "oa": 1,
+    "total": 5
+  },
+  {
+    "year": 2010,
+    "oa_pct": 14.29,
+    "oa": 1,
+    "total": 7
+  },
+  {
+    "year": 2011,
+    "oa_pct": 33.33,
+    "oa": 3,
+    "total": 9
+  },
+  {
+    "year": 2012,
+    "oa_pct": 12.5,
+    "oa": 1,
+    "total": 8
+  },
+  {
+    "year": 2013,
+    "oa_pct": 42.86,
+    "oa": 3,
+    "total": 7
+  },
+  {
+    "year": 2014,
+    "oa_pct": 63.64,
+    "oa": 7,
+    "total": 11
+  },
+  {
+    "year": 2015,
+    "oa_pct": 77.78,
+    "oa": 7,
+    "total": 9
+  },
+  {
+    "year": 2016,
+    "oa_pct": 40.0,
+    "oa": 4,
+    "total": 10
+  },
+  {
+    "year": 2017,
+    "oa_pct": 88.89,
+    "oa": 8,
+    "total": 9
+  },
+  {
+    "year": 2018,
+    "oa_pct": 84.21,
+    "oa": 16,
+    "total": 19
+  },
+  {
+    "year": 2019,
+    "oa_pct": 70.0,
+    "oa": 7,
+    "total": 10
+  },
+  {
+    "year": 2020,
+    "oa_pct": 75.0,
+    "oa": 12,
+    "total": 16
+  },
+  {
+    "year": 2021,
+    "oa_pct": 71.43,
+    "oa": 10,
+    "total": 14
+  },
+  {
+    "year": 2022,
+    "oa_pct": 66.67,
+    "oa": 6,
+    "total": 9
+  },
+  {
+    "year": 2023,
+    "oa_pct": 100.0,
+    "oa": 1,
+    "total": 1
+  },
+  {
+    "year": 2024,
+    "oa_pct": 80.0,
+    "oa": 4,
+    "total": 5
+  }
+]

@@ -1,0 +1,88 @@
+{
+  "theme": "white",
+  "runId": "research-trends",
+  "sizes": {
+    "topicTagPx": 24,
+    "datePx": 26,
+    "pageNumberPx": 24,
+    "logoHeightPx": 54
+  },
+  "slides": [
+    {
+      "type": "cover",
+      "slots": {
+        "topic_tag": "Pesquisa & Dados",
+        "published_at": "2024",
+        "series_label": "Tendências de pesquisa",
+        "title": "Pesquisa sobre queimadas no Brasil",
+        "summary": "Cruzamento entre OpenAlex, Crossref e Google Trends — instituições, temas, veículos e interesse público desde 2000."
+      }
+    },
+    {
+      "type": "body_chart",
+      "slots": {
+        "topic_tag": "Pesquisa & Dados",
+        "published_at": "2024",
+        "caption": "Publicações por ano · OpenAlex",
+        "image_url": "/generated/research-publications-per-year.png",
+        "body_text": "Em 2024, 5 trabalhos foram publicados, uma alta de 400.0% sobre 2023."
+      }
+    },
+    {
+      "type": "body_chart",
+      "slots": {
+        "topic_tag": "Pesquisa & Dados",
+        "published_at": "2024",
+        "caption": "Top 10 instituições brasileiras · OpenAlex",
+        "image_url": "/generated/research-top-institutions.png",
+        "body_text": "O instituição mais frequente é Instituto Nacional de Pesquisas Espaciais, com 95 trabalhos."
+      }
+    },
+    {
+      "type": "body_chart",
+      "slots": {
+        "topic_tag": "Pesquisa & Dados",
+        "published_at": "2024",
+        "caption": "Temas mais frequentes · OpenAlex concepts",
+        "image_url": "/generated/research-top-concepts.png",
+        "body_text": "O tema mais frequente é Biology, com 182 trabalhos."
+      }
+    },
+    {
+      "type": "body_chart",
+      "slots": {
+        "topic_tag": "Pesquisa & Dados",
+        "published_at": "2024",
+        "caption": "Top 10 periódicos e veículos · OpenAlex",
+        "image_url": "/generated/research-top-venues.png",
+        "body_text": "O veículo mais frequente é Forest Ecology and Management, com 15 trabalhos."
+      }
+    },
+    {
+      "type": "body_chart",
+      "slots": {
+        "topic_tag": "Pesquisa & Dados",
+        "published_at": "2024",
+        "caption": "Open Access · OpenAlex",
+        "image_url": "/generated/research-open-access-share.png",
+        "body_text": "Em 2024, 80.0% das publicações eram Open Access (4 de 5)."
+      }
+    },
+    {
+      "type": "cta",
+      "slots": {
+        "topic_tag": "Pesquisa & Dados",
+        "published_at": "2024",
+        "cta_kicker": "Quer continuar acompanhando?",
+        "cta_headline": "Mais análises e dados",
+        "cta_subline": "Acesse o portal de dados abertos do instituto.",
+        "cta_url": "institutoforest.org"
+      }
+    }
+  ],
+  "sources": {
+    "openalex": "https://api.openalex.org/works (concepts: wildfire, forest fire; BR institutions)",
+    "crossref": "https://api.crossref.org/works/{doi}",
+    "google_trends": "pytrends (Google Trends, Brazil, last 10 years)"
+  }
+}

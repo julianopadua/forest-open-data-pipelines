@@ -53,6 +53,10 @@ def render_publications_per_year(
     series: list[dict[str, Any]], out: Path, *, title: str
 ) -> None:
     fig, ax = _new_fig()
+    if not series:
+        _draw_empty(ax, title)
+        _save(fig, out)
+        return
     xs = [int(row["year"]) for row in series]
     ys = [int(row["count"]) for row in series]
     ax.fill_between(xs, ys, color=ACCENT_FILL, alpha=0.9, linewidth=0)
@@ -64,6 +68,22 @@ def render_publications_per_year(
     _save(fig, out)
 
 
+def _draw_empty(ax, title: str) -> None:
+    ax.set_title(title, color=TEXT_PRIMARY, fontsize=15, fontweight="bold", loc="left", pad=12)
+    ax.text(
+        0.5,
+        0.5,
+        "Sem dados disponíveis para o recorte atual.",
+        ha="center",
+        va="center",
+        color=TEXT_MUTED,
+        fontsize=14,
+        transform=ax.transAxes,
+    )
+    ax.set_xticks([])
+    ax.set_yticks([])
+
+
 def render_top_bars(
     items: list[dict[str, Any]],
     out: Path,
@@ -73,6 +93,10 @@ def render_top_bars(
     value_key: str = "count",
 ) -> None:
     fig, ax = _new_fig()
+    if not items:
+        _draw_empty(ax, title)
+        _save(fig, out)
+        return
     items = list(reversed(items))  # so largest is at top
     labels = [str(it[label_key])[:48] for it in items]
     values = [int(it[value_key]) for it in items]
@@ -100,6 +124,10 @@ def render_open_access_share(
     series: list[dict[str, Any]], out: Path, *, title: str
 ) -> None:
     fig, ax = _new_fig()
+    if not series:
+        _draw_empty(ax, title)
+        _save(fig, out)
+        return
     xs = [int(row["year"]) for row in series]
     oa = [float(row["oa_pct"]) for row in series]
     closed = [100.0 - val for val in oa]
@@ -141,6 +169,10 @@ def render_trends_vs_publications(
     trends_label: str,
 ) -> None:
     fig, ax = _new_fig()
+    if not trends_series or not pubs_series:
+        _draw_empty(ax, title)
+        _save(fig, out)
+        return
     tx = [row["date"] for row in trends_series]
     ty = [int(row["value"]) for row in trends_series]
     line1, = ax.plot(tx, ty, color=COMPARE, linewidth=1.6, alpha=0.85, label=trends_label)
