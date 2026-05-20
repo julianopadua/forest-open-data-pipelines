@@ -2,51 +2,51 @@
   {
     "id": "C86803240",
     "label": "Biology",
-    "count": 182
+    "count": 45
   },
   {
     "id": "C18903297",
     "label": "Ecology",
-    "count": 180
+    "count": 44
   },
   {
     "id": "C205649164",
     "label": "Geography",
-    "count": 175
+    "count": 42
   },
   {
     "id": "C39432304",
     "label": "Environmental science",
-    "count": 171
+    "count": 34
   },
   {
-    "id": "C54286561",
-    "label": "Agroforestry",
-    "count": 93
-  },
-  {
-    "id": "C110872660",
-    "label": "Ecosystem",
-    "count": 89
-  },
-  {
-    "id": "C535291247",
-    "label": "Amazon rainforest",
-    "count": 87
+    "id": "C130217890",
+    "label": "Biodiversity",
+    "count": 26
   },
   {
     "id": "C41008148",
     "label": "Computer science",
-    "count": 83
+    "count": 26
   },
   {
-    "id": "C97137747",
-    "label": "Forestry",
-    "count": 78
+    "id": "C144024400",
+    "label": "Sociology",
+    "count": 23
   },
   {
-    "id": "C199360897",
-    "label": "Programming language",
-    "count": 64
+    "id": "C110872660",
+    "label": "Ecosystem",
+    "count": 22
+  },
+  {
+    "id": "C15708023",
+    "label": "Humanities",
+    "count": 21
+  },
+  {
+    "id": "C17744445",
+    "label": "Political science",
+    "count": 20
   }
 ]

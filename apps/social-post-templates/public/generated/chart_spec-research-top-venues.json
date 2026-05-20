@@ -1,52 +1,52 @@
 [
   {
-    "id": "https://openalex.org/S195255895",
-    "label": "Forest Ecology and Management",
-    "count": 15
+    "id": "https://openalex.org/S4306400562",
+    "label": "Zenodo (CERN European Organization for Nuclear Research)",
+    "count": 14
   },
   {
-    "id": "https://openalex.org/S91660768",
-    "label": "Philosophical Transactions of the Royal Society B Biological Sciences",
-    "count": 9
+    "id": "https://openalex.org/S4306525896",
+    "label": "Research Square",
+    "count": 8
   },
   {
-    "id": "https://openalex.org/S137773608",
-    "label": "Nature",
-    "count": 7
+    "id": "https://openalex.org/S4404661896",
+    "label": "Revista Tópicos.",
+    "count": 4
   },
   {
-    "id": "https://openalex.org/S74970393",
-    "label": "Global Change Biology",
-    "count": 6
+    "id": "https://openalex.org/S2254258",
+    "label": "Annals of Botany",
+    "count": 3
+  },
+  {
+    "id": "https://openalex.org/S4406922384",
+    "label": "Open MIND",
+    "count": 2
   },
   {
     "id": "https://openalex.org/S196734849",
     "label": "Scientific Reports",
-    "count": 6
+    "count": 2
   },
   {
-    "id": "https://openalex.org/S185004651",
-    "label": "Flora",
-    "count": 6
+    "id": "https://openalex.org/S4210198021",
+    "label": "Alceu",
+    "count": 2
   },
   {
-    "id": "https://openalex.org/S125754415",
-    "label": "Proceedings of the National Academy of Sciences",
-    "count": 5
+    "id": "https://openalex.org/S4210222087",
+    "label": "Soils and Rocks",
+    "count": 2
   },
   {
-    "id": "https://openalex.org/S98137347",
-    "label": "Conservation Biology",
-    "count": 5
+    "id": "https://openalex.org/S87561820",
+    "label": "Environmental Science and Pollution Research",
+    "count": 2
   },
   {
-    "id": "https://openalex.org/S166870025",
-    "label": "Ecological Applications",
-    "count": 5
-  },
-  {
-    "id": "https://openalex.org/S162708223",
-    "label": "Atmospheric chemistry and physics",
-    "count": 5
+    "id": "https://openalex.org/S10134376",
+    "label": "Sustainability",
+    "count": 2
   }
 ]

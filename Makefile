@@ -36,7 +36,7 @@ endif
 .PHONY: anp-catalog anp-catalog-smoke
 .PHONY: publish-catalog
 .PHONY: bdqueimadas-social-assets bdqueimadas-social-full
-.PHONY: research-social-assets research-social-refresh
+.PHONY: research-social-assets research-social-recent research-social-weekly research-social-refresh
 .PHONY: test test-verbose
 .PHONY: clean
 
@@ -153,11 +153,17 @@ bdqueimadas-social-assets: ## Generate BDQueimadas carousel charts + manifest (n
 bdqueimadas-social-full: ## Generate carousel + LLM captions, requires GROQ_API_KEY in .env
 	$(PYTHON) -m forest_pipelines.social --data-dir data/inpe_bdqueimadas --emit-manifest --llm
 
-research-social-assets: ## Generate research-trends deck (OpenAlex + Crossref + Google Trends) on white theme
-	$(PYTHON) -m forest_pipelines.social.research_trends --verbose
+research-social-assets: ## Research deck (historical, all-time, cited_by_count:desc)
+	$(PYTHON) -m forest_pipelines.social.research_trends --mode historical --verbose
 
-research-social-refresh: ## Same as research-social-assets but drops OpenAlex + Google Trends caches first
-	$(PYTHON) -m forest_pipelines.social.research_trends --refresh --verbose
+research-social-recent: ## Research deck (recent, last 30d, publication_date:desc)
+	$(PYTHON) -m forest_pipelines.social.research_trends --mode recent --window-days 30 --verbose
+
+research-social-weekly: ## Research deck (recent, last 7d)
+	$(PYTHON) -m forest_pipelines.social.research_trends --mode recent --window-days 7 --verbose
+
+research-social-refresh: ## Drop the current topic/mode/window cache and rerun historical
+	$(PYTHON) -m forest_pipelines.social.research_trends --mode historical --refresh --verbose
 
 # ── Tests ─────────────────────────────────────────────────────────────────────
 ## Tests

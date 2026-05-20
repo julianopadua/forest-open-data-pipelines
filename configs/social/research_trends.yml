@@ -2,32 +2,42 @@
 #
 # The pipeline currently reads its primary settings from CLI flags (see
 #   python -m forest_pipelines.social.research_trends --help
-# ). This file documents the intended defaults and how to tweak the OpenAlex
-# query for a future seed topic without editing Python.
+# ). This file documents intended defaults and lists the supported topics.
 
 mailto_env: FOREST_POLITE_EMAIL
 mailto_default: julianofpadua@gmail.com
 
-openalex:
-  base_url: https://api.openalex.org
-  filter:
-    concepts:
-      - C2776775217   # Wildfire
-      - C84111414     # Forest fire
-    institutions_country: BR
-    from_publication_date: "2000-01-01"
-  per_page: 200
-  max_pages: null   # null = follow cursor to the end
+# Two run modes. Each has its own default sort:
+#   historical: sort=cited_by_count:desc, from_date=2000-01-01, no upper bound
+#   recent: sort=publication_date:desc, default window = 30 days, to_date=today
+modes:
+  historical:
+    default_from_date: "2000-01-01"
+    default_sort: "cited_by_count:desc"
+  recent:
+    default_window_days: 30
+    default_sort: "publication_date:desc"
 
-crossref:
-  sample_top_cited: 20
+# Topic registry (mirrors TOPICS in pipeline.py). Slug is also part of the
+# cache key, so different topics never share a cache file.
+topics:
+  brazil-wildfire:
+    cover_title: "Pesquisa sobre queimadas no Brasil"
+    search: "wildfire OR queimadas OR forest fire"
+    extra_filters:
+      - "authorships.institutions.country_code:BR"
+    google_trends_terms:
+      - queimadas
+  ml-environment:
+    cover_title: "Machine learning em pesquisa ambiental"
+    search: "(machine learning OR deep learning) AND (environment OR ecology OR forest OR climate)"
+    extra_filters: []
+    google_trends_terms:
+      - "machine learning environment"
 
-google_trends:
-  geo: BR
-  timeframe: "today 10-y"
-  terms:
-    - queimadas
-    - wildfire Brazil
+# Cache key format: openalex_<topic>_<mode>_<from>_<to|open>_<sort>.json
+# `--refresh` deletes the cache file matching the current invocation only,
+# plus all google_trends_*.json files.
 
 output:
   charts_dir: apps/social-post-templates/public/generated

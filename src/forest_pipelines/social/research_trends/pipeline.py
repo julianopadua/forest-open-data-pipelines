@@ -412,27 +412,33 @@ def _format_top_cited_lines(
     return "\n".join(lines)
 
 
+def _pluralize_pt(n: int, singular: str, plural: str) -> str:
+    return singular if n == 1 else plural
+
+
 def _cover_summary(agg: Aggregation, config: PipelineConfig) -> str:
     today = date.today()
     today_human = today.strftime("%d/%m/%Y")
     if config.mode == "recent":
         window_days = (today - config.from_date).days
+        works_word = _pluralize_pt(agg.total_works, "trabalho indexado", "trabalhos indexados")
         return (
-            f"Últimos {window_days} dias: {agg.total_works} trabalhos indexados pelo OpenAlex "
-            f"sobre {config.topic.body_subject_phrase} (até {today_human})."
+            f"Últimos {window_days} dias: {agg.total_works} {works_word} pelo OpenAlex sobre "
+            f"{config.topic.body_subject_phrase} (até {today_human})."
         )
     cy = agg.current_year
     cy_count = agg.current_year_count
     if cy_count > 0:
+        pub_word = _pluralize_pt(cy_count, "publicação", "publicações")
         return (
-            f"{cy} registra {cy_count} publicações sobre {config.topic.body_subject_phrase} "
+            f"{cy} registra {cy_count} {pub_word} sobre {config.topic.body_subject_phrase} "
             f"indexadas no OpenAlex até {today_human}."
         )
-    # No current-year publications captured; fall back to latest available.
     if agg.publications_per_year:
         latest = agg.publications_per_year[-1]
+        pub_word = _pluralize_pt(latest["count"], "publicação", "publicações")
         return (
-            f"Último ano com dados: {latest['year']} ({latest['count']} publicações sobre "
+            f"Último ano com dados: {latest['year']} ({latest['count']} {pub_word} sobre "
             f"{config.topic.body_subject_phrase} indexadas no OpenAlex)."
         )
     return f"Sem publicações indexadas pelo OpenAlex no recorte atual ({today_human})."
@@ -460,13 +466,18 @@ def _publications_body(agg: Aggregation, config: PipelineConfig) -> str:
 
 
 def _top_with_papers_body(
-    agg: Aggregation, items: list[dict[str, Any]], *, suffix: str, top_field: str
+    agg: Aggregation,
+    items: list[dict[str, Any]],
+    *,
+    suffix: str,
+    article: str,
+    top_field: str,
 ) -> str:
     if not items:
         return "Sem dados suficientes no recorte atual."
     head = (
-        f"O {suffix} mais frequente é {items[0]['label']}, com {items[0]['count']} trabalhos "
-        f"no recorte analisado.\n\nMais citados:\n"
+        f"{article} {suffix} mais frequente é {items[0]['label']}, com {items[0]['count']} "
+        f"trabalhos no recorte analisado.\n\nMais citados:\n"
     )
     return head + _format_top_cited_lines(agg.top_cited_works, field_key=top_field, limit=5)
 
@@ -540,6 +551,7 @@ def _build_manifest(
                         agg,
                         agg.top_institutions,
                         suffix="instituição",
+                        article="A",
                         top_field="primary_institution",
                     ),
                 },
@@ -555,6 +567,7 @@ def _build_manifest(
                         agg,
                         agg.top_concepts,
                         suffix="tema",
+                        article="O",
                         top_field="primary_concept",
                     ),
                 },
@@ -570,6 +583,7 @@ def _build_manifest(
                         agg,
                         agg.top_venues,
                         suffix="veículo",
+                        article="O",
                         top_field="primary_venue",
                     ),
                 },
