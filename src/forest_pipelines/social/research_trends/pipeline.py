@@ -347,26 +347,30 @@ def _validate_with_crossref(
 
 def _render_charts(
     agg: Aggregation,
+    yearly_counts_10y: dict[int, int],
     trends_payload: dict[str, Any] | None,
     out_dir: Path,
     topic: TopicConfig,
+    highlight_year: int,
 ) -> dict[str, Path]:
     out_dir.mkdir(parents=True, exist_ok=True)
     paths: dict[str, Path] = {}
 
     paths[CHART_PUB_YEAR] = out_dir / f"research-{CHART_PUB_YEAR}.png"
     render_publications_per_year(
-        agg.publications_per_year,
+        yearly_counts_10y,
         paths[CHART_PUB_YEAR],
         title=f"Publicações por ano sobre {topic.body_subject_phrase}",
+        highlight_year=highlight_year,
     )
 
-    if trends_payload and trends_payload.get("series") and agg.publications_per_year:
+    pubs_series_for_trends = [{"year": y, "count": c} for y, c in sorted(yearly_counts_10y.items())]
+    if trends_payload and trends_payload.get("series") and pubs_series_for_trends:
         first_term = next(iter(trends_payload["series"].keys()))
         paths[CHART_TRENDS] = out_dir / f"research-{CHART_TRENDS}.png"
         render_trends_vs_publications(
             trends_payload["series"][first_term],
-            agg.publications_per_year,
+            pubs_series_for_trends,
             paths[CHART_TRENDS],
             title="Interesse público vs produção científica",
             trends_label=f"Google Trends · {first_term}",
@@ -400,15 +404,24 @@ def _render_charts(
 
 
 def _format_top_cited_lines(
-    items: list[dict[str, Any]], *, field_key: str, limit: int = 5
+    items: list[dict[str, Any]], *, field_key: str, limit: int = 3
 ) -> str:
+    """Render the top-cited works as a multi-line list.
+
+    Each line is short enough to fit the body-chart slot at ~22px font. Title
+    is truncated; year and the side field (institution/concept/venue) are
+    joined with commas. The slide CSS must use white-space: pre-line so the
+    newlines survive into the rendered post.
+    """
     if not items:
         return ""
     lines = []
     for i, item in enumerate(items[:limit], 1):
         right = item.get(field_key) or ""
         year = item.get("year") or "s/d"
-        lines.append(f"{i}. {item['title']} ({year}) — {right}")
+        title = item.get("title") or ""
+        title = title if len(title) <= 60 else title[:59].rstrip() + "..."
+        lines.append(f"{i}. {title} ({year}), {right}")
     return "\n".join(lines)
 
 
@@ -444,24 +457,33 @@ def _cover_summary(agg: Aggregation, config: PipelineConfig) -> str:
     return f"Sem publicações indexadas pelo OpenAlex no recorte atual ({today_human})."
 
 
-def _publications_body(agg: Aggregation, config: PipelineConfig) -> str:
-    pubs = agg.publications_per_year
-    if not pubs:
+def _publications_body(
+    yearly_counts: dict[int, int], highlight_year: int, topic: TopicConfig
+) -> str:
+    if not yearly_counts:
         return (
-            "Nenhum trabalho indexado pelo OpenAlex no intervalo analisado. "
-            "Tente ampliar a janela de data ou revisar a estratégia de busca."
+            "Nenhum trabalho indexado pelo OpenAlex nos últimos 10 anos para a "
+            "estratégia de busca atual. Revise o tema ou amplie os filtros."
         )
-    latest = pubs[-1]
-    prior = pubs[-2] if len(pubs) >= 2 else None
+    cy_count = yearly_counts.get(highlight_year, 0)
+    total_10y = sum(yearly_counts.values())
+    today = date.today()
+    is_partial = highlight_year == today.year and today.month < 12
     base = (
-        f"Em {latest['year']}, {latest['count']} trabalhos foram indexados pelo OpenAlex "
-        f"dentro da estratégia de busca atual"
+        f"Últimos 10 anos: {total_10y} trabalhos sobre {topic.body_subject_phrase} "
+        f"indexados pelo OpenAlex."
     )
-    if prior and prior.get("count"):
-        delta = (latest["count"] - prior["count"]) / prior["count"] * 100.0
-        sign = "alta" if delta >= 0 else "queda"
-        base += f", uma {sign} de {abs(delta):.1f}% sobre {prior['year']}"
-    base += "."
+    if is_partial:
+        base += (
+            f" Em {highlight_year} (ano em curso), {cy_count} trabalhos até o momento."
+        )
+    else:
+        prior_count = yearly_counts.get(highlight_year - 1, 0)
+        base += f" Em {highlight_year}, {cy_count} trabalhos."
+        if prior_count > 0:
+            delta = (cy_count - prior_count) / prior_count * 100.0
+            sign = "alta" if delta >= 0 else "queda"
+            base += f" {sign.capitalize()} de {abs(delta):.1f}% sobre {highlight_year - 1}."
     return base
 
 
@@ -477,9 +499,9 @@ def _top_with_papers_body(
         return "Sem dados suficientes no recorte atual."
     head = (
         f"{article} {suffix} mais frequente é {items[0]['label']}, com {items[0]['count']} "
-        f"trabalhos no recorte analisado.\n\nMais citados:\n"
+        f"trabalhos no recorte.\n\nMais citados no recorte:\n"
     )
-    return head + _format_top_cited_lines(agg.top_cited_works, field_key=top_field, limit=5)
+    return head + _format_top_cited_lines(agg.top_cited_works, field_key=top_field, limit=3)
 
 
 # ── Manifest emission ────────────────────────────────────────────────────────
@@ -487,6 +509,7 @@ def _top_with_papers_body(
 
 def _build_manifest(
     agg: Aggregation,
+    yearly_counts_10y: dict[int, int],
     chart_paths: dict[str, Path],
     trends_payload: dict[str, Any] | None,
     config: PipelineConfig,
@@ -514,9 +537,9 @@ def _build_manifest(
             "slots": {
                 "topic_tag": topic.cover_topic_tag,
                 "published_at": published_at,
-                "caption": f"Publicações por ano · OpenAlex ({config.mode})",
+                "caption": f"Publicações por ano · OpenAlex (últimos 10 anos)",
                 "image_url": img(CHART_PUB_YEAR),
-                "body_text": _publications_body(agg, config),
+                "body_text": _publications_body(yearly_counts_10y, today.year, topic),
             },
         },
     ]
@@ -673,13 +696,46 @@ def run(config: PipelineConfig) -> None:
 
     agg = _aggregate(works, config.topic)
 
+    # Always pull a 10-year yearly histogram for the topic via OpenAlex
+    # group_by — this is one cheap request and decouples the bar chart from
+    # the mode's date window. Without this, recent-mode runs would render a
+    # single-bar chart (only the current year), which is misleading.
+    today = date.today()
+    histogram_end = today.year
+    histogram_start = histogram_end - 9
+    histogram_filter = ",".join(
+        list(config.topic.extra_filters)
+        + [
+            f"from_publication_date:{histogram_start}-01-01",
+            f"to_publication_date:{histogram_end}-12-31",
+        ]
+    )
+    histogram_cache_key = f"{config.topic.slug}_{histogram_start}_{histogram_end}"
+    yearly_counts_10y = openalex.count_by_year(
+        search=config.topic.search_query,
+        filter_str=histogram_filter,
+        cache_key=histogram_cache_key,
+    )
+    LOG.info(
+        "research_trends.yearly_counts_loaded years=%d total=%d",
+        len(yearly_counts_10y),
+        sum(yearly_counts_10y.values()),
+    )
+
     if not config.skip_google_trends and config.topic.google_trends_terms:
         trends_client = GoogleTrendsClient(cache_dir=config.cache_dir)
         trends_payload = trends_client.interest_over_time(list(config.topic.google_trends_terms))
     else:
         trends_payload = None
 
-    chart_paths = _render_charts(agg, trends_payload, config.out_dir, config.topic)
+    chart_paths = _render_charts(
+        agg,
+        yearly_counts_10y,
+        trends_payload,
+        config.out_dir,
+        config.topic,
+        highlight_year=histogram_end,
+    )
     LOG.info("research_trends.charts_rendered count=%d", len(chart_paths))
 
     validation = _validate_with_crossref(works, crossref, sample=config.crossref_sample)
@@ -687,8 +743,12 @@ def run(config: PipelineConfig) -> None:
     audit_path.write_text(json.dumps(validation, ensure_ascii=False, indent=2))
     LOG.info("research_trends.crossref_audited n=%d path=%s", len(validation), audit_path.name)
 
+    pub_year_spec = [
+        {"year": y, "count": c, "highlight": y == today.year}
+        for y, c in sorted(yearly_counts_10y.items())
+    ]
     for key, data in (
-        (CHART_PUB_YEAR, agg.publications_per_year),
+        (CHART_PUB_YEAR, pub_year_spec),
         (CHART_INSTITUTIONS, agg.top_institutions),
         (CHART_CONCEPTS, agg.top_concepts),
         (CHART_VENUES, agg.top_venues),
@@ -698,7 +758,7 @@ def run(config: PipelineConfig) -> None:
             json.dumps(data, ensure_ascii=False, indent=2)
         )
 
-    manifest = _build_manifest(agg, chart_paths, trends_payload, config)
+    manifest = _build_manifest(agg, yearly_counts_10y, chart_paths, trends_payload, config)
     config.manifest_path.parent.mkdir(parents=True, exist_ok=True)
     config.manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2))
     config.public_manifest_path.parent.mkdir(parents=True, exist_ok=True)
@@ -817,13 +877,20 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.refresh:
         prefix = _cache_key(topic, mode, from_date, to_date, sort)
+        deleted: list[Path] = []
         target = args.cache_dir / f"openalex_{prefix}.json"
         if target.exists():
             target.unlink()
-            LOG.info("research_trends.cache_cleared path=%s", target)
-        # Also drop google trends caches: they aren't keyed by date window.
+            deleted.append(target)
+        # Group-by year cache (keyed by topic+window range).
+        for path in args.cache_dir.glob(f"openalex_groupby_{topic.slug}_*.json"):
+            path.unlink()
+            deleted.append(path)
+        # Google Trends cache (not keyed by date window).
         for path in args.cache_dir.glob("google_trends_*.json"):
             path.unlink()
+            deleted.append(path)
+        LOG.info("research_trends.cache_cleared n=%d", len(deleted))
 
     config = PipelineConfig(
         topic=topic,

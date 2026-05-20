@@ -23,9 +23,9 @@
       "slots": {
         "topic_tag": "Pesquisa & Dados",
         "published_at": "May 2026",
-        "caption": "Publicações por ano · OpenAlex (recent)",
+        "caption": "Publicações por ano · OpenAlex (últimos 10 anos)",
         "image_url": "/generated/research-publications-per-year.png",
-        "body_text": "Em 2026, 150 trabalhos foram indexados pelo OpenAlex dentro da estratégia de busca atual."
+        "body_text": "Últimos 10 anos: 26693 trabalhos sobre queimadas no Brasil indexados pelo OpenAlex. Em 2026 (ano em curso), 1041 trabalhos até o momento."
       }
     },
     {
@@ -35,7 +35,7 @@
         "published_at": "May 2026",
         "caption": "Top 10 instituições · OpenAlex",
         "image_url": "/generated/research-top-institutions.png",
-        "body_text": "A instituição mais frequente é Universidade Federal de Mato Grosso do Sul, com 34 trabalhos no recorte analisado.\n\nMais citados:\n1. Bottle Roll Tests for Kinetic Evaluation of Nickel Ores: Capabilities, Limitations, and M… (2026) — Universidade Federal de Minas Gerais\n2. Non-invasive intracranial pressure estimation in the intensive care unit: narrative revie… (2026) — Universidade de São Paulo\n3. Short-Term Effects of Wildfire on Bird Assemblages in a Core Area of the Pantanal Biosphe… (2026) — Universidade do Estado de Mato Grosso\n4. The Comrades Marathon: a narrative review of physiological responses and health implicati… (2026) — Universidade do Estado do Pará\n5. Tripping time optimization through drill pipe velocity control (2026) — Universidade Tecnológica Federal do Paraná"
+        "body_text": "A instituição mais frequente é Universidade Federal de Mato Grosso do Sul, com 34 trabalhos no recorte.\n\nMais citados no recorte:\n1. Bottle Roll Tests for Kinetic Evaluation of Nickel Ores: Ca... (2026), Universidade Federal de Minas Gerais\n2. Non-invasive intracranial pressure estimation in the intens... (2026), Universidade de São Paulo\n3. Short-Term Effects of Wildfire on Bird Assemblages in a Cor... (2026), Universidade do Estado de Mato Grosso"
       }
     },
     {
@@ -45,7 +45,7 @@
         "published_at": "May 2026",
         "caption": "Temas mais frequentes · OpenAlex concepts",
         "image_url": "/generated/research-top-concepts.png",
-        "body_text": "O tema mais frequente é Biology, com 45 trabalhos no recorte analisado.\n\nMais citados:\n1. Bottle Roll Tests for Kinetic Evaluation of Nickel Ores: Capabilities, Limitations, and M… (2026) — Bottle\n2. Non-invasive intracranial pressure estimation in the intensive care unit: narrative revie… (2026) — Medicine\n3. Short-Term Effects of Wildfire on Bird Assemblages in a Core Area of the Pantanal Biosphe… (2026) — Species richness\n4. The Comrades Marathon: a narrative review of physiological responses and health implicati… (2026) — Narrative review\n5. Tripping time optimization through drill pipe velocity control (2026) — Tripping"
+        "body_text": "O tema mais frequente é Biology, com 45 trabalhos no recorte.\n\nMais citados no recorte:\n1. Bottle Roll Tests for Kinetic Evaluation of Nickel Ores: Ca... (2026), Bottle\n2. Non-invasive intracranial pressure estimation in the intens... (2026), Medicine\n3. Short-Term Effects of Wildfire on Bird Assemblages in a Cor... (2026), Species richness"
       }
     },
     {
@@ -55,7 +55,7 @@
         "published_at": "May 2026",
         "caption": "Top 10 periódicos e veículos · OpenAlex",
         "image_url": "/generated/research-top-venues.png",
-        "body_text": "O veículo mais frequente é Zenodo (CERN European Organization for Nuclear Research), com 14 trabalhos no recorte analisado.\n\nMais citados:\n1. Bottle Roll Tests for Kinetic Evaluation of Nickel Ores: Capabilities, Limitations, and M… (2026) — Revista Multidisciplinar do Nordeste Mineiro\n2. Non-invasive intracranial pressure estimation in the intensive care unit: narrative revie… (2026) — Intensive Care Medicine\n3. Short-Term Effects of Wildfire on Bird Assemblages in a Core Area of the Pantanal Biosphe… (2026) — Wetlands\n4. The Comrades Marathon: a narrative review of physiological responses and health implicati… (2026) — Frontiers in Physiology\n5. Tripping time optimization through drill pipe velocity control (2026) — Journal of the Brazilian Society of Mechanical Sciences and Engineering"
+        "body_text": "O veículo mais frequente é Zenodo (CERN European Organization for Nuclear Research), com 14 trabalhos no recorte.\n\nMais citados no recorte:\n1. Bottle Roll Tests for Kinetic Evaluation of Nickel Ores: Ca... (2026), Revista Multidisciplinar do Nordeste Mineiro\n2. Non-invasive intracranial pressure estimation in the intens... (2026), Intensive Care Medicine\n3. Short-Term Effects of Wildfire on Bird Assemblages in a Cor... (2026), Wetlands"
       }
     },
     {
