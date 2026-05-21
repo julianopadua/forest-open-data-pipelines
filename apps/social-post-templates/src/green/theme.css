@@ -75,7 +75,6 @@
   display: flex;
   flex-direction: row;
   align-items: stretch;
-  gap: 2rem;
   height: 100%;
 }
 
@@ -83,30 +82,38 @@
   flex-direction: row-reverse;
 }
 
-[data-body-logo-half] .body-text-col {
-  flex: 1 1 0;
+[data-body-logo-half] .lh-text {
+  flex: 0 0 50%;
   min-width: 0;
   display: flex;
   align-items: center;
+  padding: 0 3rem;
+  box-sizing: border-box;
 }
 
-[data-body-logo-half] .body-text-col [data-slot="body_text"] {
+[data-body-logo-half] .lh-text [data-slot="body_text"] {
   text-align: justify;
   text-justify: inter-word;
   hyphens: auto;
   -webkit-hyphens: auto;
 }
 
-.logo-half {
-  flex: 1 1 0;
+[data-body-logo-half] .lh-logo {
+  flex: 0 0 50%;
   min-width: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.logo-half {
+  width: 100%;
   height: 100%;
   -webkit-mask: url("/images/logos/001-wlogo.png") no-repeat;
           mask: url("/images/logos/001-wlogo.png") no-repeat;
   -webkit-mask-size: 200% auto;
           mask-size: 200% auto;
   background-color: var(--accent);
-  opacity: 0.92;
+  opacity: 0.95;
 }
 
 [data-body-logo-half][data-side="right"] .logo-half {
@@ -117,6 +124,55 @@
 [data-body-logo-half][data-side="left"] .logo-half {
   -webkit-mask-position: right center;
           mask-position: right center;
+}
+
+/* Compact frame for portrait photos in body-image-text */
+[data-body-image-text][data-fit="compact"] .body-image-frame {
+  flex: 0 0 auto;
+  max-height: 720px;
+  align-self: center;
+  width: 100%;
+}
+
+/* Body: text on top + supporting image below */
+[data-body-text-image] {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  height: 100%;
+  min-height: 0;
+}
+
+.body-text-image-copy {
+  flex: 0 0 auto;
+  width: 100%;
+}
+
+.body-text-image-copy [data-slot="body_text"] {
+  text-align: justify;
+  text-justify: inter-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+
+.body-text-image-frame {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: var(--bg-secondary);
+  border: 1px solid var(--accent-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.body-text-image-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
 }
 
 /* Body: chart (large image) + legend + text */

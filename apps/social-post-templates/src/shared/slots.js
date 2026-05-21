@@ -10,11 +10,37 @@ export function applySlotsFromQuery() {
   const params = new URLSearchParams(window.location.search);
   const slots = {};
   for (const [k, v] of params.entries()) {
-    if (k === "side" || k === "cols") continue;
+    if (k === "side" || k === "cols" || k === "fit" || k === "blank") continue;
     if (k.startsWith("chrome_")) continue;
     slots[k] = v;
   }
   applySlots(slots);
+  if (params.get("blank") === "1") applyBlankMode();
+}
+
+const CHROME_SLOTS = new Set(["topic_tag", "published_at", "card_number"]);
+const STRUCTURAL_FRAMES = [
+  ".body-image-frame",
+  ".body-chart-frame",
+  ".body-text-image-frame",
+  ".lh-logo",
+];
+
+function applyBlankMode() {
+  document.querySelectorAll("[data-slot]").forEach((el) => {
+    const slot = el.getAttribute("data-slot");
+    if (CHROME_SLOTS.has(slot)) return;
+    if (el instanceof HTMLImageElement) {
+      el.style.display = "none";
+    } else {
+      el.textContent = "";
+    }
+  });
+  STRUCTURAL_FRAMES.forEach((sel) => {
+    document.querySelectorAll(sel).forEach((el) => {
+      el.style.display = "none";
+    });
+  });
 }
 
 /**
@@ -55,6 +81,13 @@ function applyLayoutParams() {
     const root = document.querySelector("[data-body-text]");
     if (root) {
       root.dataset.cols = cols;
+    }
+  }
+  const fit = params.get("fit");
+  if (fit) {
+    const root = document.querySelector("[data-body-image-text]");
+    if (root) {
+      root.dataset.fit = fit;
     }
   }
 }

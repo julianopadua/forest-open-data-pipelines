@@ -58,6 +58,7 @@
         <button type="button" id="btnAddChart">+ Gráfico + texto</button>
         <button type="button" id="btnAddTxt">+ Só texto</button>
         <button type="button" id="btnAddLogoHalf">+ Meio logo</button>
+        <button type="button" id="btnAddTxtImg">+ Texto + imagem</button>
         <button type="button" id="btnAddCta">+ CTA</button>
         <button type="button" id="btnLoadExample">Carregar exemplo</button>
       </div>
@@ -95,6 +96,7 @@
 
       <div class="toolbar" style="margin-top:0.75rem">
         <button type="button" class="primary" id="btnZipImages">Baixar ZIP (imagens)</button>
+        <button type="button" id="btnZipBlank">Baixar ZIP sem texto (chrome, p/ Canva)</button>
         <button type="button" class="primary" id="btnDownload">Baixar manifest.json</button>
         <button type="button" id="btnCopy">Copiar comando de export</button>
       </div>
@@ -167,6 +169,16 @@
         },
         logoSide: "right",
       },
+      body_text_image: {
+        label: "Texto + imagem (vertical)",
+        defaults: {
+          topic_tag: "Instituto Forest",
+          published_at: "Mai 2026",
+          caption: "Título da seção",
+          body_text: "Texto institucional na parte superior, com a imagem de apoio logo abaixo.",
+          image_url: "",
+        },
+      },
       cta: {
         label: "CTA final",
         defaults: {
@@ -193,6 +205,7 @@
       body_chart: "/green/slides/body-chart.html",
       body_text: "/green/slides/body-text.html",
       body_logo_half: "/green/slides/body-logo-half.html",
+      body_text_image: "/green/slides/body-text-image.html",
       cta: "/green/slides/cta.html",
     };
 
@@ -303,7 +316,10 @@
       Object.entries(slots).forEach(([k, v]) => {
         if (v != null && v !== "") p.set(k, String(v));
       });
-      if (slide.type === "body_image_text") p.set("side", slide.imageSide || "left");
+      if (slide.type === "body_image_text") {
+        p.set("side", slide.imageSide || "left");
+        if (slide.imageFit) p.set("fit", slide.imageFit);
+      }
       if (slide.type === "body_text") p.set("cols", String(slide.columns ?? 2));
       if (slide.type === "body_logo_half") p.set("side", slide.logoSide || "right");
       const c = state.chromeSizes;
@@ -313,6 +329,12 @@
       p.set("chrome_logo", String(c.logoHeightPx));
       const base = window.location.origin;
       return `${base}${path}?${p.toString()}`;
+    }
+
+    function previewUrlBlank(index) {
+      const url = previewUrl(index);
+      const sep = url.includes("?") ? "&" : "?";
+      return `${url}${sep}blank=1`;
     }
 
     function refreshPreview() {
@@ -466,6 +488,11 @@
       previewIndex = state.slides.length - 1;
       renderAll();
     };
+    document.getElementById("btnAddTxtImg").onclick = () => {
+      state.slides.push(newSlide("body_text_image"));
+      previewIndex = state.slides.length - 1;
+      renderAll();
+    };
     document.getElementById("btnAddCta").onclick = () => {
       state.slides.push(newSlide("cta"));
       previewIndex = state.slides.length - 1;
@@ -545,6 +572,9 @@
       getSlideUrls() {
         return state.slides.map((_, i) => previewUrl(i));
       },
+      getSlideUrlsBlank() {
+        return state.slides.map((_, i) => previewUrlBlank(i));
+      },
       getRunId() {
         return document.getElementById("runId").value.trim() || "post";
       },
@@ -595,34 +625,48 @@
     import { downloadCarouselZip } from "/src/shared/composerZipExport.js";
 
     const zipBtn = document.getElementById("btnZipImages");
+    const zipBlankBtn = document.getElementById("btnZipBlank");
     const zipHint = document.getElementById("zipHint");
 
-    zipBtn.addEventListener("click", async () => {
+    async function runZip({ button, urlsFn, runIdSuffix, doneLabel }) {
       const api = window.__composerZip;
       if (!api?.getSlideUrls) return;
-      const urls = api.getSlideUrls();
+      const urls = urlsFn();
       if (!urls.length) {
         zipHint.textContent = "Adicione pelo menos um slide.";
         return;
       }
-      zipBtn.disabled = true;
+      button.disabled = true;
       zipHint.textContent = "";
       try {
         await downloadCarouselZip({
-          getSlideUrls: () => api.getSlideUrls(),
-          getRunId: () => api.getRunId(),
+          getSlideUrls: urlsFn,
+          getRunId: () => api.getRunId() + (runIdSuffix || ""),
           onProgress: (done, total) => {
             zipHint.textContent = `Gerando imagens… ${done}/${total}`;
           },
         });
-        zipHint.textContent = "Download iniciado: ZIP com img01.png, img02.png, …";
+        zipHint.textContent = doneLabel;
       } catch (e) {
         console.error(e);
         zipHint.textContent = e instanceof Error ? e.message : String(e);
       } finally {
-        zipBtn.disabled = false;
+        button.disabled = false;
       }
-    });
+    }
+
+    zipBtn.addEventListener("click", () => runZip({
+      button: zipBtn,
+      urlsFn: () => window.__composerZip.getSlideUrls(),
+      doneLabel: "Download iniciado: ZIP com img01.png, img02.png, …",
+    }));
+
+    zipBlankBtn.addEventListener("click", () => runZip({
+      button: zipBlankBtn,
+      urlsFn: () => window.__composerZip.getSlideUrlsBlank(),
+      runIdSuffix: "-blank",
+      doneLabel: "Download iniciado: ZIP sem texto (chrome only) para edição no Canva.",
+    }));
   </script>
 </body>
 </html>

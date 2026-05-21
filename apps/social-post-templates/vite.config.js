@@ -15,6 +15,7 @@ export default defineConfig({
         greenBodyChart: "green/slides/body-chart.html",
         greenBodyText: "green/slides/body-text.html",
         greenBodyLogoHalf: "green/slides/body-logo-half.html",
+        greenBodyTextImage: "green/slides/body-text-image.html",
         greenCta: "green/slides/cta.html",
 
         red: "red/index.html",
