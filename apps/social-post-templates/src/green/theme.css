@@ -108,22 +108,17 @@
 .logo-half {
   width: 100%;
   height: 100%;
-  -webkit-mask: url("/images/logos/001-wlogo.png") no-repeat;
-          mask: url("/images/logos/001-wlogo.png") no-repeat;
-  -webkit-mask-size: 200% auto;
-          mask-size: 200% auto;
-  background-color: var(--accent);
-  opacity: 0.95;
+  background-image: url("/images/logos/001-glogo.png");
+  background-repeat: no-repeat;
+  background-size: 200% auto;
 }
 
 [data-body-logo-half][data-side="right"] .logo-half {
-  -webkit-mask-position: left center;
-          mask-position: left center;
+  background-position: left center;
 }
 
 [data-body-logo-half][data-side="left"] .logo-half {
-  -webkit-mask-position: right center;
-          mask-position: right center;
+  background-position: right center;
 }
 
 /* Compact frame for portrait photos in body-image-text */

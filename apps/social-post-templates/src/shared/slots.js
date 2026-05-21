@@ -10,11 +10,13 @@ export function applySlotsFromQuery() {
   const params = new URLSearchParams(window.location.search);
   const slots = {};
   for (const [k, v] of params.entries()) {
-    if (k === "side" || k === "cols" || k === "fit" || k === "blank" || k === "hide") continue;
+    if (k === "side" || k === "cols" || k === "fit" || k === "blank" || k === "hide" || k === "style") continue;
     if (k.startsWith("chrome_")) continue;
     slots[k] = v;
   }
   applySlots(slots);
+  const styleParam = params.get("style");
+  if (styleParam) applySlotStyles(styleParam);
   const hide = params.get("hide");
   if (hide) applyHiddenSlots(hide);
   if (params.get("blank") === "1") applyBlankMode();
@@ -30,6 +32,53 @@ function applyHiddenSlots(hideParam) {
         el.style.display = "none";
       });
     });
+}
+
+const PX_PROPS = new Set([
+  "fontSize",
+  "marginTop",
+  "marginRight",
+  "marginBottom",
+  "marginLeft",
+  "letterSpacing",
+  "lineHeight",
+  "maxHeight",
+  "maxWidth",
+  "width",
+  "height",
+  "top",
+  "right",
+  "bottom",
+  "left",
+]);
+
+function normalizeStyleValue(prop, value) {
+  if (value == null) return null;
+  const str = String(value).trim();
+  if (!str) return null;
+  if (PX_PROPS.has(prop) && /^-?\d+(\.\d+)?$/.test(str)) return str + "px";
+  return str;
+}
+
+function applySlotStyles(styleParam) {
+  let map;
+  try {
+    map = JSON.parse(styleParam);
+  } catch (e) {
+    console.warn("Invalid style param (not JSON)", e);
+    return;
+  }
+  if (!map || typeof map !== "object") return;
+  Object.entries(map).forEach(([key, props]) => {
+    if (!props || typeof props !== "object") return;
+    document.querySelectorAll(`[data-slot="${key}"]`).forEach((el) => {
+      Object.entries(props).forEach(([prop, raw]) => {
+        const value = normalizeStyleValue(prop, raw);
+        if (value == null) return;
+        el.style[prop] = value;
+      });
+    });
+  });
 }
 
 const CHROME_SLOTS = new Set(["topic_tag", "published_at", "card_number"]);

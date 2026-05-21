@@ -325,6 +325,9 @@
       if (Array.isArray(slide.hiddenSlots) && slide.hiddenSlots.length) {
         p.set("hide", slide.hiddenSlots.join(","));
       }
+      if (slide.slotStyles && Object.keys(slide.slotStyles).length) {
+        p.set("style", JSON.stringify(slide.slotStyles));
+      }
       const c = state.chromeSizes;
       p.set("chrome_topic", String(c.topicTagPx));
       p.set("chrome_date", String(c.datePx));
@@ -344,6 +347,110 @@
       const iframe = document.getElementById("preview");
       const url = previewUrl(previewIndex);
       iframe.src = url;
+    }
+
+    const TEXT_STYLE_FIELDS = [
+      { kind: "input", prop: "fontSize",      label: "Fonte (px)" },
+      { kind: "select", prop: "textAlign",     label: "Alinhar",
+        options: [["left","esq"],["center","centro"],["right","dir"],["justify","just"]] },
+      { kind: "input", prop: "lineHeight",    label: "Entrelinha" },
+      { kind: "input", prop: "letterSpacing", label: "Letter-spc" },
+      { kind: "input", prop: "color",         label: "Cor (hex)" },
+      { kind: "input", prop: "marginTop",     label: "Margem topo" },
+      { kind: "input", prop: "marginLeft",    label: "Margem esq" },
+      { kind: "input", prop: "marginRight",   label: "Margem dir" },
+    ];
+
+    const IMAGE_STYLE_FIELDS = [
+      { kind: "input", prop: "width",         label: "Largura" },
+      { kind: "input", prop: "maxHeight",     label: "Altura máx" },
+      { kind: "select", prop: "objectFit",    label: "Object-fit",
+        options: [["contain","contain"],["cover","cover"],["fill","fill"],["none","none"]] },
+      { kind: "select", prop: "objectPosition", label: "Object-pos",
+        options: [
+          ["top center","topo"], ["center","centro"], ["bottom center","base"],
+          ["left center","esquerda"], ["right center","direita"],
+          ["top left","topo-esq"], ["top right","topo-dir"],
+          ["bottom left","base-esq"], ["bottom right","base-dir"],
+        ] },
+      { kind: "input", prop: "marginTop",     label: "Margem topo" },
+      { kind: "input", prop: "marginLeft",    label: "Margem esq" },
+    ];
+
+    function updateSlotStyle(slide, slotKey, prop, value) {
+      if (!slide.slotStyles) slide.slotStyles = {};
+      if (!slide.slotStyles[slotKey]) slide.slotStyles[slotKey] = {};
+      if (value === "" || value == null) {
+        delete slide.slotStyles[slotKey][prop];
+      } else {
+        slide.slotStyles[slotKey][prop] = String(value);
+      }
+      if (Object.keys(slide.slotStyles[slotKey]).length === 0) delete slide.slotStyles[slotKey];
+      if (Object.keys(slide.slotStyles).length === 0) delete slide.slotStyles;
+      syncManifestTextarea();
+      refreshPreview();
+    }
+
+    function renderStylePanel(slide, slotKey) {
+      const details = document.createElement("details");
+      details.style.marginTop = "0.35rem";
+
+      const summary = document.createElement("summary");
+      summary.textContent = "Ajustar estilo";
+      summary.style.fontSize = "0.7rem";
+      summary.style.color = "#94a3b8";
+      summary.style.cursor = "pointer";
+      summary.style.textTransform = "uppercase";
+      summary.style.letterSpacing = "0.05em";
+      details.appendChild(summary);
+
+      const grid = document.createElement("div");
+      grid.style.display = "grid";
+      grid.style.gridTemplateColumns = "1fr 1fr";
+      grid.style.gap = "0.25rem 0.5rem";
+      grid.style.marginTop = "0.4rem";
+
+      const fields = slotKey === "image_url" ? IMAGE_STYLE_FIELDS : TEXT_STYLE_FIELDS;
+      const current = slide.slotStyles?.[slotKey] || {};
+
+      fields.forEach((f) => {
+        const wrap = document.createElement("div");
+        const l = document.createElement("label");
+        l.textContent = f.label;
+        l.style.marginTop = "0";
+        l.style.fontSize = "0.65rem";
+        wrap.appendChild(l);
+
+        let control;
+        if (f.kind === "select") {
+          control = document.createElement("select");
+          const oEmpty = document.createElement("option");
+          oEmpty.value = "";
+          oEmpty.textContent = "—";
+          control.appendChild(oEmpty);
+          f.options.forEach(([v, t]) => {
+            const o = document.createElement("option");
+            o.value = v;
+            o.textContent = t;
+            control.appendChild(o);
+          });
+          control.value = current[f.prop] ?? "";
+          control.onchange = () => updateSlotStyle(slide, slotKey, f.prop, control.value);
+        } else {
+          control = document.createElement("input");
+          control.type = "text";
+          control.placeholder = "—";
+          control.value = current[f.prop] ?? "";
+          control.oninput = () => updateSlotStyle(slide, slotKey, f.prop, control.value);
+        }
+        control.style.fontSize = "0.75rem";
+        control.style.padding = "0.25rem 0.4rem";
+        wrap.appendChild(control);
+        grid.appendChild(wrap);
+      });
+
+      details.appendChild(grid);
+      return details;
     }
 
     function renderSlides() {
@@ -476,6 +583,8 @@
           };
           block.appendChild(labRow);
           block.appendChild(input);
+
+          block.appendChild(renderStylePanel(slide, key));
         });
 
         root.appendChild(block);
