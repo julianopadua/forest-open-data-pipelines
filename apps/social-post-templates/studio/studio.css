@@ -167,6 +167,8 @@ button.btn.danger { background: #7f1d1d; }
 .studio-canvas {
   /* canvas chrome injected here; the post-canvas size is 1080x1350 */
   background-color: var(--bg);
+  /* Allow Moveable handles to render at the very edges without being clipped. */
+  overflow: visible !important;
 }
 
 /* Element wrappers (text + image) */

@@ -90,6 +90,80 @@ const state = {
 
 let moveable = null;
 
+// ---------- Undo / redo history ----------
+const history = { past: [], future: [] };
+const MAX_HISTORY = 100;
+const SNAP_DEBOUNCE_MS = 300;
+let _lastSnapAt = 0;
+
+function snapshot() {
+  return {
+    slides: JSON.parse(JSON.stringify(state.slides)),
+    globalSlots: { ...state.globalSlots },
+    sizes: { ...state.sizes },
+    selectedSlideIdx: state.selectedSlideIdx,
+    selectedElementId: state.selectedElementId,
+  };
+}
+
+function applySnapshot(s) {
+  state.slides = JSON.parse(JSON.stringify(s.slides));
+  state.globalSlots = { ...s.globalSlots };
+  state.sizes = { ...s.sizes };
+  state.selectedSlideIdx = Math.min(s.selectedSlideIdx, state.slides.length - 1);
+  state.selectedElementId = s.selectedElementId;
+  // sync the form inputs that hold global state outside the canvas
+  const gt = document.getElementById("globalTopic");
+  const gp = document.getElementById("globalPubAt");
+  if (gt) gt.value = state.globalSlots.topic_tag;
+  if (gp) gp.value = state.globalSlots.published_at;
+  [
+    ["chromeTopic", "topicTagPx"], ["chromeDate", "datePx"],
+    ["chromePage", "pageNumberPx"], ["chromeLogo", "logoHeightPx"],
+  ].forEach(([id, key]) => {
+    const n = document.getElementById(id);
+    if (n) n.value = state.sizes[key];
+  });
+  renderAll();
+}
+
+function pushHistory({ force = false } = {}) {
+  const now = Date.now();
+  if (!force && now - _lastSnapAt < SNAP_DEBOUNCE_MS) {
+    _lastSnapAt = now;
+    return;
+  }
+  _lastSnapAt = now;
+  history.past.push(snapshot());
+  if (history.past.length > MAX_HISTORY) history.past.shift();
+  history.future.length = 0;
+}
+
+function undo() {
+  if (!history.past.length) return;
+  const prev = history.past.pop();
+  history.future.push(snapshot());
+  applySnapshot(prev);
+}
+
+function redo() {
+  if (!history.future.length) return;
+  const next = history.future.pop();
+  history.past.push(snapshot());
+  applySnapshot(next);
+}
+
+window.addEventListener("keydown", (e) => {
+  const mod = e.metaKey || e.ctrlKey;
+  if (!mod) return;
+  // skip when typing in an input / textarea / contenteditable
+  const ae = document.activeElement;
+  if (ae && (ae.tagName === "INPUT" || ae.tagName === "TEXTAREA" || ae.isContentEditable)) return;
+  const k = e.key.toLowerCase();
+  if (k === "z" && !e.shiftKey) { e.preventDefault(); undo(); }
+  else if ((k === "z" && e.shiftKey) || k === "y") { e.preventDefault(); redo(); }
+});
+
 // ---------- Slide / element factories ----------
 function blankSlide() {
   return { id: uid("slide"), kind: "blank", elements: [] };
@@ -319,47 +393,36 @@ function attachDoubleClickEdit() {
     if (!wasAlreadySelected) {
       selectElement(id);
     }
-    // Trigger drag immediately from this same mousedown
+    // Trigger drag immediately from this same mousedown. Pass the wrap as target
+    // so Moveable uses it even if the internal target hasn't fully synced yet.
     if (moveable && typeof moveable.dragStart === "function") {
-      try { moveable.dragStart(e); } catch (err) { /* ignore */ }
+      try { moveable.dragStart(e, wrap); } catch (err) { /* ignore */ }
     }
   });
 }
 
-function ensureMoveable() {
-  if (moveable) return moveable;
-  moveable = new Moveable(card, {
-    target: null,
-    draggable: true,
-    resizable: true,
-    keepRatio: false,
-    snappable: true,
-    snapCenter: true,
-    snapThreshold: 5,
-    elementGuidelines: [],
-    snapDirections: { top: true, left: true, right: true, bottom: true, center: true, middle: true },
-    elementSnapDirections: { top: true, left: true, right: true, bottom: true, center: true, middle: true },
-  });
-
-  moveable.on("drag", (e) => {
+function attachMoveableHandlers(m) {
+  m.on("dragStart", () => { pushHistory({ force: true }); });
+  m.on("resizeStart", () => { pushHistory({ force: true }); });
+  m.on("drag", (e) => {
     e.target.style.transform = e.transform;
   });
-  moveable.on("dragEnd", (e) => {
+  m.on("dragEnd", (e) => {
     const el = findElement(state.selectedElementId);
     if (!el) return;
     el.x += e.lastEvent?.beforeTranslate?.[0] ?? 0;
     el.y += e.lastEvent?.beforeTranslate?.[1] ?? 0;
     e.target.style.transform = "";
     applyElementGeom(e.target, el);
-    moveable.updateRect();
+    m.updateRect();
     renderPropsPanel();
   });
-  moveable.on("resize", (e) => {
+  m.on("resize", (e) => {
     e.target.style.width = `${e.width}px`;
     e.target.style.height = `${e.height}px`;
     e.target.style.transform = e.drag.transform;
   });
-  moveable.on("resizeEnd", (e) => {
+  m.on("resizeEnd", (e) => {
     const el = findElement(state.selectedElementId);
     if (!el) return;
     el.w = parseFloat(e.target.style.width);
@@ -368,30 +431,46 @@ function ensureMoveable() {
     el.y += e.lastEvent?.drag?.beforeTranslate?.[1] ?? 0;
     e.target.style.transform = "";
     applyElementGeom(e.target, el);
-    moveable.updateRect();
+    m.updateRect();
     renderPropsPanel();
   });
+}
+
+function ensureMoveable() {
+  // Compat alias — older code paths still call this. We always have a Moveable
+  // in `moveable` after the first selection; nothing else uses ensureMoveable.
   return moveable;
 }
 
 function syncMoveableTarget() {
-  ensureMoveable();
-  if (!state.selectedElementId) {
-    moveable.target = null;
-    moveable.updateRect();
-    return;
-  }
+  if (moveable) { moveable.destroy(); moveable = null; }
+  if (!state.selectedElementId) return null;
   const target = card.querySelector(`.el[data-element-id="${state.selectedElementId}"]`);
-  if (!target) {
-    moveable.target = null;
-    moveable.updateRect();
-    return;
-  }
+  if (!target) return null;
+  const chromeNodes = [
+    card.querySelector('[data-slot="topic_tag"]'),
+    card.querySelector('[data-slot="published_at"]'),
+    card.querySelector('[data-slot="card_number"]'),
+    card.querySelector(".footer-brand-logo"),
+  ].filter(Boolean);
   const guidelines = Array.from(card.querySelectorAll(".el")).filter((n) => n !== target)
-    .concat(Array.from(card.querySelectorAll(".guide")));
-  moveable.target = target;
-  moveable.elementGuidelines = guidelines;
-  moveable.updateRect();
+    .concat(Array.from(card.querySelectorAll(".guide")))
+    .concat(chromeNodes);
+
+  moveable = new Moveable(card, {
+    target,
+    draggable: true,
+    resizable: true,
+    keepRatio: false,
+    snappable: true,
+    snapCenter: true,
+    snapThreshold: 5,
+    elementGuidelines: guidelines,
+    snapDirections: { top: true, left: true, right: true, bottom: true, center: true, middle: true },
+    elementSnapDirections: { top: true, left: true, right: true, bottom: true, center: true, middle: true },
+  });
+  attachMoveableHandlers(moveable);
+  return moveable;
 }
 
 function selectElement(id) {
@@ -409,6 +488,7 @@ function findElement(id) {
 }
 
 function beginInlineEdit(id, node) {
+  pushHistory({ force: true });
   node.setAttribute("contenteditable", "true");
   node.focus();
   document.execCommand && document.execCommand("selectAll", false, null);
@@ -460,6 +540,7 @@ function labelFor(s) {
 function moveSlide(i, delta) {
   const j = i + delta;
   if (j < 0 || j >= state.slides.length) return;
+  pushHistory({ force: true });
   const t = state.slides[i];
   state.slides[i] = state.slides[j];
   state.slides[j] = t;
@@ -469,6 +550,7 @@ function moveSlide(i, delta) {
 }
 
 function duplicateSlide(i) {
+  pushHistory({ force: true });
   const clone = JSON.parse(JSON.stringify(state.slides[i]));
   clone.id = uid("slide");
   clone.elements.forEach((el) => { el.id = uid("el"); });
@@ -480,6 +562,7 @@ function duplicateSlide(i) {
 
 function deleteSlide(i) {
   if (state.slides[i].elements.length > 0 && !confirm("Apagar este slide?")) return;
+  pushHistory({ force: true });
   state.slides.splice(i, 1);
   if (state.slides.length === 0) state.slides.push(blankSlide());
   state.selectedSlideIdx = Math.min(state.selectedSlideIdx, state.slides.length - 1);
@@ -492,6 +575,7 @@ document.getElementById("btnAddBlank").onclick = () => addSlide(blankSlide());
 document.getElementById("btnAddCta").onclick   = () => addSlide(ctaSlide());
 
 function addSlide(slide) {
+  pushHistory({ force: true });
   state.slides.splice(state.selectedSlideIdx + 1, 0, slide);
   state.selectedSlideIdx += 1;
   state.selectedElementId = null;
@@ -500,11 +584,20 @@ function addSlide(slide) {
 
 // ---------- Add element buttons ----------
 document.getElementById("btnAddText").onclick = () => {
+  pushHistory({ force: true });
   const el = makeTextElement();
   currentSlide().elements.push(el);
   state.selectedElementId = el.id;
   renderAll();
 };
+
+function addImageFromDataUrl(dataUrl) {
+  pushHistory({ force: true });
+  const el = makeImageElement(dataUrl);
+  currentSlide().elements.push(el);
+  state.selectedElementId = el.id;
+  renderAll();
+}
 
 const imgFileInput = document.getElementById("imgFileInput");
 document.getElementById("btnAddImage").onclick = () => imgFileInput.click();
@@ -512,12 +605,7 @@ imgFileInput.addEventListener("change", (e) => {
   const file = e.target.files?.[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = () => {
-    const el = makeImageElement(reader.result);
-    currentSlide().elements.push(el);
-    state.selectedElementId = el.id;
-    renderAll();
-  };
+  reader.onload = () => addImageFromDataUrl(reader.result);
   reader.readAsDataURL(file);
   imgFileInput.value = "";
 });
@@ -525,20 +613,36 @@ imgFileInput.addEventListener("change", (e) => {
 document.getElementById("btnAddImageUrl").onclick = () => {
   const url = document.getElementById("imgUrlInput").value.trim();
   if (!url) return;
-  const el = makeImageElement(url);
-  currentSlide().elements.push(el);
-  state.selectedElementId = el.id;
+  addImageFromDataUrl(url);
   document.getElementById("imgUrlInput").value = "";
-  renderAll();
 };
+
+// Paste images from clipboard. Skip when typing in a form field / text element.
+window.addEventListener("paste", (e) => {
+  const ae = document.activeElement;
+  if (ae && (ae.tagName === "INPUT" || ae.tagName === "TEXTAREA" || ae.isContentEditable)) return;
+  const items = e.clipboardData?.items;
+  if (!items) return;
+  for (const item of items) {
+    if (item.type && item.type.startsWith("image/")) {
+      const file = item.getAsFile();
+      if (!file) continue;
+      e.preventDefault();
+      const r = new FileReader();
+      r.onload = () => addImageFromDataUrl(r.result);
+      r.readAsDataURL(file);
+      return;
+    }
+  }
+});
 
 // ---------- Global metadata ----------
 const globalTopic = document.getElementById("globalTopic");
 const globalPubAt = document.getElementById("globalPubAt");
 globalTopic.value = state.globalSlots.topic_tag;
 globalPubAt.value = state.globalSlots.published_at;
-globalTopic.oninput = () => { state.globalSlots.topic_tag = globalTopic.value; renderActiveSlide(); };
-globalPubAt.oninput = () => { state.globalSlots.published_at = globalPubAt.value; renderActiveSlide(); };
+globalTopic.oninput = () => { pushHistory(); state.globalSlots.topic_tag = globalTopic.value; renderActiveSlide(); };
+globalPubAt.oninput = () => { pushHistory(); state.globalSlots.published_at = globalPubAt.value; renderActiveSlide(); };
 
 const chromeInputs = [
   ["chromeTopic", "topicTagPx"],
@@ -550,6 +654,7 @@ chromeInputs.forEach(([id, key]) => {
   const node = document.getElementById(id);
   node.value = state.sizes[key];
   node.oninput = () => {
+    pushHistory();
     const v = Number(node.value);
     if (Number.isFinite(v)) state.sizes[key] = v;
     applyChromeSizes(state.sizes);
@@ -572,6 +677,7 @@ document.getElementById("customColor").oninput = (e) => applyColorToSelection(e.
 function applyColorToSelection(color) {
   const el = findElement(state.selectedElementId);
   if (!el || el.type !== "text") return;
+  pushHistory();
   el.color = color;
   const wrap = card.querySelector(`.el[data-element-id="${el.id}"] .text-content`);
   if (wrap) applyTextStyle(wrap, el);
@@ -608,6 +714,7 @@ function renderPropsPanel() {
     const l = document.createElement("label"); l.textContent = k.toUpperCase();
     const i = document.createElement("input"); i.type = "number"; i.value = String(el[k]);
     i.oninput = () => {
+      pushHistory();
       const v = Number(i.value);
       if (!Number.isFinite(v)) return;
       el[k] = v;
@@ -625,15 +732,17 @@ function renderPropsPanel() {
 
   const actions = document.createElement("div");
   actions.className = "btn-row";
-  const front = btn("Trazer p/ frente", "small", () => { slide.elements.splice(idx, 1); slide.elements.push(el); renderAll(); selectElement(el.id); });
-  const back  = btn("Enviar p/ trás", "small", () => { slide.elements.splice(idx, 1); slide.elements.unshift(el); renderAll(); selectElement(el.id); });
+  const front = btn("Trazer p/ frente", "small", () => { pushHistory({ force: true }); slide.elements.splice(idx, 1); slide.elements.push(el); renderAll(); selectElement(el.id); });
+  const back  = btn("Enviar p/ trás", "small", () => { pushHistory({ force: true }); slide.elements.splice(idx, 1); slide.elements.unshift(el); renderAll(); selectElement(el.id); });
   const dup   = btn("Duplicar", "small", () => {
+    pushHistory({ force: true });
     const c = JSON.parse(JSON.stringify(el));
     c.id = uid("el"); c.x += 20; c.y += 20;
     slide.elements.splice(idx + 1, 0, c);
     renderAll(); selectElement(c.id);
   });
   const del   = btn("Apagar", "small danger", () => {
+    pushHistory({ force: true });
     slide.elements.splice(idx, 1);
     state.selectedElementId = null;
     renderAll();
@@ -665,7 +774,7 @@ function renderTextProps(el) {
   colorWrap.style.marginTop = "0.5rem";
   const cl = document.createElement("label"); cl.textContent = "Cor"; colorWrap.appendChild(cl);
   const ci = document.createElement("input"); ci.type = "color"; ci.value = el.color;
-  ci.oninput = () => { el.color = ci.value; applyTextOnly(el); };
+  ci.oninput = () => { pushHistory(); el.color = ci.value; applyTextOnly(el); };
   colorWrap.appendChild(ci);
   propsBody.appendChild(colorWrap);
 }
@@ -682,7 +791,7 @@ function renderImageProps(el) {
     f.onchange = () => {
       const file = f.files?.[0]; if (!file) return;
       const r = new FileReader();
-      r.onload = () => { el.src = r.result; renderAll(); selectElement(el.id); };
+      r.onload = () => { pushHistory({ force: true }); el.src = r.result; renderAll(); selectElement(el.id); };
       r.readAsDataURL(file);
     };
     f.click();
@@ -720,6 +829,7 @@ function addNumber(parent, label, key, el, apply, step = 1) {
   const l = document.createElement("label"); l.textContent = label;
   const i = document.createElement("input"); i.type = "number"; i.step = String(step); i.value = String(el[key] ?? "");
   i.oninput = () => {
+    pushHistory();
     const v = Number(i.value);
     if (Number.isFinite(v)) el[key] = v;
     apply(el);
@@ -737,7 +847,7 @@ function addSelect(parent, label, key, el, opts, apply) {
     if (el[key] === v) o.selected = true;
     s.appendChild(o);
   });
-  s.onchange = () => { el[key] = s.value; apply(el); };
+  s.onchange = () => { pushHistory({ force: true }); el[key] = s.value; apply(el); };
   wrap.append(l, s);
   parent.appendChild(wrap);
 }
@@ -770,6 +880,7 @@ loadFile.addEventListener("change", (e) => {
         alert(`Manifest é do tema "${data.theme}", abra o studio nesse tema (?theme=${data.theme}).`);
         return;
       }
+      pushHistory({ force: true });
       state.globalSlots = data.globalSlots || state.globalSlots;
       state.sizes = { ...DEFAULT_CHROME, ...(data.sizes || {}) };
       state.slides = data.slides && data.slides.length ? data.slides : [blankSlide()];
