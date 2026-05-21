@@ -7,12 +7,14 @@
     "pageNumberPx": 24,
     "logoHeightPx": 54
   },
+  "globalSlots": {
+    "topic_tag": "Instituto Forest",
+    "published_at": "Mai 2026"
+  },
   "slides": [
     {
       "type": "cover",
       "slots": {
-        "topic_tag": "Instituto Forest",
-        "published_at": "Mai 2026",
         "series_label": "Apresentação",
         "title": "Bem-vindo ao Instituto Forest",
         "summary": "Um portal centralizado de dados abertos para analistas, pesquisadores e quem precisa olhar problemas reais com uma visão sistêmica.",
@@ -23,8 +25,6 @@
       "type": "body_logo_half",
       "logoSide": "right",
       "slots": {
-        "topic_tag": "Instituto Forest",
-        "published_at": "Mai 2026",
         "caption": "Propósito institucional",
         "body_text": "Dados abertos devem ser de fácil acesso para todos. O Instituto reúne fontes dispersas em um único ambiente e atua como agregador: ao baixar pela plataforma, você é redirecionado às URLs originais e obtém os dados diretamente das fontes primárias, com transparência de processo.",
         "card_number": "02 / 07"
@@ -34,8 +34,6 @@
       "type": "body_logo_half",
       "logoSide": "left",
       "slots": {
-        "topic_tag": "Instituto Forest",
-        "published_at": "Mai 2026",
         "caption": "Compromissos",
         "body_text": "Instituição sem fins lucrativos. Dados abertos de INPE, INMET, CVM, Ibama, IBGE, Conab, ANP. Sensoriamento remoto e satélite. Investimentos do BID e Banco Mundial. Análise e reportagem reprodutíveis. Escalabilidade por automação, modularidade e padrões abertos.",
         "card_number": "03 / 07"
@@ -44,8 +42,6 @@
     {
       "type": "body_text_image",
       "slots": {
-        "topic_tag": "Instituto Forest",
-        "published_at": "Mai 2026",
         "caption": "Oferecemos uma API pública",
         "body_text": "O catálogo agregado pode ser consultado e baixado de forma programática para incorporar os dados em pipelines, painéis e estudos, sem precisar visitar cada site individualmente.",
         "image_url": "/images/api-page.png",
@@ -57,8 +53,6 @@
       "imageSide": "right",
       "imageFit": "compact",
       "slots": {
-        "topic_tag": "Instituto Forest",
-        "published_at": "Mai 2026",
         "image_url": "/images/whoweare/myself4.jpg",
         "caption": "Juliano Pádua · fundador",
         "body_text": "Formando em Engenharia de Computação, com vivências em mercado e em pesquisa. Minha trajetória cruza infraestrutura, dados e meio ambiente. TCC em aprendizado de máquina para detecção de focos de incêndio, no repositório UFSCar.",
@@ -68,8 +62,6 @@
     {
       "type": "body_text_image",
       "slots": {
-        "topic_tag": "Instituto Forest",
-        "published_at": "Mai 2026",
         "caption": "Hoje e futuro",
         "body_text": "Hoje o Instituto se organiza em torno de dados abertos, automação e narrativas técnicas. Dados abertos por meio de código aberto: a comunidade open source é um dos nossos mantras. Olhamos para frente reforçando projetos aplicados que possam ser verificados e replicados gratuitamente.",
         "image_url": "/images/open-data-page.png",
@@ -79,8 +71,6 @@
     {
       "type": "cta",
       "slots": {
-        "topic_tag": "Instituto Forest",
-        "published_at": "Mai 2026",
         "cta_kicker": "Quer conhecer melhor?",
         "cta_headline": "Acompanhe o Instituto Forest",
         "cta_subline": "Dados abertos, código aberto e análises reprodutíveis em um portal centralizado.",
