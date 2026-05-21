@@ -322,6 +322,9 @@
       }
       if (slide.type === "body_text") p.set("cols", String(slide.columns ?? 2));
       if (slide.type === "body_logo_half") p.set("side", slide.logoSide || "right");
+      if (Array.isArray(slide.hiddenSlots) && slide.hiddenSlots.length) {
+        p.set("hide", slide.hiddenSlots.join(","));
+      }
       const c = state.chromeSizes;
       p.set("chrome_topic", String(c.topicTagPx));
       p.set("chrome_date", String(c.datePx));
@@ -427,8 +430,40 @@
         }
 
         Object.keys(slide.slots).forEach((key) => {
+          const labRow = document.createElement("div");
+          labRow.style.display = "flex";
+          labRow.style.alignItems = "center";
+          labRow.style.gap = "0.5rem";
+          labRow.style.marginTop = "0.5rem";
+
+          const vis = document.createElement("input");
+          vis.type = "checkbox";
+          vis.title = "Mostrar este campo no slide";
+          vis.style.width = "auto";
+          vis.style.margin = "0";
+          const isHidden = Array.isArray(slide.hiddenSlots) && slide.hiddenSlots.includes(key);
+          vis.checked = !isHidden;
+          vis.onchange = () => {
+            if (!Array.isArray(slide.hiddenSlots)) slide.hiddenSlots = [];
+            const idx = slide.hiddenSlots.indexOf(key);
+            if (vis.checked) {
+              if (idx >= 0) slide.hiddenSlots.splice(idx, 1);
+            } else {
+              if (idx < 0) slide.hiddenSlots.push(key);
+            }
+            if (slide.hiddenSlots.length === 0) delete slide.hiddenSlots;
+            syncManifestTextarea();
+            refreshPreview();
+          };
+
           const lab = document.createElement("label");
           lab.textContent = key;
+          lab.style.margin = "0";
+          lab.style.flex = "1";
+
+          labRow.appendChild(vis);
+          labRow.appendChild(lab);
+
           const input =
             key === "summary" || key.includes("text_col") || key === "body_text" || key === "cta_subline"
               ? document.createElement("textarea")
@@ -439,7 +474,7 @@
             slide.slots[key] = input.value;
             syncManifestTextarea();
           };
-          block.appendChild(lab);
+          block.appendChild(labRow);
           block.appendChild(input);
         });
 

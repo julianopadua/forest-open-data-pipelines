@@ -10,12 +10,26 @@ export function applySlotsFromQuery() {
   const params = new URLSearchParams(window.location.search);
   const slots = {};
   for (const [k, v] of params.entries()) {
-    if (k === "side" || k === "cols" || k === "fit" || k === "blank") continue;
+    if (k === "side" || k === "cols" || k === "fit" || k === "blank" || k === "hide") continue;
     if (k.startsWith("chrome_")) continue;
     slots[k] = v;
   }
   applySlots(slots);
+  const hide = params.get("hide");
+  if (hide) applyHiddenSlots(hide);
   if (params.get("blank") === "1") applyBlankMode();
+}
+
+function applyHiddenSlots(hideParam) {
+  hideParam
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .forEach((key) => {
+      document.querySelectorAll(`[data-slot="${key}"]`).forEach((el) => {
+        el.style.display = "none";
+      });
+    });
 }
 
 const CHROME_SLOTS = new Set(["topic_tag", "published_at", "card_number"]);

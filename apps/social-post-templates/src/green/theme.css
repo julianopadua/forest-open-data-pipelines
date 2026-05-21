@@ -128,10 +128,13 @@
 
 /* Compact frame for portrait photos in body-image-text */
 [data-body-image-text][data-fit="compact"] .body-image-frame {
-  flex: 0 0 auto;
+  flex: 1 1 0;
   max-height: 720px;
   align-self: center;
-  width: 100%;
+}
+
+[data-body-image-text][data-fit="compact"] .body-image-frame img {
+  object-position: top center;
 }
 
 /* Body: text on top + supporting image below */
@@ -161,8 +164,6 @@
   width: 100%;
   border-radius: 0.5rem;
   overflow: hidden;
-  background: var(--bg-secondary);
-  border: 1px solid var(--accent-muted);
   display: flex;
   align-items: center;
   justify-content: center;
