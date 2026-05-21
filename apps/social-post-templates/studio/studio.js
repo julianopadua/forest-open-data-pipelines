@@ -281,18 +281,15 @@ function renderActiveSlide() {
   const slide = currentSlide();
   slide.elements.forEach(renderElement);
   applyChromeSizes(state.sizes);
-  attachSelection();
-  reattachMoveable();
+  attachDoubleClickEdit();
+  syncMoveableTarget();
 }
 
-function attachSelection() {
+let _delegatedMousedownAttached = false;
+
+function attachDoubleClickEdit() {
   card.querySelectorAll(".el").forEach((wrap) => {
     const id = wrap.dataset.elementId;
-    wrap.addEventListener("mousedown", (e) => {
-      if (wrap.querySelector(".text-content[contenteditable='true']")) return;
-      e.stopPropagation();
-      selectElement(id);
-    });
     const textNode = wrap.querySelector(".text-content");
     if (textNode) {
       wrap.addEventListener("dblclick", (e) => {
@@ -301,37 +298,45 @@ function attachSelection() {
       });
     }
   });
+
+  if (_delegatedMousedownAttached) return;
+  _delegatedMousedownAttached = true;
+
   card.addEventListener("mousedown", (e) => {
-    if (e.target === card) selectElement(null);
+    // Let Moveable handles process their own clicks
+    if (e.target.closest(".moveable-control-box, .moveable-line, .moveable-direction, .moveable-control, .moveable-area")) {
+      return;
+    }
+    const wrap = e.target.closest(".el");
+    if (!wrap) {
+      selectElement(null);
+      return;
+    }
+    if (wrap.querySelector(".text-content[contenteditable='true']")) return;
+
+    const id = wrap.dataset.elementId;
+    const wasAlreadySelected = state.selectedElementId === id;
+    if (!wasAlreadySelected) {
+      selectElement(id);
+    }
+    // Trigger drag immediately from this same mousedown
+    if (moveable && typeof moveable.dragStart === "function") {
+      try { moveable.dragStart(e); } catch (err) { /* ignore */ }
+    }
   });
 }
 
-function selectElement(id) {
-  state.selectedElementId = id;
-  card.querySelectorAll(".el").forEach((w) => {
-    w.classList.toggle("selected", w.dataset.elementId === id);
-  });
-  reattachMoveable();
-  renderPropsPanel();
-}
-
-function reattachMoveable() {
-  if (moveable) { moveable.destroy(); moveable = null; }
-  if (!state.selectedElementId) return;
-  const target = card.querySelector(`.el[data-element-id="${state.selectedElementId}"]`);
-  if (!target) return;
-  const guidelines = Array.from(card.querySelectorAll(".el")).filter((n) => n !== target)
-    .concat(Array.from(card.querySelectorAll(".guide")));
-
+function ensureMoveable() {
+  if (moveable) return moveable;
   moveable = new Moveable(card, {
-    target,
+    target: null,
     draggable: true,
     resizable: true,
     keepRatio: false,
     snappable: true,
     snapCenter: true,
     snapThreshold: 5,
-    elementGuidelines: guidelines,
+    elementGuidelines: [],
     snapDirections: { top: true, left: true, right: true, bottom: true, center: true, middle: true },
     elementSnapDirections: { top: true, left: true, right: true, bottom: true, center: true, middle: true },
   });
@@ -366,6 +371,36 @@ function reattachMoveable() {
     moveable.updateRect();
     renderPropsPanel();
   });
+  return moveable;
+}
+
+function syncMoveableTarget() {
+  ensureMoveable();
+  if (!state.selectedElementId) {
+    moveable.target = null;
+    moveable.updateRect();
+    return;
+  }
+  const target = card.querySelector(`.el[data-element-id="${state.selectedElementId}"]`);
+  if (!target) {
+    moveable.target = null;
+    moveable.updateRect();
+    return;
+  }
+  const guidelines = Array.from(card.querySelectorAll(".el")).filter((n) => n !== target)
+    .concat(Array.from(card.querySelectorAll(".guide")));
+  moveable.target = target;
+  moveable.elementGuidelines = guidelines;
+  moveable.updateRect();
+}
+
+function selectElement(id) {
+  state.selectedElementId = id;
+  card.querySelectorAll(".el").forEach((w) => {
+    w.classList.toggle("selected", w.dataset.elementId === id);
+  });
+  syncMoveableTarget();
+  renderPropsPanel();
 }
 
 function findElement(id) {
