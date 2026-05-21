@@ -70,6 +70,55 @@
   display: none;
 }
 
+/* Body: half-logo + text (logo continuum across two slides) */
+[data-body-logo-half] {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 2rem;
+  height: 100%;
+}
+
+[data-body-logo-half][data-side="left"] {
+  flex-direction: row-reverse;
+}
+
+[data-body-logo-half] .body-text-col {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+[data-body-logo-half] .body-text-col [data-slot="body_text"] {
+  text-align: justify;
+  text-justify: inter-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+
+.logo-half {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 100%;
+  -webkit-mask: url("/images/logos/001-wlogo.png") no-repeat;
+          mask: url("/images/logos/001-wlogo.png") no-repeat;
+  -webkit-mask-size: 200% auto;
+          mask-size: 200% auto;
+  background-color: var(--accent);
+  opacity: 0.92;
+}
+
+[data-body-logo-half][data-side="right"] .logo-half {
+  -webkit-mask-position: left center;
+          mask-position: left center;
+}
+
+[data-body-logo-half][data-side="left"] .logo-half {
+  -webkit-mask-position: right center;
+          mask-position: right center;
+}
+
 /* Body: chart (large image) + legend + text */
 [data-body-chart] {
   display: flex;

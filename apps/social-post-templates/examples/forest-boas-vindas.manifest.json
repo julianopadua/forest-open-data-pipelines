@@ -1,0 +1,99 @@
+{
+  "theme": "green",
+  "runId": "forest-boas-vindas",
+  "sizes": {
+    "topicTagPx": 24,
+    "datePx": 26,
+    "pageNumberPx": 24,
+    "logoHeightPx": 54
+  },
+  "slides": [
+    {
+      "type": "cover",
+      "slots": {
+        "topic_tag": "Instituto Forest",
+        "published_at": "Mai 2026",
+        "series_label": "Apresentação",
+        "title": "Bem-vindo ao Instituto Forest",
+        "summary": "Um portal centralizado de dados abertos para analistas, pesquisadores e quem precisa olhar problemas reais com uma visão sistêmica.",
+        "card_number": "01 / 08"
+      }
+    },
+    {
+      "type": "body_logo_half",
+      "logoSide": "right",
+      "slots": {
+        "topic_tag": "Instituto Forest",
+        "published_at": "Mai 2026",
+        "caption": "Propósito institucional",
+        "body_text": "Dados abertos devem ser de fácil acesso para todos. O Instituto reúne fontes dispersas em um único ambiente e atua como agregador: ao baixar pela plataforma, você é redirecionado às URLs originais e obtém os dados diretamente das fontes primárias, com transparência de processo.",
+        "card_number": "02 / 08"
+      }
+    },
+    {
+      "type": "body_logo_half",
+      "logoSide": "left",
+      "slots": {
+        "topic_tag": "Instituto Forest",
+        "published_at": "Mai 2026",
+        "caption": "Compromissos",
+        "body_text": "Instituição sem fins lucrativos. Dados abertos de INPE, INMET, CVM, Ibama, IBGE, Conab, ANP. Sensoriamento remoto e satélite. Investimentos do BID e Banco Mundial. Análise e reportagem reprodutíveis. Escalabilidade por automação, modularidade e padrões abertos.",
+        "card_number": "03 / 08"
+      }
+    },
+    {
+      "type": "body_text",
+      "columns": 1,
+      "slots": {
+        "topic_tag": "Instituto Forest",
+        "published_at": "Mai 2026",
+        "text_col_1": "Oferecemos também uma API pública. O catálogo agregado pode ser consultado e baixado de forma programática, para incorporar os dados em seus próprios pipelines, painéis e estudos, sem precisar visitar cada site individualmente.",
+        "card_number": "04 / 08"
+      }
+    },
+    {
+      "type": "body_text",
+      "columns": 1,
+      "slots": {
+        "topic_tag": "Instituto Forest",
+        "published_at": "Mai 2026",
+        "text_col_1": "Quem somos: tecnologia, dados e engenharia a serviço de desafios econômicos, sociais e ambientais. Inspirados pela Teoria Geral dos Sistemas, trabalhamos a interseção entre computação e meio ambiente com método interdisciplinar e contribuição direta à comunidade open source.",
+        "card_number": "05 / 08"
+      }
+    },
+    {
+      "type": "body_image_text",
+      "imageSide": "right",
+      "slots": {
+        "topic_tag": "Instituto Forest",
+        "published_at": "Mai 2026",
+        "image_url": "/images/whoweare/myself4.jpg",
+        "caption": "Juliano Pádua · fundador",
+        "body_text": "Formando em Engenharia de Computação, com vivências em mercado e em pesquisa. Minha trajetória cruza infraestrutura, dados e meio ambiente. TCC em aprendizado de máquina para detecção de focos de incêndio, no repositório UFSCar.",
+        "card_number": "06 / 08"
+      }
+    },
+    {
+      "type": "body_text",
+      "columns": 1,
+      "slots": {
+        "topic_tag": "Instituto Forest",
+        "published_at": "Mai 2026",
+        "text_col_1": "Hoje, o Instituto se organiza em torno de dados abertos, automação e narrativas técnicas. Dados abertos por meio de código aberto: a comunidade open source é um dos nossos mantras. Olhamos para frente reforçando projetos aplicados que possam ser verificados e replicados gratuitamente.",
+        "card_number": "07 / 08"
+      }
+    },
+    {
+      "type": "cta",
+      "slots": {
+        "topic_tag": "Instituto Forest",
+        "published_at": "Mai 2026",
+        "cta_kicker": "Quer conhecer melhor?",
+        "cta_headline": "Acompanhe o Instituto Forest",
+        "cta_subline": "Dados abertos, código aberto e análises reprodutíveis em um portal centralizado.",
+        "cta_url": "institutoforest.org",
+        "card_number": "08 / 08"
+      }
+    }
+  ]
+}

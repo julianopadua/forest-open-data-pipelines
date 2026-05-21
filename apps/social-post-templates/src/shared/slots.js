@@ -45,6 +45,10 @@ function applyLayoutParams() {
     if (root) {
       root.dataset.side = side;
     }
+    const logoRoot = document.querySelector("[data-body-logo-half]");
+    if (logoRoot) {
+      logoRoot.dataset.side = side;
+    }
   }
   const cols = params.get("cols");
   if (cols === "1" || cols === "2") {
