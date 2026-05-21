@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Forest Studio · WYSIWYG</title>
+  <link rel="stylesheet" href="../src/style.css" />
+  <link id="themeCss" rel="stylesheet" href="" />
+  <link rel="stylesheet" href="./studio.css" />
+</head>
+<body>
+  <header class="studio-header">
+    <a class="studio-back" href="../index.html">← Início</a>
+    <h1>Forest Studio · <span id="hdrThemeName">verde</span></h1>
+    <span class="studio-subtitle">Editor livre. Arraste, alinhe, edite à vontade.</span>
+  </header>
+
+  <div class="studio-layout">
+
+    <aside class="studio-sidebar" id="sidebarLeft">
+      <section>
+        <h3>Slides</h3>
+        <div id="slidesList" class="slides-list"></div>
+        <div class="btn-row">
+          <button type="button" id="btnAddCover" class="btn">+ Capa</button>
+          <button type="button" id="btnAddBlank" class="btn primary">+ Slide</button>
+          <button type="button" id="btnAddCta" class="btn">+ Final</button>
+        </div>
+      </section>
+
+      <section>
+        <h3>Adicionar</h3>
+        <div class="btn-row">
+          <button type="button" id="btnAddText" class="btn primary">+ Texto</button>
+          <button type="button" id="btnAddImage" class="btn primary">+ Imagem</button>
+        </div>
+        <input type="file" id="imgFileInput" accept="image/*" style="display:none" />
+        <label class="micro-label">Ou cole uma URL</label>
+        <div class="row-inline">
+          <input type="text" id="imgUrlInput" placeholder="/images/..." />
+          <button type="button" id="btnAddImageUrl" class="btn small">Adicionar</button>
+        </div>
+      </section>
+
+      <section>
+        <h3>Metadados globais</h3>
+        <label>Topic tag</label>
+        <input type="text" id="globalTopic" />
+        <label>Publicado em</label>
+        <input type="text" id="globalPubAt" />
+        <div class="grid-2">
+          <div><label>Tópico (px)</label><input type="number" id="chromeTopic" min="10" max="56" /></div>
+          <div><label>Data (px)</label><input type="number" id="chromeDate" min="10" max="48" /></div>
+          <div><label>Nº pág (px)</label><input type="number" id="chromePage" min="10" max="48" /></div>
+          <div><label>Logo (px)</label><input type="number" id="chromeLogo" min="24" max="96" /></div>
+        </div>
+      </section>
+
+      <section>
+        <h3>Persistência</h3>
+        <div class="btn-row">
+          <button type="button" id="btnSave" class="btn">Salvar manifest</button>
+          <button type="button" id="btnLoad" class="btn">Carregar manifest</button>
+        </div>
+        <input type="file" id="loadFile" accept="application/json" style="display:none" />
+        <div class="btn-row">
+          <button type="button" id="btnExport" class="btn primary">Exportar ZIP PNG</button>
+          <button type="button" id="btnExportBlank" class="btn">ZIP sem texto</button>
+        </div>
+        <p class="hint" id="exportHint"></p>
+      </section>
+    </aside>
+
+    <main class="studio-stage" id="stage">
+      <div class="canvas-scaler stage-scaler">
+        <div id="card" class="post-canvas grid-cross studio-canvas">
+          <!-- chrome corners and elements injected by studio.js -->
+        </div>
+      </div>
+    </main>
+
+    <aside class="studio-sidebar studio-right" id="sidebarRight">
+      <section id="paletteSection">
+        <h3>Paleta do tema</h3>
+        <div id="paletteSwatches" class="swatches"></div>
+        <label>Cor personalizada</label>
+        <input type="color" id="customColor" />
+      </section>
+
+      <section id="elementProps" class="hidden">
+        <h3>Elemento selecionado</h3>
+        <div id="propsBody"></div>
+      </section>
+
+      <section id="emptyHint">
+        <h3>Sem seleção</h3>
+        <p class="hint">Clique num elemento do canvas para editar. Duplo-clique em texto para editar inline. Use a paleta acima para aplicar cores rapidamente.</p>
+      </section>
+    </aside>
+  </div>
+
+  <script type="module" src="./studio.js"></script>
+</body>
+</html>

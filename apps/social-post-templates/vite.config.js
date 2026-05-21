@@ -7,6 +7,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: "index.html",
+        studio: "studio/index.html",
 
         green: "green/index.html",
         greenComposer: "green/composer.html",
