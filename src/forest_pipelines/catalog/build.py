@@ -19,11 +19,12 @@ import yaml
 
 from forest_pipelines.catalog.anp_placement import anp_id_from_slug, placement_for_dataset
 
-#schema 1.1: adds optional per-dataset generated_at and last_release_iso so the portal
-#renders the catalog page without per-manifest browser fetches. additive change.
-CATALOG_SCHEMA_VERSION = "1.1"
+#schema 1.2: adds compact bilingual card fields and report card metadata.
+CATALOG_SCHEMA_VERSION = "1.2"
 DEFAULT_CATALOG_BUCKET_PREFIX = "catalog"
 ANP_CATALOG_DATASET_PATH = "anp/catalog/anp_catalog_compact.json"
+MAX_DATASET_DESCRIPTION_CHARS = 240
+MAX_REPORT_EXCERPT_CHARS = 260
 
 ManifestLoader = Callable[[str], dict[str, Any] | None]
 
@@ -177,12 +178,56 @@ def _dataset_entry_from_base(
     }
     if raw.get("segment_title"):
         entry["segment_title"] = raw["segment_title"]
+    for optional_key in (
+        "title_en",
+        "description_en",
+        "category_title_en",
+        "segment_title_en",
+        "subcategory_title_en",
+        "source_title_en",
+    ):
+        if raw.get(optional_key):
+            entry[optional_key] = _clean_text(raw[optional_key])
 
     _enrich_with_manifest(entry, manifest_loader, warnings_bucket)
     return entry
 
 
 _WHITESPACE_RE = re.compile(r"\s+")
+
+
+def _clean_text(value: Any) -> str:
+    return _WHITESPACE_RE.sub(" ", str(value or "")).strip()
+
+
+def _truncate_words(text: str, max_chars: int) -> str:
+    clean = _clean_text(text)
+    if len(clean) <= max_chars:
+        return clean
+    head = clean[:max_chars].rsplit(" ", 1)[0].strip()
+    return head if len(head) >= 48 else clean[:max_chars].strip()
+
+
+def _localized_text(value: Any, locale: str) -> str:
+    if isinstance(value, dict):
+        preferred = value.get(locale)
+        if preferred:
+            return _clean_text(preferred)
+        fallback = value.get("pt") or value.get("en")
+        return _clean_text(fallback)
+    return _clean_text(value)
+
+
+def _compact_anp_description(title: str, locale: str) -> str:
+    if locale == "en":
+        return _truncate_words(
+            f"Public ANP dataset for {title}, indexed from the official dados.gov.br catalog.",
+            MAX_DATASET_DESCRIPTION_CHARS,
+        )
+    return _truncate_words(
+        f"Dataset publico da ANP sobre {title}, indexado a partir do catalogo oficial dados.gov.br.",
+        MAX_DATASET_DESCRIPTION_CHARS,
+    )
 
 
 def _dataset_entry_from_anp(
@@ -194,8 +239,9 @@ def _dataset_entry_from_anp(
     if not slug:
         return None
     placement = placement_for_dataset(ds)
-    notes = str(ds.get("notes_plain") or "")
-    description = _WHITESPACE_RE.sub(" ", notes).strip()[:800]
+    title = _clean_text(ds.get("title") or slug)
+    description = _compact_anp_description(title, "pt")
+    description_en = _compact_anp_description(title, "en")
 
     entry: dict[str, Any] = {
         "id": anp_id_from_slug(slug),
@@ -204,8 +250,9 @@ def _dataset_entry_from_anp(
         "source_id": "anp",
         "source_title": "ANP",
         "slug": slug,
-        "title": ds.get("title") or slug,
+        "title": title,
         "description": description,
+        "description_en": description_en,
         "manifest_path": ANP_CATALOG_DATASET_PATH,
         "source_url": f"https://dados.gov.br/dados/conjuntos-dados/{slug}",
         "generated_at": _generated_at_for_anp_dataset(ds, root_generated_at),
@@ -288,6 +335,10 @@ def _report_entry(raw: dict[str, Any]) -> dict[str, Any]:
     for optional_key in (
         "title_en",
         "description_en",
+        "excerpt",
+        "excerpt_en",
+        "generated_at",
+        "coverage",
         "source_title_en",
         "category_title_en",
         "source_portal_href",
@@ -306,13 +357,91 @@ def _report_entry(raw: dict[str, Any]) -> dict[str, Any]:
     return entry
 
 
+def _report_excerpt_from_document(
+    report_doc: dict[str, Any],
+    *,
+    locale: str,
+    fallback: str,
+) -> str:
+    analysis = report_doc.get("analysis")
+    if isinstance(analysis, dict):
+        overview = _localized_text(analysis.get("overview"), locale)
+        if overview:
+            return _truncate_words(overview, MAX_REPORT_EXCERPT_CHARS)
+
+    summary = _localized_text(report_doc.get("summary"), locale)
+    if summary:
+        return _truncate_words(summary, MAX_REPORT_EXCERPT_CHARS)
+
+    return _truncate_words(fallback, MAX_REPORT_EXCERPT_CHARS)
+
+
+def _compact_report_coverage(report_doc: dict[str, Any]) -> dict[str, Any] | None:
+    coverage = report_doc.get("coverage")
+    if not isinstance(coverage, dict):
+        return None
+    compact: dict[str, Any] = {}
+    for key in ("first_year", "latest_year", "year_range", "latest_period"):
+        if key in coverage:
+            compact[key] = coverage.get(key)
+    return compact or None
+
+
+def _enrich_report_with_document(
+    entry: dict[str, Any],
+    report_loader: ManifestLoader | None,
+    warnings_bucket: list[str],
+) -> None:
+    if report_loader is None:
+        return
+    report_path = entry.get("stable_report_path")
+    if not report_path:
+        return
+    try:
+        report_doc = report_loader(report_path)
+    except Exception as exc:  # noqa: BLE001
+        warnings_bucket.append(
+            f"Falha ao carregar report '{report_path}' para enriquecer catalogo: {exc}"
+        )
+        return
+    if not isinstance(report_doc, dict):
+        warnings_bucket.append(
+            f"Report '{report_path}' indisponivel; entrada de catalogo sem metadados de card."
+        )
+        return
+
+    generated_at = _parse_iso_or_none(report_doc.get("generated_at"))
+    if generated_at:
+        entry["generated_at"] = generated_at
+
+    coverage = _compact_report_coverage(report_doc)
+    if coverage:
+        entry["coverage"] = coverage
+
+    entry["excerpt"] = _report_excerpt_from_document(
+        report_doc,
+        locale="pt",
+        fallback=entry["description"],
+    )
+    entry["excerpt_en"] = _report_excerpt_from_document(
+        report_doc,
+        locale="en",
+        fallback=entry.get("description_en") or entry["description"],
+    )
+
+
 def build_reports_catalog(
     *,
     reports_config_path: Path,
     warnings_bucket: list[str],
+    report_loader: ManifestLoader | None = None,
 ) -> dict[str, Any]:
     cfg = _load_yaml(reports_config_path)
-    entries = [_report_entry(r) for r in cfg.get("reports") or []]
+    entries = []
+    for raw in cfg.get("reports") or []:
+        entry = _report_entry(raw)
+        _enrich_report_with_document(entry, report_loader, warnings_bucket)
+        entries.append(entry)
     return {
         "schema_version": CATALOG_SCHEMA_VERSION,
         "catalog_id": "reports_catalog",
@@ -375,7 +504,7 @@ def _default_reports_config_path(root: Path) -> Path:
 
 
 def _default_anp_compact_path(root: Path) -> Path:
-    # Project-standard location produced by `anp-compact`.
+    #project-standard location produced by `anp-compact`.
     return root / "src" / "forest_pipelines" / "dados_abertos" / "anp_catalog_compact.json"
 
 
@@ -384,6 +513,7 @@ def build_catalogs_from_defaults(
     *,
     anp_compact_override: Path | None = None,
     manifest_loader: ManifestLoader | None = None,
+    report_loader: ManifestLoader | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """Convenience wrapper: resolve all config paths from project root."""
     open_warnings: list[str] = []
@@ -397,6 +527,7 @@ def build_catalogs_from_defaults(
     reports_envelope = build_reports_catalog(
         reports_config_path=_default_reports_config_path(root),
         warnings_bucket=reports_warnings,
+        report_loader=report_loader or manifest_loader,
     )
     return open_envelope, reports_envelope
 
@@ -442,5 +573,5 @@ __all__ = [
     "make_storage_manifest_loader",
 ]
 
-# Iterable is imported for type-checking intent; not used in runtime paths.
+#iterable is imported for type-checking intent; not used in runtime paths.
 _ = Iterable

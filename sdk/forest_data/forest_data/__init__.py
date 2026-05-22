@@ -12,6 +12,7 @@ from .models import (
     OpenDataItem,
     ProfileWarning,
     ReportSummary,
+    ReportSummaryCoverage,
 )
 
 __version__ = "0.1.0a1"
@@ -24,6 +25,7 @@ __all__ = [
     "OpenDataItem",
     "ProfileWarning",
     "ReportSummary",
+    "ReportSummaryCoverage",
     "UnsafeFilenameError",
     "UpstreamError",
     "__version__",

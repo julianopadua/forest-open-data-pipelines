@@ -30,7 +30,13 @@ class DatasetSummary:
     subcategory_title: str
     source_url: str
     manifest_path: str
+    title_en: str | None = None
+    description_en: str | None = None
+    source_title_en: str | None = None
+    category_title_en: str | None = None
+    subcategory_title_en: str | None = None
     segment_title: str | None = None
+    segment_title_en: str | None = None
     generated_at: str | None = None
     last_release_iso: str | None = None
 
@@ -47,7 +53,13 @@ class DatasetSummary:
             subcategory_title=raw["subcategory_title"],
             source_url=raw["source_url"],
             manifest_path=raw["manifest_path"],
+            title_en=raw.get("title_en"),
+            description_en=raw.get("description_en"),
+            source_title_en=raw.get("source_title_en"),
+            category_title_en=raw.get("category_title_en"),
+            subcategory_title_en=raw.get("subcategory_title_en"),
             segment_title=raw.get("segment_title"),
+            segment_title_en=raw.get("segment_title_en"),
             generated_at=raw.get("generated_at"),
             last_release_iso=raw.get("last_release_iso"),
         )
@@ -134,6 +146,25 @@ class DatasetManifest:
 
 
 @dataclass(frozen=True, slots=True)
+class ReportSummaryCoverage:
+    first_year: int | None = None
+    latest_year: int | None = None
+    year_range: str | None = None
+    latest_period: str | None = None
+
+    @classmethod
+    def from_dict(cls, raw: dict[str, Any] | None) -> "ReportSummaryCoverage | None":
+        if not isinstance(raw, dict):
+            return None
+        return cls(
+            first_year=int(raw["first_year"]) if raw.get("first_year") is not None else None,
+            latest_year=int(raw["latest_year"]) if raw.get("latest_year") is not None else None,
+            year_range=raw.get("year_range"),
+            latest_period=raw.get("latest_period"),
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class ReportSummary:
     id: str
     slug: str
@@ -144,6 +175,14 @@ class ReportSummary:
     manifest_path: str
     stable_report_path: str
     tags: list[str] = field(default_factory=list)
+    title_en: str | None = None
+    description_en: str | None = None
+    source_title_en: str | None = None
+    category_title_en: str | None = None
+    excerpt: str | None = None
+    excerpt_en: str | None = None
+    generated_at: str | None = None
+    coverage: ReportSummaryCoverage | None = None
     source_dataset_url: str | None = None
 
     @classmethod
@@ -158,5 +197,13 @@ class ReportSummary:
             manifest_path=raw["manifest_path"],
             stable_report_path=raw["stable_report_path"],
             tags=list(raw.get("tags", [])),
+            title_en=raw.get("title_en"),
+            description_en=raw.get("description_en"),
+            source_title_en=raw.get("source_title_en"),
+            category_title_en=raw.get("category_title_en"),
+            excerpt=raw.get("excerpt"),
+            excerpt_en=raw.get("excerpt_en"),
+            generated_at=raw.get("generated_at"),
+            coverage=ReportSummaryCoverage.from_dict(raw.get("coverage")),
             source_dataset_url=raw.get("source_dataset_url"),
         )
