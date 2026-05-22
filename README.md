@@ -25,6 +25,9 @@ Python monorepo that discovers official open-data source URLs, profiles each res
 - [apps/ directory](#apps-directory)
 - [Module documentation](#module-documentation)
 - [Troubleshooting](#troubleshooting)
+- [Release status](#release-status)
+- [Contributing](#contributing)
+- [License and data](#license-and-data)
 
 ---
 
@@ -440,3 +443,21 @@ To capture console output while running a sync:
 ```bash
 forest-pipelines sync inpe_bdqueimadas_focos | tee logs/run_console.log
 ```
+
+---
+
+## Release status
+
+`v0.1.0-alpha` is the first public alpha target. Contracts, documentation, dataset coverage, and SDK behavior may evolve while the project stabilizes.
+
+---
+
+## Contributing
+
+Contributions are described in [CONTRIBUTING.md](CONTRIBUTING.md). Sensitive security reports should follow [SECURITY.md](SECURITY.md).
+
+---
+
+## License and data
+
+Source code is licensed under the [MIT License](LICENSE). Data, content, metadata, reports, and third-party dataset terms are described in [DATA-LICENSING.md](DATA-LICENSING.md).
