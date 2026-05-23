@@ -13,9 +13,69 @@ from forest_pipelines.manifests.build_manifest import build_manifest
 from forest_pipelines.profiling import ProfileOptions, profiled_item, profile_source_url
 
 CKAN_SHOW_TMPL = "https://dados.cvm.gov.br/api/3/action/package_show?id={package_id}"
-ALLOWED_NETLOC = "dados.cvm.gov.br"
+ALLOWED_NETLOCS = {
+    "dados.cvm.gov.br",
+    "www.gov.br",
+    "portaldatransparencia.gov.br",
+}
 METADATA_HINT_RE = re.compile(r"(meta|metadado|dicionario|dicionário|layout|readme)", re.IGNORECASE)
 DEFAULT_PERIOD_RE = re.compile(r"(?<!\d)((?:19|20)\d{2})(?:[-_]?([01]\d))?(?!\d)")
+SUPPORTED_DATASET_IDS: tuple[str, ...] = (
+    "cvm_processo_sancionador",
+    "cvm_crowdfunding_cad",
+    "cvm_agente_fiduc_cad",
+    "cvm_oferta_distrib",
+    "cvm_emissor_cepac_cad",
+    "cvm_coord_oferta_cad",
+    "cvm_auditor_cad",
+    "cvm_intermed_cad",
+    "cvm_agente_auton_cad",
+    "cvm_ato_declr_intermed",
+    "cvm_cia_aberta_eventos_recompra_acoes",
+    "cvm_cia_incent_cad",
+    "cvm_cia_estrang_cad",
+    "cvm_cia_aberta_cad",
+    "cvm_fi_inf_diario",
+    "cvm_fi_doc_extrato",
+    "cvm_invnr_cad",
+    "cvm_fi_cad",
+    "cvm_consultor_vlmob_cad",
+    "cvm_adm_fii_cad",
+    "cvm_adm_cart_cad",
+    "cvm_fii_doc_inf_trimestral",
+    "cvm_securit_doc_inf_mensal_ots",
+    "cvm_fii_doc_inf_mensal",
+    "cvm_securit_doc_inf_mensal_cri",
+    "cvm_securit_doc_inf_mensal_cra",
+    "cvm_fii_doc_inf_anual",
+    "cvm_fiagro_doc_inf_mensal",
+    "cvm_fi_doc_entrega",
+    "cvm_fii_doc_dfin",
+    "cvm_securit_doc_dfin_cri",
+    "cvm_securit_doc_dfin_cra",
+    "cvm_cia_aberta_doc_vlmo",
+    "cvm_cia_aberta_doc_itr",
+    "cvm_cia_aberta_doc_ipe",
+    "cvm_cia_aberta_doc_fre",
+    "cvm_cia_aberta_doc_fca",
+    "cvm_cia_aberta_doc_dfp",
+    "cvm_cia_aberta_doc_cgvn",
+    "cvm_fi_doc_perfil_mensal",
+    "cvm_fie_medidas",
+    "cvm_fi_doc_lamina",
+    "cvm_fip_doc_inf_trimestral",
+    "cvm_fip_doc_inf_quadrimestral",
+    "cvm_fidc_doc_inf_mensal",
+    "cvm_fi_doc_eventual",
+    "cvm_fi_doc_compl",
+    "cvm_fi_doc_cda",
+    "cvm_fie_doc_balancete",
+    "cvm_fi_doc_balancete",
+    "cvm_fie_doc_balanco",
+    "cvm_distrpubl",
+    "cvm_emissores",
+    "cvm_arrecadacao_receita_publica",
+)
 
 
 @dataclass(frozen=True)
@@ -124,13 +184,26 @@ def fetch_ckan_package(package_id: str, timeout: int = 60) -> dict[str, Any]:
 
 def is_allowed_download_url(url: str) -> bool:
     parsed = urlparse(url)
-    return parsed.scheme in {"http", "https"} and parsed.netloc.lower() == ALLOWED_NETLOC
+    return parsed.scheme in {"http", "https"} and parsed.netloc.lower() in ALLOWED_NETLOCS
 
 
 def filename_from_resource(resource: dict[str, Any]) -> str:
     url = str(resource.get("url") or "")
     name = Path(unquote(urlparse(url).path)).name
-    return name or str(resource.get("name") or "download")
+    if name and name.lower() not in {"view", "baixar", "consulta"} and "." in name:
+        return name
+    fallback = str(resource.get("name") or name or "download")
+    fmt = str(resource.get("format") or "").strip().lower()
+    return _safe_filename(fallback, fmt)
+
+
+def _safe_filename(value: str, fmt: str) -> str:
+    name = re.sub(r"[^A-Za-z0-9._-]+", "_", value.strip()).strip("._-")
+    if not name:
+        name = "download"
+    if fmt and not name.lower().endswith(f".{fmt}"):
+        name = f"{name}.{fmt}"
+    return name
 
 
 def _matches_any(patterns: tuple[str, ...], text: str) -> bool:
@@ -141,17 +214,22 @@ def resource_allowed(resource: dict[str, Any], cfg: DatasetCfg) -> bool:
     url = str(resource.get("url") or "").strip()
     if not url or not is_allowed_download_url(url):
         return False
+    filename = filename_from_resource(resource)
     target = " ".join(
         [
-            filename_from_resource(resource),
+            filename,
             str(resource.get("name") or ""),
             str(resource.get("description") or ""),
             str(resource.get("format") or ""),
         ]
     )
-    if cfg.filename_include and not _matches_any(cfg.filename_include, target):
+    if cfg.filename_include and not (
+        _matches_any(cfg.filename_include, filename) or _matches_any(cfg.filename_include, target)
+    ):
         return False
-    if cfg.filename_exclude and _matches_any(cfg.filename_exclude, target):
+    if cfg.filename_exclude and (
+        _matches_any(cfg.filename_exclude, filename) or _matches_any(cfg.filename_exclude, target)
+    ):
         return False
     return True
 
@@ -188,11 +266,13 @@ def period_from_resource(resource: dict[str, Any], cfg: DatasetCfg) -> str:
 
 def select_resources(resources: list[dict[str, Any]], cfg: DatasetCfg, latest_months: int | None) -> list[dict[str, Any]]:
     allowed = [resource for resource in resources if resource_allowed(resource, cfg)]
-    allowed.sort(key=lambda resource: (period_from_resource(resource, cfg), filename_from_resource(resource)), reverse=True)
+    metadata = [resource for resource in allowed if cfg.include_meta and is_metadata_resource(resource)]
+    data = [resource for resource in allowed if resource not in metadata]
+    data.sort(key=lambda resource: (period_from_resource(resource, cfg), filename_from_resource(resource)), reverse=True)
     limit = latest_months or cfg.latest_months or cfg.latest_items or cfg.max_items
     if limit:
-        allowed = allowed[:limit]
-    return allowed
+        data = data[:limit]
+    return data + metadata
 
 
 def build_metadata_file(

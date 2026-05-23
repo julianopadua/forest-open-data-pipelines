@@ -200,37 +200,15 @@ datasets:
     manifest_path: cvm/invnr_cad/manifest.json
     source_url: "https://dados.cvm.gov.br/dataset/invnr-cad"
 
-  - id: cvm_fi_cad_registro_fundo_classe
+  - id: cvm_fi_cad
     category_title: "Mercado financeiro"
     subcategory_title: "Fundos"
     source_id: cvm
     source_title: CVM
-    slug: fi-cad-registro-fundo-classe
-    title: "FI - CAD - Registro de Fundos, Classes e Subclasses"
-    description: "Cadastro de fundos, classes e subclasses de fundos de investimento."
-    manifest_path: cvm/fi/cad/registro_fundo_classe/manifest.json
-    source_url: "https://dados.cvm.gov.br/dataset/fi-cad"
-
-  - id: cvm_fi_cad_nao_adaptados_rcvm175
-    category_title: "Mercado financeiro"
-    subcategory_title: "Fundos"
-    source_id: cvm
-    source_title: CVM
-    slug: fi-cad-nao-adaptados-rcvm175
-    title: "FI - CAD - Não adaptados RCVM175"
-    description: "Cadastro de fundos ainda não adaptados à Resolução CVM 175."
-    manifest_path: cvm/fi/cad/nao_adaptados_rcvm175/manifest.json
-    source_url: "https://dados.cvm.gov.br/dataset/fi-cad"
-
-  - id: cvm_fi_cad_icvm555_hist
-    category_title: "Mercado financeiro"
-    subcategory_title: "Fundos"
-    source_id: cvm
-    source_title: CVM
-    slug: fi-cad-icvm555-hist
-    title: "FI - CAD - ICVM 555 Histórico"
-    description: "Histórico cadastral de fundos da ICVM 555."
-    manifest_path: cvm/fi/cad/icvm555_hist/manifest.json
+    slug: fi-cad
+    title: "FI - CAD - Informação Cadastral"
+    description: "Cadastro de fundos de investimento, incluindo fundos não adaptados à Resolução CVM 175, histórico ICVM 555 e registro de fundos, classes e subclasses."
+    manifest_path: cvm/fi/cad/manifest.json
     source_url: "https://dados.cvm.gov.br/dataset/fi-cad"
 
   - id: cvm_consultor_vlmob_cad

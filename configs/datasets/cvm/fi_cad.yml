@@ -1,0 +1,10 @@
+id: cvm_fi_cad
+title: "CVM - FI - CAD - Informação Cadastral"
+source_dataset_url: "https://dados.cvm.gov.br/dataset/fi-cad"
+source: cvm_ckan
+ckan_package_id: fi-cad
+dataset_slug: fi-cad
+bucket_prefix: cvm/fi/cad
+include_meta: false
+filename_include:
+  - '^(cad_fi|cad_fi_hist|registro_fundo_classe)\.(csv|zip)$'

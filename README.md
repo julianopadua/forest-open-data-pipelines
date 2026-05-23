@@ -348,9 +348,7 @@ Default prefix: `anp/catalog`.
 | --- | --- |
 | `cvm_fi_inf_diario` | CVM |
 | `cvm_fi_doc_extrato` | CVM |
-| `cvm_fi_cad_registro_fundo_classe` | CVM |
-| `cvm_fi_cad_nao_adaptados_rcvm175` | CVM |
-| `cvm_fi_cad_icvm555_hist` | CVM |
+| `cvm_fi_cad` | CVM |
 | `cvm_fii_doc_inf_trimestral` | CVM |
 | `cvm_fi_doc_entrega` | CVM |
 | `cvm_fii_doc_inf_mensal` | CVM |
