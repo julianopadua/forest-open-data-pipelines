@@ -1,0 +1,8 @@
+id: cvm_agente_fiduc_cad
+title: "CVM - Agentes Fiduciários - Informação Cadastral"
+source_dataset_url: "https://dados.cvm.gov.br/dataset/agente_fiduc-cad"
+source: cvm_ckan
+ckan_package_id: agente_fiduc-cad
+dataset_slug: agente_fiduc-cad
+bucket_prefix: cvm/agente_fiduc_cad
+include_meta: true

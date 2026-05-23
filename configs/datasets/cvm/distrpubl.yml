@@ -1,0 +1,8 @@
+id: cvm_distrpubl
+title: "CVM - Ofertas Públicas"
+source_dataset_url: "https://dados.cvm.gov.br/dataset/distrpubl"
+source: cvm_ckan
+ckan_package_id: distrpubl
+dataset_slug: distrpubl
+bucket_prefix: cvm/distrpubl
+include_meta: true

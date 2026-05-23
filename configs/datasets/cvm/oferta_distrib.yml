@@ -1,0 +1,8 @@
+id: cvm_oferta_distrib
+title: "CVM - Ofertas de Distribuição"
+source_dataset_url: "https://dados.cvm.gov.br/dataset/oferta-distrib"
+source: cvm_ckan
+ckan_package_id: oferta-distrib
+dataset_slug: oferta-distrib
+bucket_prefix: cvm/oferta_distrib
+include_meta: true

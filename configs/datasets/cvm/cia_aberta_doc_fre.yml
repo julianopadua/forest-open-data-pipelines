@@ -1,0 +1,8 @@
+id: cvm_cia_aberta_doc_fre
+title: "CVM - Cias Abertas - Formulário de Referência"
+source_dataset_url: "https://dados.cvm.gov.br/dataset/cia_aberta-doc-fre"
+source: cvm_ckan
+ckan_package_id: cia_aberta-doc-fre
+dataset_slug: cia_aberta-doc-fre
+bucket_prefix: cvm/cia_aberta_doc_fre
+include_meta: true

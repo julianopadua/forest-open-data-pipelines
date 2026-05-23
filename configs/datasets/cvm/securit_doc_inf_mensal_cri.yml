@@ -1,0 +1,8 @@
+id: cvm_securit_doc_inf_mensal_cri
+title: "CVM - Securitizadoras - Informe Mensal de CRI"
+source_dataset_url: "https://dados.cvm.gov.br/dataset/securit-doc-inf_mensal_cri"
+source: cvm_ckan
+ckan_package_id: securit-doc-inf_mensal_cri
+dataset_slug: securit-doc-inf_mensal_cri
+bucket_prefix: cvm/securit_doc_inf_mensal_cri
+include_meta: true

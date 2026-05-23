@@ -1,0 +1,8 @@
+id: cvm_cia_aberta_doc_cgvn
+title: "CVM - Cias Abertas - Informe do Código de Governança"
+source_dataset_url: "https://dados.cvm.gov.br/dataset/cia_aberta-doc-cgvn"
+source: cvm_ckan
+ckan_package_id: cia_aberta-doc-cgvn
+dataset_slug: cia_aberta-doc-cgvn
+bucket_prefix: cvm/cia_aberta_doc_cgvn
+include_meta: true

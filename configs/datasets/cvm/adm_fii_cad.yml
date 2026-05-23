@@ -1,0 +1,8 @@
+id: cvm_adm_fii_cad
+title: "CVM - Administradores de FII - Informação Cadastral"
+source_dataset_url: "https://dados.cvm.gov.br/dataset/adm_fii-cad"
+source: cvm_ckan
+ckan_package_id: adm_fii-cad
+dataset_slug: adm_fii-cad
+bucket_prefix: cvm/adm_fii_cad
+include_meta: true

@@ -1,0 +1,8 @@
+id: cvm_fi_doc_balancete
+title: "CVM - FI - Balancete"
+source_dataset_url: "https://dados.cvm.gov.br/dataset/fi-doc-balancete"
+source: cvm_ckan
+ckan_package_id: fi-doc-balancete
+dataset_slug: fi-doc-balancete
+bucket_prefix: cvm/fi_doc_balancete
+include_meta: true

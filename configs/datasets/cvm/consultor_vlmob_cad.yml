@@ -1,0 +1,8 @@
+id: cvm_consultor_vlmob_cad
+title: "CVM - Consultores de Valores Mobiliários - Informação Cadastral"
+source_dataset_url: "https://dados.cvm.gov.br/dataset/consultor_vlmob-cad"
+source: cvm_ckan
+ckan_package_id: consultor_vlmob-cad
+dataset_slug: consultor_vlmob-cad
+bucket_prefix: cvm/consultor_vlmob_cad
+include_meta: true

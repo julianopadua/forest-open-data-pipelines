@@ -1,0 +1,8 @@
+id: cvm_fie_medidas
+title: "CVM - Fundos Estruturados - Medidas"
+source_dataset_url: "https://dados.cvm.gov.br/dataset/fie-medidas"
+source: cvm_ckan
+ckan_package_id: fie-medidas
+dataset_slug: fie-medidas
+bucket_prefix: cvm/fie_medidas
+include_meta: true

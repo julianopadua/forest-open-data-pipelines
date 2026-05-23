@@ -1,0 +1,8 @@
+id: cvm_processo_sancionador
+title: "CVM - Processos Sancionadores"
+source_dataset_url: "https://dados.cvm.gov.br/dataset/processo-sancionador"
+source: cvm_ckan
+ckan_package_id: processo-sancionador
+dataset_slug: processo-sancionador
+bucket_prefix: cvm/processo_sancionador
+include_meta: true

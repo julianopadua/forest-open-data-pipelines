@@ -1,0 +1,8 @@
+id: cvm_emissor_cepac_cad
+title: "CVM - Emissores de CEPAC - Informação Cadastral"
+source_dataset_url: "https://dados.cvm.gov.br/dataset/emissor_cepac-cad"
+source: cvm_ckan
+ckan_package_id: emissor_cepac-cad
+dataset_slug: emissor_cepac-cad
+bucket_prefix: cvm/emissor_cepac_cad
+include_meta: true

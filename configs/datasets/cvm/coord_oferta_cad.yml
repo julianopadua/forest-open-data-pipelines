@@ -1,0 +1,8 @@
+id: cvm_coord_oferta_cad
+title: "CVM - Coordenadores de Ofertas - Informação Cadastral"
+source_dataset_url: "https://dados.cvm.gov.br/dataset/coord_oferta-cad"
+source: cvm_ckan
+ckan_package_id: coord_oferta-cad
+dataset_slug: coord_oferta-cad
+bucket_prefix: cvm/coord_oferta_cad
+include_meta: true

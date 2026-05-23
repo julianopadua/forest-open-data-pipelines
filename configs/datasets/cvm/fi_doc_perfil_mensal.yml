@@ -1,0 +1,8 @@
+id: cvm_fi_doc_perfil_mensal
+title: "CVM - FI - Perfil Mensal"
+source_dataset_url: "https://dados.cvm.gov.br/dataset/fi-doc-perfil_mensal"
+source: cvm_ckan
+ckan_package_id: fi-doc-perfil_mensal
+dataset_slug: fi-doc-perfil_mensal
+bucket_prefix: cvm/fi_doc_perfil_mensal
+include_meta: true

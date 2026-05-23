@@ -1,0 +1,8 @@
+id: cvm_fip_doc_inf_quadrimestral
+title: "CVM - FIP - Informe Quadrimestral"
+source_dataset_url: "https://dados.cvm.gov.br/dataset/fip-doc-inf_quadrimestral"
+source: cvm_ckan
+ckan_package_id: fip-doc-inf_quadrimestral
+dataset_slug: fip-doc-inf_quadrimestral
+bucket_prefix: cvm/fip_doc_inf_quadrimestral
+include_meta: true

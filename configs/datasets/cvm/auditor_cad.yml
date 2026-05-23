@@ -1,0 +1,8 @@
+id: cvm_auditor_cad
+title: "CVM - Auditores Independentes - Informação Cadastral"
+source_dataset_url: "https://dados.cvm.gov.br/dataset/auditor-cad"
+source: cvm_ckan
+ckan_package_id: auditor-cad
+dataset_slug: auditor-cad
+bucket_prefix: cvm/auditor_cad
+include_meta: true

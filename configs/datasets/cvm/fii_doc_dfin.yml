@@ -1,0 +1,8 @@
+id: cvm_fii_doc_dfin
+title: "CVM - FII - Demonstrações Financeiras"
+source_dataset_url: "https://dados.cvm.gov.br/dataset/fii-doc-dfin"
+source: cvm_ckan
+ckan_package_id: fii-doc-dfin
+dataset_slug: fii-doc-dfin
+bucket_prefix: cvm/fii_doc_dfin
+include_meta: true

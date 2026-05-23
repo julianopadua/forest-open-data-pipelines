@@ -1,0 +1,8 @@
+id: cvm_fi_doc_compl
+title: "CVM - FI - Formulário de Informações Complementares"
+source_dataset_url: "https://dados.cvm.gov.br/dataset/fi-doc-compl"
+source: cvm_ckan
+ckan_package_id: fi-doc-compl
+dataset_slug: fi-doc-compl
+bucket_prefix: cvm/fi_doc_compl
+include_meta: true

@@ -1,0 +1,8 @@
+id: cvm_ato_declr_intermed
+title: "CVM - Intermediários - Atos Declaratórios"
+source_dataset_url: "https://dados.cvm.gov.br/dataset/ato_declr-intermed"
+source: cvm_ckan
+ckan_package_id: ato_declr-intermed
+dataset_slug: ato_declr-intermed
+bucket_prefix: cvm/ato_declr_intermed
+include_meta: true

@@ -1,0 +1,8 @@
+id: cvm_intermed_cad
+title: "CVM - Intermediários - Informação Cadastral"
+source_dataset_url: "https://dados.cvm.gov.br/dataset/intermed-cad"
+source: cvm_ckan
+ckan_package_id: intermed-cad
+dataset_slug: intermed-cad
+bucket_prefix: cvm/intermed_cad
+include_meta: true

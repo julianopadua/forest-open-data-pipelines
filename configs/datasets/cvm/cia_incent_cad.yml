@@ -1,0 +1,8 @@
+id: cvm_cia_incent_cad
+title: "CVM - Companhias Incentivadas - Informação Cadastral"
+source_dataset_url: "https://dados.cvm.gov.br/dataset/cia_incent-cad"
+source: cvm_ckan
+ckan_package_id: cia_incent-cad
+dataset_slug: cia_incent-cad
+bucket_prefix: cvm/cia_incent_cad
+include_meta: true

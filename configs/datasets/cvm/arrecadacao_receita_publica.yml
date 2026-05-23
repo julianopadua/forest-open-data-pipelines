@@ -1,0 +1,8 @@
+id: cvm_arrecadacao_receita_publica
+title: "CVM - Arrecadação - Receita Pública"
+source_dataset_url: "https://dados.cvm.gov.br/dataset/arrecadacao-receita-publica"
+source: cvm_ckan
+ckan_package_id: arrecadacao-receita-publica
+dataset_slug: arrecadacao-receita-publica
+bucket_prefix: cvm/arrecadacao_receita_publica
+include_meta: true

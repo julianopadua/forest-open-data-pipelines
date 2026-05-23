@@ -1,0 +1,8 @@
+id: cvm_fie_doc_balancete
+title: "CVM - Fundos Estruturados - Balancete"
+source_dataset_url: "https://dados.cvm.gov.br/dataset/fie-doc-balancete"
+source: cvm_ckan
+ckan_package_id: fie-doc-balancete
+dataset_slug: fie-doc-balancete
+bucket_prefix: cvm/fie_doc_balancete
+include_meta: true

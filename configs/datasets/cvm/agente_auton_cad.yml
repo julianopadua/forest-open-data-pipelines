@@ -1,0 +1,8 @@
+id: cvm_agente_auton_cad
+title: "CVM - Agentes Autônomos - Informação Cadastral"
+source_dataset_url: "https://dados.cvm.gov.br/dataset/agente_auton-cad"
+source: cvm_ckan
+ckan_package_id: agente_auton-cad
+dataset_slug: agente_auton-cad
+bucket_prefix: cvm/agente_auton_cad
+include_meta: true

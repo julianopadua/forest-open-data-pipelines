@@ -1,0 +1,8 @@
+id: cvm_cia_aberta_eventos_recompra_acoes
+title: "CVM - Cias Abertas - Eventos de Recompra de Ações"
+source_dataset_url: "https://dados.cvm.gov.br/dataset/cia_aberta-eventos-recompra_acoes"
+source: cvm_ckan
+ckan_package_id: cia_aberta-eventos-recompra_acoes
+dataset_slug: cia_aberta-eventos-recompra_acoes
+bucket_prefix: cvm/cia_aberta_eventos_recompra_acoes
+include_meta: true

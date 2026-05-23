@@ -1,0 +1,8 @@
+id: cvm_fidc_doc_inf_mensal
+title: "CVM - FIDC - Informe Mensal"
+source_dataset_url: "https://dados.cvm.gov.br/dataset/fidc-doc-inf_mensal"
+source: cvm_ckan
+ckan_package_id: fidc-doc-inf_mensal
+dataset_slug: fidc-doc-inf_mensal
+bucket_prefix: cvm/fidc_doc_inf_mensal
+include_meta: true

@@ -1,0 +1,8 @@
+id: cvm_securit_doc_dfin_cra
+title: "CVM - Securitizadoras - Demonstrações Financeiras de CRA"
+source_dataset_url: "https://dados.cvm.gov.br/dataset/securit-doc-dfin_cra"
+source: cvm_ckan
+ckan_package_id: securit-doc-dfin_cra
+dataset_slug: securit-doc-dfin_cra
+bucket_prefix: cvm/securit_doc_dfin_cra
+include_meta: true

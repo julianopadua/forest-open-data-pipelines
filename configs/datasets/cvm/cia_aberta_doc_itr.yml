@@ -1,0 +1,8 @@
+id: cvm_cia_aberta_doc_itr
+title: "CVM - Cias Abertas - ITR"
+source_dataset_url: "https://dados.cvm.gov.br/dataset/cia_aberta-doc-itr"
+source: cvm_ckan
+ckan_package_id: cia_aberta-doc-itr
+dataset_slug: cia_aberta-doc-itr
+bucket_prefix: cvm/cia_aberta_doc_itr
+include_meta: true

@@ -1,11 +1,9 @@
-# configs/datasets/cvm_fi_inf_diario.yml
 id: cvm_fi_inf_diario
 title: "CVM - FI - Informe Diário"
 source_dataset_url: "https://dados.cvm.gov.br/dataset/fi-doc-inf_diario"
-
 source: cvm_ckan
+ckan_package_id: fi-doc-inf_diario
 dataset_slug: fi-doc-inf_diario
 bucket_prefix: cvm/fi/inf_diario
-mode: mirror_latest_months
-latest_months: 12
 include_meta: true
+latest_months: 12

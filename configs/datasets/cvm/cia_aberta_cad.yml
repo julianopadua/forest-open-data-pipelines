@@ -1,0 +1,8 @@
+id: cvm_cia_aberta_cad
+title: "CVM - Companhias Abertas - Informação Cadastral"
+source_dataset_url: "https://dados.cvm.gov.br/dataset/cia_aberta-cad"
+source: cvm_ckan
+ckan_package_id: cia_aberta-cad
+dataset_slug: cia_aberta-cad
+bucket_prefix: cvm/cia_aberta_cad
+include_meta: true

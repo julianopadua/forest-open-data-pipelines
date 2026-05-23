@@ -1,6 +1,8 @@
-# configs/datasets/cvm_fii_doc_inf_trimestral.yml
 id: cvm_fii_doc_inf_trimestral
-title: CVM - FII - Documentos - Informe Trimestral Estruturado
+title: "CVM - FII - Informe Trimestral Estruturado"
+source_dataset_url: "https://dados.cvm.gov.br/dataset/fii-doc-inf_trimestral"
+source: cvm_ckan
+ckan_package_id: fii-doc-inf_trimestral
 dataset_slug: fii-doc-inf_trimestral
 bucket_prefix: cvm/fii/doc/inf_trimestral
-latest_years: 5
+include_meta: true

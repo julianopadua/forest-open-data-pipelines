@@ -1,0 +1,8 @@
+id: cvm_crowdfunding_cad
+title: "CVM - Crowdfunding - Informação Cadastral"
+source_dataset_url: "https://dados.cvm.gov.br/dataset/crowdfunding-cad"
+source: cvm_ckan
+ckan_package_id: crowdfunding-cad
+dataset_slug: crowdfunding-cad
+bucket_prefix: cvm/crowdfunding_cad
+include_meta: true

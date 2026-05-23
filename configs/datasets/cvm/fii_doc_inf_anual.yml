@@ -1,11 +1,8 @@
 id: cvm_fii_doc_inf_anual
-title: "CVM - FII - Documentos: Informe Anual"
+title: "CVM - FII - Informe Anual Estruturado"
 source_dataset_url: "https://dados.cvm.gov.br/dataset/fii-doc-inf_anual"
-
 source: cvm_ckan
+ckan_package_id: fii-doc-inf_anual
 dataset_slug: fii-doc-inf_anual
 bucket_prefix: cvm/fii/doc/inf_anual
-mode: mirror_latest_months
-# Arquivos anuais. latest_months=10 garante pegar todo o histórico disponível
-latest_months: 10
 include_meta: true

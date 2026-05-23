@@ -11,8 +11,162 @@ schema_version: "1.0"
 
 datasets:
   # =========================================
-  # Mercado financeiro -> Fundos -> CVM
+  # Mercado financeiro -> CVM
   # =========================================
+  - id: cvm_processo_sancionador
+    category_title: "Mercado financeiro"
+    subcategory_title: "Processos"
+    source_id: cvm
+    source_title: CVM
+    slug: processo-sancionador
+    title: "Processos Sancionadores"
+    description: "Dados sobre processos sancionadores instaurados e julgados pela CVM."
+    manifest_path: cvm/processo_sancionador/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/processo-sancionador"
+
+  - id: cvm_crowdfunding_cad
+    category_title: "Mercado financeiro"
+    subcategory_title: "Cadastros"
+    source_id: cvm
+    source_title: CVM
+    slug: crowdfunding-cad
+    title: "Crowdfunding - Informação Cadastral"
+    description: "Dados cadastrais de plataformas de investimento participativo autorizadas pela CVM."
+    manifest_path: cvm/crowdfunding_cad/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/crowdfunding-cad"
+
+  - id: cvm_agente_fiduc_cad
+    category_title: "Mercado financeiro"
+    subcategory_title: "Cadastros"
+    source_id: cvm
+    source_title: CVM
+    slug: agente-fiduc-cad
+    title: "Agentes Fiduciários - Informação Cadastral"
+    description: "Dados cadastrais de agentes fiduciários registrados na CVM."
+    manifest_path: cvm/agente_fiduc_cad/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/agente_fiduc-cad"
+
+  - id: cvm_oferta_distrib
+    category_title: "Mercado financeiro"
+    subcategory_title: "Ofertas"
+    source_id: cvm
+    source_title: CVM
+    slug: oferta-distrib
+    title: "Ofertas de Distribuição"
+    description: "Informações sobre ofertas públicas de distribuição acompanhadas pela CVM."
+    manifest_path: cvm/oferta_distrib/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/oferta-distrib"
+
+  - id: cvm_emissor_cepac_cad
+    category_title: "Mercado financeiro"
+    subcategory_title: "Cadastros"
+    source_id: cvm
+    source_title: CVM
+    slug: emissor-cepac-cad
+    title: "Emissores de CEPAC - Informação Cadastral"
+    description: "Dados cadastrais de emissores de CEPAC."
+    manifest_path: cvm/emissor_cepac_cad/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/emissor_cepac-cad"
+
+  - id: cvm_coord_oferta_cad
+    category_title: "Mercado financeiro"
+    subcategory_title: "Cadastros"
+    source_id: cvm
+    source_title: CVM
+    slug: coord-oferta-cad
+    title: "Coordenadores de Ofertas - Informação Cadastral"
+    description: "Dados cadastrais de coordenadores de ofertas públicas."
+    manifest_path: cvm/coord_oferta_cad/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/coord_oferta-cad"
+
+  - id: cvm_auditor_cad
+    category_title: "Mercado financeiro"
+    subcategory_title: "Cadastros"
+    source_id: cvm
+    source_title: CVM
+    slug: auditor-cad
+    title: "Auditores Independentes - Informação Cadastral"
+    description: "Dados cadastrais de auditores independentes registrados na CVM."
+    manifest_path: cvm/auditor_cad/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/auditor-cad"
+
+  - id: cvm_intermed_cad
+    category_title: "Mercado financeiro"
+    subcategory_title: "Cadastros"
+    source_id: cvm
+    source_title: CVM
+    slug: intermed-cad
+    title: "Intermediários - Informação Cadastral"
+    description: "Dados cadastrais de intermediários do mercado de valores mobiliários."
+    manifest_path: cvm/intermed_cad/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/intermed-cad"
+
+  - id: cvm_agente_auton_cad
+    category_title: "Mercado financeiro"
+    subcategory_title: "Cadastros"
+    source_id: cvm
+    source_title: CVM
+    slug: agente-auton-cad
+    title: "Agentes Autônomos - Informação Cadastral"
+    description: "Dados cadastrais de agentes autônomos de investimento."
+    manifest_path: cvm/agente_auton_cad/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/agente_auton-cad"
+
+  - id: cvm_ato_declr_intermed
+    category_title: "Mercado financeiro"
+    subcategory_title: "Cadastros"
+    source_id: cvm
+    source_title: CVM
+    slug: ato-declr-intermed
+    title: "Intermediários - Atos Declaratórios"
+    description: "Atos declaratórios relacionados a intermediários do mercado de valores mobiliários."
+    manifest_path: cvm/ato_declr_intermed/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/ato_declr-intermed"
+
+  - id: cvm_cia_aberta_eventos_recompra_acoes
+    category_title: "Mercado financeiro"
+    subcategory_title: "Companhias abertas"
+    source_id: cvm
+    source_title: CVM
+    slug: cia-aberta-eventos-recompra-acoes
+    title: "Cias Abertas - Eventos de Recompra de Ações"
+    description: "Eventos de recompra de ações divulgados por companhias abertas."
+    manifest_path: cvm/cia_aberta_eventos_recompra_acoes/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/cia_aberta-eventos-recompra_acoes"
+
+  - id: cvm_cia_incent_cad
+    category_title: "Mercado financeiro"
+    subcategory_title: "Cadastros"
+    source_id: cvm
+    source_title: CVM
+    slug: cia-incent-cad
+    title: "Companhias Incentivadas - Informação Cadastral"
+    description: "Dados cadastrais de companhias incentivadas."
+    manifest_path: cvm/cia_incent_cad/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/cia_incent-cad"
+
+  - id: cvm_cia_estrang_cad
+    category_title: "Mercado financeiro"
+    subcategory_title: "Cadastros"
+    source_id: cvm
+    source_title: CVM
+    slug: cia-estrang-cad
+    title: "Companhias Estrangeiras - Informação Cadastral"
+    description: "Dados cadastrais de companhias estrangeiras registradas na CVM."
+    manifest_path: cvm/cia_estrang_cad/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/cia_estrang-cad"
+
+  - id: cvm_cia_aberta_cad
+    category_title: "Mercado financeiro"
+    subcategory_title: "Cadastros"
+    source_id: cvm
+    source_title: CVM
+    slug: cia-aberta-cad
+    title: "Companhias Abertas - Informação Cadastral"
+    description: "Dados cadastrais de companhias abertas."
+    manifest_path: cvm/cia_aberta_cad/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/cia_aberta-cad"
+
   - id: cvm_fi_inf_diario
     category_title: "Mercado financeiro"
     subcategory_title: "Fundos"
@@ -20,7 +174,7 @@ datasets:
     source_title: CVM
     slug: fi-informe-diario
     title: "FI - Informe Diário"
-    description: "Informes diários de fundos de investimento (arquivos mensais em ZIP) + dicionário de dados (TXT)."
+    description: "Informes diários de fundos de investimento em arquivos mensais."
     manifest_path: cvm/fi/inf_diario/manifest.json
     source_url: "https://dados.cvm.gov.br/dataset/fi-doc-inf_diario"
 
@@ -31,9 +185,163 @@ datasets:
     source_title: CVM
     slug: fi-doc-extrato
     title: "FI - DOC - Extrato"
-    description: "Extrato das informações de Fundos de Investimento: versão Atual + recortes anuais (CSV) + dicionário (TXT)."
+    description: "Extratos das informações de fundos de investimento."
     manifest_path: cvm/fi/doc/extrato/manifest.json
     source_url: "https://dados.cvm.gov.br/dataset/fi-doc-extrato"
+
+  - id: cvm_invnr_cad
+    category_title: "Mercado financeiro"
+    subcategory_title: "Cadastros"
+    source_id: cvm
+    source_title: CVM
+    slug: invnr-cad
+    title: "Investidores Não Residentes - Representantes"
+    description: "Dados cadastrais de representantes de investidores não residentes."
+    manifest_path: cvm/invnr_cad/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/invnr-cad"
+
+  - id: cvm_fi_cad_registro_fundo_classe
+    category_title: "Mercado financeiro"
+    subcategory_title: "Fundos"
+    source_id: cvm
+    source_title: CVM
+    slug: fi-cad-registro-fundo-classe
+    title: "FI - CAD - Registro de Fundos, Classes e Subclasses"
+    description: "Cadastro de fundos, classes e subclasses de fundos de investimento."
+    manifest_path: cvm/fi/cad/registro_fundo_classe/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/fi-cad"
+
+  - id: cvm_fi_cad_nao_adaptados_rcvm175
+    category_title: "Mercado financeiro"
+    subcategory_title: "Fundos"
+    source_id: cvm
+    source_title: CVM
+    slug: fi-cad-nao-adaptados-rcvm175
+    title: "FI - CAD - Não adaptados RCVM175"
+    description: "Cadastro de fundos ainda não adaptados à Resolução CVM 175."
+    manifest_path: cvm/fi/cad/nao_adaptados_rcvm175/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/fi-cad"
+
+  - id: cvm_fi_cad_icvm555_hist
+    category_title: "Mercado financeiro"
+    subcategory_title: "Fundos"
+    source_id: cvm
+    source_title: CVM
+    slug: fi-cad-icvm555-hist
+    title: "FI - CAD - ICVM 555 Histórico"
+    description: "Histórico cadastral de fundos da ICVM 555."
+    manifest_path: cvm/fi/cad/icvm555_hist/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/fi-cad"
+
+  - id: cvm_consultor_vlmob_cad
+    category_title: "Mercado financeiro"
+    subcategory_title: "Cadastros"
+    source_id: cvm
+    source_title: CVM
+    slug: consultor-vlmob-cad
+    title: "Consultores de Valores Mobiliários - Informação Cadastral"
+    description: "Dados cadastrais de consultores de valores mobiliários."
+    manifest_path: cvm/consultor_vlmob_cad/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/consultor_vlmob-cad"
+
+  - id: cvm_adm_fii_cad
+    category_title: "Mercado financeiro"
+    subcategory_title: "Cadastros"
+    source_id: cvm
+    source_title: CVM
+    slug: adm-fii-cad
+    title: "Administradores de FII - Informação Cadastral"
+    description: "Dados cadastrais de administradores de fundos de investimento imobiliário."
+    manifest_path: cvm/adm_fii_cad/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/adm_fii-cad"
+
+  - id: cvm_adm_cart_cad
+    category_title: "Mercado financeiro"
+    subcategory_title: "Cadastros"
+    source_id: cvm
+    source_title: CVM
+    slug: adm-cart-cad
+    title: "Administradores de Carteira - Informação Cadastral"
+    description: "Dados cadastrais de administradores de carteira."
+    manifest_path: cvm/adm_cart_cad/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/adm_cart-cad"
+
+  - id: cvm_fii_doc_inf_trimestral
+    category_title: "Mercado financeiro"
+    subcategory_title: "Fundos"
+    source_id: cvm
+    source_title: CVM
+    slug: fii-informe-trimestral
+    title: "FII - Informe Trimestral Estruturado"
+    description: "Informes trimestrais estruturados de fundos imobiliários."
+    manifest_path: cvm/fii/doc/inf_trimestral/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/fii-doc-inf_trimestral"
+
+  - id: cvm_securit_doc_inf_mensal_ots
+    category_title: "Mercado financeiro"
+    subcategory_title: "Securitização"
+    source_id: cvm
+    source_title: CVM
+    slug: securit-doc-inf-mensal-ots
+    title: "Securitizadoras - Informe Mensal de Outros Títulos"
+    description: "Informes mensais de outros títulos de securitização."
+    manifest_path: cvm/securit_doc_inf_mensal_ots/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/securit-doc-inf_mensal_ots"
+
+  - id: cvm_fii_doc_inf_mensal
+    category_title: "Mercado financeiro"
+    subcategory_title: "Fundos"
+    source_id: cvm
+    source_title: CVM
+    slug: fii-doc-inf-mensal
+    title: "FII - Informe Mensal Estruturado"
+    description: "Informes mensais estruturados de fundos imobiliários."
+    manifest_path: cvm/fii/doc/inf_mensal/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/fii-doc-inf_mensal"
+
+  - id: cvm_securit_doc_inf_mensal_cri
+    category_title: "Mercado financeiro"
+    subcategory_title: "Securitização"
+    source_id: cvm
+    source_title: CVM
+    slug: securit-doc-inf-mensal-cri
+    title: "Securitizadoras - Informe Mensal de CRI"
+    description: "Informes mensais de certificados de recebíveis imobiliários."
+    manifest_path: cvm/securit_doc_inf_mensal_cri/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/securit-doc-inf_mensal_cri"
+
+  - id: cvm_securit_doc_inf_mensal_cra
+    category_title: "Mercado financeiro"
+    subcategory_title: "Securitização"
+    source_id: cvm
+    source_title: CVM
+    slug: securit-doc-inf-mensal-cra
+    title: "Securitizadoras - Informe Mensal de CRA"
+    description: "Informes mensais de certificados de recebíveis do agronegócio."
+    manifest_path: cvm/securit_doc_inf_mensal_cra/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/securit-doc-inf_mensal_cra"
+
+  - id: cvm_fii_doc_inf_anual
+    category_title: "Mercado financeiro"
+    subcategory_title: "Fundos"
+    source_id: cvm
+    source_title: CVM
+    slug: fii-doc-inf-anual
+    title: "FII - Informe Anual Estruturado"
+    description: "Informes anuais estruturados de fundos imobiliários."
+    manifest_path: cvm/fii/doc/inf_anual/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/fii-doc-inf_anual"
+
+  - id: cvm_fiagro_doc_inf_mensal
+    category_title: "Mercado financeiro"
+    subcategory_title: "Fundos"
+    source_id: cvm
+    source_title: CVM
+    slug: fiagro-doc-inf-mensal
+    title: "FIAGRO - Informe Mensal"
+    description: "Informes mensais de FIAGRO."
+    manifest_path: cvm/fiagro_doc_inf_mensal/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/fiagro-doc-inf_mensal"
 
   - id: cvm_fi_doc_entrega
     category_title: "Mercado financeiro"
@@ -46,71 +354,280 @@ datasets:
     manifest_path: cvm/fi/doc/entrega/manifest.json
     source_url: "https://dados.cvm.gov.br/dataset/fi-doc-entrega"
 
-  - id: cvm_fi_cad_registro_fundo_classe
+  - id: cvm_fii_doc_dfin
     category_title: "Mercado financeiro"
     subcategory_title: "Fundos"
     source_id: cvm
     source_title: CVM
-    slug: fi-cad-registro-fundo-classe
-    title: "FI - CAD - Registro (Fundo, Classe e Subclasse)"
-    description: "Cadastro de Fundos (registro de fundo/classe/subclasse)."
-    manifest_path: cvm/fi/cad/registro_fundo_classe/manifest.json
-    source_url: "https://dados.cvm.gov.br/dataset/fi-cad"
+    slug: fii-doc-dfin
+    title: "FII - Demonstrações Financeiras"
+    description: "Demonstrações financeiras de fundos de investimento imobiliário."
+    manifest_path: cvm/fii_doc_dfin/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/fii-doc-dfin"
 
-  - id: cvm_fi_cad_nao_adaptados_rcvm175
+  - id: cvm_securit_doc_dfin_cri
     category_title: "Mercado financeiro"
-    subcategory_title: "Fundos"
+    subcategory_title: "Securitização"
     source_id: cvm
     source_title: CVM
-    slug: fi-cad-nao-adaptados-rcvm175
-    title: "FI - CAD - Não adaptados RCVM175"
-    description: "Fundos não adaptados à RCVM 175."
-    manifest_path: cvm/fi/cad/nao_adaptados_rcvm175/manifest.json
-    source_url: "https://dados.cvm.gov.br/dataset/fi-cad"
+    slug: securit-doc-dfin-cri
+    title: "Securitizadoras - Demonstrações Financeiras de CRI"
+    description: "Demonstrações financeiras de certificados de recebíveis imobiliários."
+    manifest_path: cvm/securit_doc_dfin_cri/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/securit-doc-dfin_cri"
 
-  - id: cvm_fi_cad_icvm555_hist
+  - id: cvm_securit_doc_dfin_cra
     category_title: "Mercado financeiro"
-    subcategory_title: "Fundos"
+    subcategory_title: "Securitização"
     source_id: cvm
     source_title: CVM
-    slug: fi-cad-icvm555-hist
-    title: "FI - CAD - ICVM 555 (Histórico)"
-    description: "Histórico (ICVM 555)."
-    manifest_path: cvm/fi/cad/icvm555_hist/manifest.json
-    source_url: "https://dados.cvm.gov.br/dataset/fi-cad"
+    slug: securit-doc-dfin-cra
+    title: "Securitizadoras - Demonstrações Financeiras de CRA"
+    description: "Demonstrações financeiras de certificados de recebíveis do agronegócio."
+    manifest_path: cvm/securit_doc_dfin_cra/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/securit-doc-dfin_cra"
 
-  - id: cvm_fii_doc_inf_trimestral
+  - id: cvm_cia_aberta_doc_vlmo
     category_title: "Mercado financeiro"
-    subcategory_title: "Fundos"
+    subcategory_title: "Companhias abertas"
     source_id: cvm
     source_title: CVM
-    slug: fii-informe-trimestral
-    title: "FII - DOC - Informe Trimestral (Estruturado)"
-    description: "Informes trimestrais estruturados de FII."
-    manifest_path: cvm/fii/doc/inf_trimestral/manifest.json
-    source_url: "https://dados.cvm.gov.br/dataset/fii-doc-inf_trimestral"
+    slug: cia-aberta-doc-vlmo
+    title: "Cias Abertas - Valores Mobiliários Negociados e Detidos"
+    description: "Valores mobiliários negociados e detidos por pessoas ligadas a companhias abertas."
+    manifest_path: cvm/cia_aberta_doc_vlmo/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/cia_aberta-doc-vlmo"
 
-  - id: cvm_fii_doc_inf_mensal
+  - id: cvm_cia_aberta_doc_itr
     category_title: "Mercado financeiro"
-    subcategory_title: "Fundos"
+    subcategory_title: "Companhias abertas"
     source_id: cvm
     source_title: CVM
-    slug: fii-doc-inf-mensal
-    title: "FII - DOC - Informe Mensal (Estruturado)"
-    description: "Informes mensais estruturados de FII (arquivos anuais)."
-    manifest_path: cvm/fii/doc/inf_mensal/manifest.json
-    source_url: "https://dados.cvm.gov.br/dataset/fii-doc-inf_mensal"
+    slug: cia-aberta-doc-itr
+    title: "Cias Abertas - ITR"
+    description: "Formulários de informações trimestrais de companhias abertas."
+    manifest_path: cvm/cia_aberta_doc_itr/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/cia_aberta-doc-itr"
 
-  - id: cvm_fii_doc_inf_anual
+  - id: cvm_cia_aberta_doc_ipe
+    category_title: "Mercado financeiro"
+    subcategory_title: "Companhias abertas"
+    source_id: cvm
+    source_title: CVM
+    slug: cia-aberta-doc-ipe
+    title: "Cias Abertas - IPE"
+    description: "Documentos periódicos e eventuais de companhias abertas."
+    manifest_path: cvm/cia_aberta_doc_ipe/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/cia_aberta-doc-ipe"
+
+  - id: cvm_cia_aberta_doc_fre
+    category_title: "Mercado financeiro"
+    subcategory_title: "Companhias abertas"
+    source_id: cvm
+    source_title: CVM
+    slug: cia-aberta-doc-fre
+    title: "Cias Abertas - Formulário de Referência"
+    description: "Formulários de referência de companhias abertas."
+    manifest_path: cvm/cia_aberta_doc_fre/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/cia_aberta-doc-fre"
+
+  - id: cvm_cia_aberta_doc_fca
+    category_title: "Mercado financeiro"
+    subcategory_title: "Companhias abertas"
+    source_id: cvm
+    source_title: CVM
+    slug: cia-aberta-doc-fca
+    title: "Cias Abertas - Formulário Cadastral"
+    description: "Formulários cadastrais de companhias abertas."
+    manifest_path: cvm/cia_aberta_doc_fca/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/cia_aberta-doc-fca"
+
+  - id: cvm_cia_aberta_doc_dfp
+    category_title: "Mercado financeiro"
+    subcategory_title: "Companhias abertas"
+    source_id: cvm
+    source_title: CVM
+    slug: cia-aberta-doc-dfp
+    title: "Cias Abertas - DFP"
+    description: "Demonstrações financeiras padronizadas de companhias abertas."
+    manifest_path: cvm/cia_aberta_doc_dfp/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/cia_aberta-doc-dfp"
+
+  - id: cvm_cia_aberta_doc_cgvn
+    category_title: "Mercado financeiro"
+    subcategory_title: "Companhias abertas"
+    source_id: cvm
+    source_title: CVM
+    slug: cia-aberta-doc-cgvn
+    title: "Cias Abertas - Informe do Código de Governança"
+    description: "Informes do Código Brasileiro de Governança Corporativa."
+    manifest_path: cvm/cia_aberta_doc_cgvn/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/cia_aberta-doc-cgvn"
+
+  - id: cvm_fi_doc_perfil_mensal
     category_title: "Mercado financeiro"
     subcategory_title: "Fundos"
     source_id: cvm
     source_title: CVM
-    slug: fii-doc-inf-anual
-    title: "FII - DOC - Informe Anual (Estruturado)"
-    description: "Informes anuais estruturados de FII."
-    manifest_path: cvm/fii/doc/inf_anual/manifest.json
-    source_url: "https://dados.cvm.gov.br/dataset/fii-doc-inf_anual"
+    slug: fi-doc-perfil-mensal
+    title: "FI - Perfil Mensal"
+    description: "Perfis mensais de fundos de investimento."
+    manifest_path: cvm/fi_doc_perfil_mensal/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/fi-doc-perfil_mensal"
+
+  - id: cvm_fie_medidas
+    category_title: "Mercado financeiro"
+    subcategory_title: "Fundos"
+    source_id: cvm
+    source_title: CVM
+    slug: fie-medidas
+    title: "Fundos Estruturados - Medidas"
+    description: "Medidas de fundos estruturados, incluindo patrimônio líquido e número de cotistas."
+    manifest_path: cvm/fie_medidas/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/fie-medidas"
+
+  - id: cvm_fi_doc_lamina
+    category_title: "Mercado financeiro"
+    subcategory_title: "Fundos"
+    source_id: cvm
+    source_title: CVM
+    slug: fi-doc-lamina
+    title: "FI - Lâmina de Informações Essenciais"
+    description: "Lâminas de informações essenciais de fundos de investimento."
+    manifest_path: cvm/fi_doc_lamina/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/fi-doc-lamina"
+
+  - id: cvm_fip_doc_inf_trimestral
+    category_title: "Mercado financeiro"
+    subcategory_title: "Fundos"
+    source_id: cvm
+    source_title: CVM
+    slug: fip-doc-inf-trimestral
+    title: "FIP - Informe Trimestral"
+    description: "Informes trimestrais de fundos de investimento em participações."
+    manifest_path: cvm/fip_doc_inf_trimestral/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/fip-doc-inf_trimestral"
+
+  - id: cvm_fip_doc_inf_quadrimestral
+    category_title: "Mercado financeiro"
+    subcategory_title: "Fundos"
+    source_id: cvm
+    source_title: CVM
+    slug: fip-doc-inf-quadrimestral
+    title: "FIP - Informe Quadrimestral"
+    description: "Informes quadrimestrais de fundos de investimento em participações."
+    manifest_path: cvm/fip_doc_inf_quadrimestral/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/fip-doc-inf_quadrimestral"
+
+  - id: cvm_fidc_doc_inf_mensal
+    category_title: "Mercado financeiro"
+    subcategory_title: "Fundos"
+    source_id: cvm
+    source_title: CVM
+    slug: fidc-doc-inf-mensal
+    title: "FIDC - Informe Mensal"
+    description: "Informes mensais de fundos de investimento em direitos creditórios."
+    manifest_path: cvm/fidc_doc_inf_mensal/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/fidc-doc-inf_mensal"
+
+  - id: cvm_fi_doc_eventual
+    category_title: "Mercado financeiro"
+    subcategory_title: "Fundos"
+    source_id: cvm
+    source_title: CVM
+    slug: fi-doc-eventual
+    title: "FI - Documentos Eventuais, DFs e Demonstrativos"
+    description: "Documentos eventuais, demonstrações financeiras e demonstrativos trimestrais de fundos."
+    manifest_path: cvm/fi_doc_eventual/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/fi-doc-eventual"
+
+  - id: cvm_fi_doc_compl
+    category_title: "Mercado financeiro"
+    subcategory_title: "Fundos"
+    source_id: cvm
+    source_title: CVM
+    slug: fi-doc-compl
+    title: "FI - Formulário de Informações Complementares"
+    description: "Formulários de informações complementares de fundos de investimento."
+    manifest_path: cvm/fi_doc_compl/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/fi-doc-compl"
+
+  - id: cvm_fi_doc_cda
+    category_title: "Mercado financeiro"
+    subcategory_title: "Fundos"
+    source_id: cvm
+    source_title: CVM
+    slug: fi-doc-cda
+    title: "FI - Composição e Diversificação das Aplicações"
+    description: "Composição e diversificação das aplicações de fundos de investimento."
+    manifest_path: cvm/fi_doc_cda/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/fi-doc-cda"
+
+  - id: cvm_fie_doc_balancete
+    category_title: "Mercado financeiro"
+    subcategory_title: "Fundos"
+    source_id: cvm
+    source_title: CVM
+    slug: fie-doc-balancete
+    title: "Fundos Estruturados - Balancete"
+    description: "Balancetes mensais de fundos estruturados."
+    manifest_path: cvm/fie_doc_balancete/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/fie-doc-balancete"
+
+  - id: cvm_fi_doc_balancete
+    category_title: "Mercado financeiro"
+    subcategory_title: "Fundos"
+    source_id: cvm
+    source_title: CVM
+    slug: fi-doc-balancete
+    title: "FI - Balancete"
+    description: "Balancetes mensais de fundos de investimento."
+    manifest_path: cvm/fi_doc_balancete/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/fi-doc-balancete"
+
+  - id: cvm_fie_doc_balanco
+    category_title: "Mercado financeiro"
+    subcategory_title: "Fundos"
+    source_id: cvm
+    source_title: CVM
+    slug: fie-doc-balanco
+    title: "Fundos Estruturados - Balanço Semestral"
+    description: "Balanços semestrais de fundos estruturados."
+    manifest_path: cvm/fie_doc_balanco/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/fie-doc-balanco"
+
+  - id: cvm_distrpubl
+    category_title: "Mercado financeiro"
+    subcategory_title: "Ofertas"
+    source_id: cvm
+    source_title: CVM
+    slug: distrpubl
+    title: "Ofertas Públicas"
+    description: "Informações sobre ofertas registradas, dispensadas de registro e ofertas com esforços restritos."
+    manifest_path: cvm/distrpubl/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/distrpubl"
+
+  - id: cvm_emissores
+    category_title: "Mercado financeiro"
+    subcategory_title: "Cadastros"
+    source_id: cvm
+    source_title: CVM
+    slug: emissores
+    title: "Emissores"
+    description: "Informações agregadas sobre emissores, fundos de investimento e companhias abertas."
+    manifest_path: cvm/emissores/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/emissores"
+
+  - id: cvm_arrecadacao_receita_publica
+    category_title: "Mercado financeiro"
+    subcategory_title: "Transparência"
+    source_id: cvm
+    source_title: CVM
+    slug: arrecadacao-receita-publica
+    title: "Arrecadação - Receita Pública"
+    description: "Receitas da CVM publicadas no Portal da Transparência."
+    manifest_path: cvm/arrecadacao_receita_publica/manifest.json
+    source_url: "https://dados.cvm.gov.br/dataset/arrecadacao-receita-publica"
 
   # =========================================
   # Mercado de commodities -> Energia -> EIA

@@ -1,10 +1,8 @@
 id: cvm_fi_doc_entrega
-title: "CVM - FI - Documentos: Entrega"
+title: "CVM - FI - DOC - Entrega"
 source_dataset_url: "https://dados.cvm.gov.br/dataset/fi-doc-entrega"
-
 source: cvm_ckan
+ckan_package_id: fi-doc-entrega
 dataset_slug: fi-doc-entrega
 bucket_prefix: cvm/fi/doc/entrega
-mode: mirror_latest_months
-latest_months: 12
 include_meta: true

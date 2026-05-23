@@ -1,0 +1,8 @@
+id: cvm_emissores
+title: "CVM - Emissores"
+source_dataset_url: "https://dados.cvm.gov.br/dataset/emissores"
+source: cvm_ckan
+ckan_package_id: emissores
+dataset_slug: emissores
+bucket_prefix: cvm/emissores
+include_meta: true

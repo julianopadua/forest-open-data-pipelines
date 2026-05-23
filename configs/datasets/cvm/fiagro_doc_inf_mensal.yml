@@ -1,0 +1,8 @@
+id: cvm_fiagro_doc_inf_mensal
+title: "CVM - FIAGRO - Informe Mensal"
+source_dataset_url: "https://dados.cvm.gov.br/dataset/fiagro-doc-inf_mensal"
+source: cvm_ckan
+ckan_package_id: fiagro-doc-inf_mensal
+dataset_slug: fiagro-doc-inf_mensal
+bucket_prefix: cvm/fiagro_doc_inf_mensal
+include_meta: true

@@ -1,0 +1,8 @@
+id: cvm_securit_doc_inf_mensal_cra
+title: "CVM - Securitizadoras - Informe Mensal de CRA"
+source_dataset_url: "https://dados.cvm.gov.br/dataset/securit-doc-inf_mensal_cra"
+source: cvm_ckan
+ckan_package_id: securit-doc-inf_mensal_cra
+dataset_slug: securit-doc-inf_mensal_cra
+bucket_prefix: cvm/securit_doc_inf_mensal_cra
+include_meta: true

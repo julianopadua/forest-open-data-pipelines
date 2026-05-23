@@ -1,0 +1,8 @@
+id: cvm_fie_doc_balanco
+title: "CVM - Fundos Estruturados - Balanço Semestral"
+source_dataset_url: "https://dados.cvm.gov.br/dataset/fie-doc-balanco"
+source: cvm_ckan
+ckan_package_id: fie-doc-balanco
+dataset_slug: fie-doc-balanco
+bucket_prefix: cvm/fie_doc_balanco
+include_meta: true

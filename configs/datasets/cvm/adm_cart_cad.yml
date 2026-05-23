@@ -1,0 +1,8 @@
+id: cvm_adm_cart_cad
+title: "CVM - Administradores de Carteira - Informação Cadastral"
+source_dataset_url: "https://dados.cvm.gov.br/dataset/adm_cart-cad"
+source: cvm_ckan
+ckan_package_id: adm_cart-cad
+dataset_slug: adm_cart-cad
+bucket_prefix: cvm/adm_cart_cad
+include_meta: true

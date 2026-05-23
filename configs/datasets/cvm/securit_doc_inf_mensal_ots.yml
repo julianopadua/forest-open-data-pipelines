@@ -1,0 +1,8 @@
+id: cvm_securit_doc_inf_mensal_ots
+title: "CVM - Securitizadoras - Informe Mensal de Outros Títulos"
+source_dataset_url: "https://dados.cvm.gov.br/dataset/securit-doc-inf_mensal_ots"
+source: cvm_ckan
+ckan_package_id: securit-doc-inf_mensal_ots
+dataset_slug: securit-doc-inf_mensal_ots
+bucket_prefix: cvm/securit_doc_inf_mensal_ots
+include_meta: true

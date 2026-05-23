@@ -1,0 +1,8 @@
+id: cvm_invnr_cad
+title: "CVM - Investidores Não Residentes - Representantes"
+source_dataset_url: "https://dados.cvm.gov.br/dataset/invnr-cad"
+source: cvm_ckan
+ckan_package_id: invnr-cad
+dataset_slug: invnr-cad
+bucket_prefix: cvm/invnr_cad
+include_meta: true

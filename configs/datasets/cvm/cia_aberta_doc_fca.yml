@@ -1,0 +1,8 @@
+id: cvm_cia_aberta_doc_fca
+title: "CVM - Cias Abertas - Formulário Cadastral"
+source_dataset_url: "https://dados.cvm.gov.br/dataset/cia_aberta-doc-fca"
+source: cvm_ckan
+ckan_package_id: cia_aberta-doc-fca
+dataset_slug: cia_aberta-doc-fca
+bucket_prefix: cvm/cia_aberta_doc_fca
+include_meta: true

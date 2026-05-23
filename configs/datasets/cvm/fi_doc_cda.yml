@@ -1,0 +1,8 @@
+id: cvm_fi_doc_cda
+title: "CVM - FI - Composição e Diversificação das Aplicações"
+source_dataset_url: "https://dados.cvm.gov.br/dataset/fi-doc-cda"
+source: cvm_ckan
+ckan_package_id: fi-doc-cda
+dataset_slug: fi-doc-cda
+bucket_prefix: cvm/fi_doc_cda
+include_meta: true
