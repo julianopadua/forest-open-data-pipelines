@@ -24,6 +24,7 @@ openAbrir no browser:
 | `http://localhost:5173/white/index.html`                           | Hub do tema branco — host do deck de pesquisa                          |
 | `http://localhost:5173/white/composer.html?preset=research-trends` | Compositor com deck Research Trends pré-carregado                      |
 | `http://localhost:5173/navy/index.html`                            | Hub do tema azul marinho                                               |
+| `http://localhost:5173/navy/composer.html?preset=anp-producao-petroleo-gas` | Compositor com deck ANP produção pré-carregado                |
 
 
 ### Temas
@@ -34,7 +35,7 @@ openAbrir no browser:
 | Verde (Forest)       | `#2ECC9A`       | Conteúdo geral, séries de análise | —                                                                                      |
 | Vermelho (Wildfire)  | `#E53E3E`       | Queimadas e focos de calor        | `preset=bdqueimadas` (Python: `python -m forest_pipelines.social`)                     |
 | Branco (Research)    | `#0B7B56`       | Indicadores de pesquisa           | `preset=research-trends` (Python: `python -m forest_pipelines.social.research_trends`) |
-| Azul Marinho (Ocean) | `#4A9EFF`       | Monitoramento ambiental           | —                                                                                      |
+| Azul Marinho (Ocean) | `#4A9EFF`       | Monitoramento ambiental e energia | `preset=anp-producao-petroleo-gas` (Python: `python -m forest_pipelines.social.anp_producao`) |
 
 
 Todos os temas usam a mesma estrutura modular: `<theme>/{index,composer}.html` + `<theme>/slides/{cover,body-image-text,body-chart,body-text,cta}.html`. Tokens de cor em `src/<theme>/theme.css`. Scripts compartilhados em `[src/shared/](src/shared/)`.
@@ -173,6 +174,32 @@ MANIFEST=examples/green-manifest.example.json npm run export:manifest
 ```
 
 Saída: `dist-exports/green/<runId>/01-cover.png`, `02-body_image_text.png`, … (pasta `dist-exports/` está no `.gitignore`).
+
+## Pipeline ANP produção (carrossel 5 slides, tema azul)
+
+Deck automático para `Produção de petróleo e gás natural por estado e localização`, a partir dos CSV oficiais da ANP. O pipeline baixa e cacheia os sete arquivos do pacote em `data/anp_producao_petroleo_gas/`, mas plota no MVP apenas os dois indicadores principais: produção de petróleo e produção de gás natural.
+
+Quick start sem LLM:
+
+```bash
+make anp-producao-social-assets
+```
+
+Com textos Groq por slide:
+
+```bash
+make anp-producao-social-full
+```
+
+Saídas principais:
+
+- `public/generated/anp-producao-national.png`
+- `public/generated/anp-producao-petroleo-ufs.png`
+- `public/generated/anp-producao-gas-ufs.png`
+- `examples/anp-producao-petroleo-gas.manifest.json`
+- `public/examples/anp-producao-petroleo-gas.manifest.json`
+
+Preview: `cd apps/social-post-templates && npm run dev`, depois abrir `http://localhost:5173/navy/composer.html?preset=anp-producao-petroleo-gas`.
 
 ## Pipeline BDQueimadas (carrossel 6 slides + biomas, tema vermelho)
 

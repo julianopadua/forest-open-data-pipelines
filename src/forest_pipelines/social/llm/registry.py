@@ -12,6 +12,12 @@ from forest_pipelines.social.llm.payloads.focos_incendio import (
     build_focos_incendio_llm_payload,
     payload_to_prompt_block,
 )
+from forest_pipelines.social.llm.payloads.anp_producao import (
+    payload_to_prompt_block as anp_payload_to_prompt_block,
+)
+from forest_pipelines.social.llm.prompts.anp_producao.graphic_text import (
+    build_graphic_text_prompts as build_anp_graphic_text_prompts,
+)
 from forest_pipelines.social.llm.prompts.focos_incendio_br.carousel_post_description import (
     build_carousel_post_description_prompts,
 )
@@ -24,6 +30,7 @@ from forest_pipelines.social.llm.prompts.focos_incendio_br.post_description impo
 from forest_pipelines.social.logging import log_llm_roundtrip, log_stage
 
 TOPIC_FOCOS_INCENDIO_BR = "focos_incendio_br"
+TOPIC_ANP_PRODUCAO_PETROLEO_GAS = "anp_producao_petroleo_gas"
 COMPONENT_POST_DESCRIPTION = "post_description"
 COMPONENT_GRAPHIC_TEXT = "graphic_text"
 DEFAULT_COMPONENTS = (COMPONENT_POST_DESCRIPTION, COMPONENT_GRAPHIC_TEXT)
@@ -98,6 +105,45 @@ def generate_graphic_text_for_carousel_scope(
             scope=scope_slug,
         )
     return {"text": r2.text, "model": r2.model}
+
+
+def generate_graphic_text_for_anp_scope(
+    payload: dict[str, Any],
+    llm_settings: LLMSettings,
+    *,
+    scope_slug: str,
+    topic_id: str = TOPIC_ANP_PRODUCAO_PETROLEO_GAS,
+    logger: logging.Logger | None = None,
+) -> dict[str, str]:
+    """Texto do slide para produção ANP."""
+    block = anp_payload_to_prompt_block(payload)
+    if logger:
+        log_stage(
+            logger,
+            "llm_payload_ready",
+            {
+                "topic": topic_id,
+                "scope": scope_slug,
+                "payload_keys": sorted(payload.keys()),
+                "context_json_chars": len(block),
+            },
+        )
+    system_prompt, user_prompt = build_anp_graphic_text_prompts(
+        contexto_payload_json=block,
+        scope_slug=scope_slug,
+    )
+    result: RoutedTextResult = generate_text(llm_settings, system_prompt, user_prompt)
+    if logger:
+        log_llm_roundtrip(
+            logger,
+            topic_id=topic_id,
+            component=COMPONENT_GRAPHIC_TEXT,
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            result=result,
+            scope=scope_slug,
+        )
+    return {"text": result.text, "model": result.model}
 
 
 def run_topic_components(

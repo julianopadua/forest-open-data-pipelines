@@ -1,0 +1,182 @@
+{
+  "source": "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/producao-de-petroleo-e-gas-natural-por-estado-e-localizacao",
+  "latest_period": "2026-03-01",
+  "previous_period": "2026-02-01",
+  "yoy_period": "2025-03-01",
+  "panel": "national",
+  "title": "Produção nacional",
+  "metrics": {
+    "petroleo_m3": 20933489.71,
+    "petroleo_mom_pct": 15.79,
+    "petroleo_yoy_pct": 17.3,
+    "gas_1000m3": 6327449.81,
+    "gas_mom_pct": 14.35,
+    "gas_yoy_pct": 23.31
+  },
+  "profiles": {
+    "petroleo_m3": {
+      "key": "petroleo_m3",
+      "file": "producao-petroleo-m3.csv",
+      "size_bytes": 462540,
+      "rows": 7920,
+      "columns": [
+        "ANO",
+        "MÊS",
+        "GRANDE REGIÃO",
+        "UNIDADE DA FEDERAÇÃO",
+        "PRODUTO",
+        "LOCALIZAÇÃO",
+        "PRODUÇÃO"
+      ],
+      "value_column": "PRODUÇÃO",
+      "period_min": "1997-01-01",
+      "period_max": "2026-12-01",
+      "uf_count": 11,
+      "location_values": [
+        "MAR",
+        "TERRA"
+      ],
+      "null_values": 0
+    },
+    "lgn_m3": {
+      "key": "lgn_m3",
+      "file": "producao-lgn-m3.csv",
+      "size_bytes": 165082,
+      "rows": 3507,
+      "columns": [
+        "ANO",
+        "MÊS",
+        "GRANDE REGIÃO",
+        "UNIDADE DA FEDERAÇÃO",
+        "PRODUTO",
+        "PRODUÇÃO"
+      ],
+      "value_column": "PRODUÇÃO",
+      "period_min": "1997-01-01",
+      "period_max": "2026-03-01",
+      "uf_count": 10,
+      "location_values": [],
+      "null_values": 0
+    },
+    "gas_natural_1000m3": {
+      "key": "gas_natural_1000m3",
+      "file": "producao-gas-natural-1000m3.csv",
+      "size_bytes": 472641,
+      "rows": 7643,
+      "columns": [
+        "ANO",
+        "MÊS",
+        "GRANDE REGIÃO",
+        "UNIDADE DA FEDERAÇÃO",
+        "PRODUTO",
+        "LOCALIZAÇÃO",
+        "PRODUÇÃO"
+      ],
+      "value_column": "PRODUÇÃO",
+      "period_min": "1997-01-01",
+      "period_max": "2026-03-01",
+      "uf_count": 11,
+      "location_values": [
+        "MAR",
+        "TERRA"
+      ],
+      "null_values": 0
+    },
+    "reinjecao_1000m3": {
+      "key": "reinjecao_1000m3",
+      "file": "reinjecao-gn-1000m3.csv",
+      "size_bytes": 405791,
+      "rows": 6872,
+      "columns": [
+        "ANO",
+        "MÊS",
+        "GRANDE REGIÃO",
+        "UNIDADE DA FEDERAÇÃO",
+        "PRODUTO",
+        "LOCALIZAÇÃO",
+        "REINJETADO"
+      ],
+      "value_column": "REINJETADO",
+      "period_min": "2000-01-01",
+      "period_max": "2026-03-01",
+      "uf_count": 11,
+      "location_values": [
+        "MAR",
+        "TERRA"
+      ],
+      "null_values": 0
+    },
+    "queima_perda_1000m3": {
+      "key": "queima_perda_1000m3",
+      "file": "queima-e-perda-gn-1000m3.csv",
+      "size_bytes": 423050,
+      "rows": 6911,
+      "columns": [
+        "ANO",
+        "MÊS",
+        "GRANDE REGIÃO",
+        "UNIDADE DA FEDERAÇÃO",
+        "PRODUTO",
+        "LOCALIZAÇÃO",
+        "QUEIMADO"
+      ],
+      "value_column": "QUEIMADO",
+      "period_min": "2000-01-01",
+      "period_max": "2026-03-01",
+      "uf_count": 11,
+      "location_values": [
+        "MAR",
+        "TERRA"
+      ],
+      "null_values": 0
+    },
+    "consumo_proprio_1000m3": {
+      "key": "consumo_proprio_1000m3",
+      "file": "consumo-proprio-gn1000m3.csv",
+      "size_bytes": 423652,
+      "rows": 6902,
+      "columns": [
+        "ANO",
+        "MÊS",
+        "GRANDE REGIÃO",
+        "UNIDADE DA FEDERAÇÃO",
+        "PRODUTO",
+        "LOCALIZAÇÃO",
+        "CONSUMO"
+      ],
+      "value_column": "CONSUMO",
+      "period_min": "2000-01-01",
+      "period_max": "2026-03-01",
+      "uf_count": 11,
+      "location_values": [
+        "MAR",
+        "TERRA"
+      ],
+      "null_values": 0
+    },
+    "gn_disponivel_1000m3": {
+      "key": "gn_disponivel_1000m3",
+      "file": "gn-disponivel-1000m3.csv",
+      "size_bytes": 431702,
+      "rows": 6917,
+      "columns": [
+        "ANO",
+        "MÊS",
+        "GRANDE REGIÃO",
+        "UNIDADE DA FEDERAÇÃO",
+        "PRODUTO",
+        "LOCALIZAÇÃO",
+        "DISPONÍVEL"
+      ],
+      "value_column": "DISPONÍVEL",
+      "period_min": "2000-01-01",
+      "period_max": "2026-03-01",
+      "uf_count": 11,
+      "location_values": [
+        "MAR",
+        "TERRA"
+      ],
+      "null_values": 0
+    }
+  }
+}

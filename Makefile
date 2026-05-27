@@ -36,6 +36,7 @@ endif
 .PHONY: anp-catalog anp-catalog-smoke
 .PHONY: publish-catalog
 .PHONY: bdqueimadas-social-assets bdqueimadas-social-full
+.PHONY: anp-producao-social-assets anp-producao-social-full
 .PHONY: research-social-assets research-social-recent research-social-weekly research-social-refresh
 .PHONY: test test-verbose
 .PHONY: clean
@@ -152,6 +153,12 @@ bdqueimadas-social-assets: ## Generate BDQueimadas carousel charts + manifest (n
 
 bdqueimadas-social-full: ## Generate carousel + LLM captions, requires GROQ_API_KEY in .env
 	$(PYTHON) -m forest_pipelines.social --data-dir data/inpe_bdqueimadas --emit-manifest --llm
+
+anp-producao-social-assets: ## Generate ANP petroleum and gas carousel charts + manifest
+	$(PYTHON) -m forest_pipelines.social.anp_producao --data-dir data/anp_producao_petroleo_gas
+
+anp-producao-social-full: ## Generate ANP petroleum and gas carousel + Groq slide texts
+	$(PYTHON) -m forest_pipelines.social.anp_producao --data-dir data/anp_producao_petroleo_gas --llm
 
 research-social-assets: ## Research deck (historical, all-time, cited_by_count:desc)
 	$(PYTHON) -m forest_pipelines.social.research_trends --mode historical --verbose

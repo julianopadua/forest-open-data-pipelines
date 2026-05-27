@@ -42,3 +42,7 @@ docs/supabase/
 docs/.fphelper/
 # audit output (runtime)
 docs/audits/
+
+# Social chart render caches
+apps/social-post-templates/public/.cache/
+apps/social-post-templates/public/.mplconfig/

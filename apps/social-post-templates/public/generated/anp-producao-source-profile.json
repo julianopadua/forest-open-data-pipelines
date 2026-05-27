@@ -1,0 +1,166 @@
+[
+  {
+    "key": "petroleo_m3",
+    "file": "producao-petroleo-m3.csv",
+    "size_bytes": 462540,
+    "rows": 7920,
+    "columns": [
+      "ANO",
+      "MÊS",
+      "GRANDE REGIÃO",
+      "UNIDADE DA FEDERAÇÃO",
+      "PRODUTO",
+      "LOCALIZAÇÃO",
+      "PRODUÇÃO"
+    ],
+    "value_column": "PRODUÇÃO",
+    "period_min": "1997-01-01",
+    "period_max": "2026-12-01",
+    "uf_count": 11,
+    "location_values": [
+      "MAR",
+      "TERRA"
+    ],
+    "null_values": 0
+  },
+  {
+    "key": "lgn_m3",
+    "file": "producao-lgn-m3.csv",
+    "size_bytes": 165082,
+    "rows": 3507,
+    "columns": [
+      "ANO",
+      "MÊS",
+      "GRANDE REGIÃO",
+      "UNIDADE DA FEDERAÇÃO",
+      "PRODUTO",
+      "PRODUÇÃO"
+    ],
+    "value_column": "PRODUÇÃO",
+    "period_min": "1997-01-01",
+    "period_max": "2026-03-01",
+    "uf_count": 10,
+    "location_values": [],
+    "null_values": 0
+  },
+  {
+    "key": "gas_natural_1000m3",
+    "file": "producao-gas-natural-1000m3.csv",
+    "size_bytes": 472641,
+    "rows": 7643,
+    "columns": [
+      "ANO",
+      "MÊS",
+      "GRANDE REGIÃO",
+      "UNIDADE DA FEDERAÇÃO",
+      "PRODUTO",
+      "LOCALIZAÇÃO",
+      "PRODUÇÃO"
+    ],
+    "value_column": "PRODUÇÃO",
+    "period_min": "1997-01-01",
+    "period_max": "2026-03-01",
+    "uf_count": 11,
+    "location_values": [
+      "MAR",
+      "TERRA"
+    ],
+    "null_values": 0
+  },
+  {
+    "key": "reinjecao_1000m3",
+    "file": "reinjecao-gn-1000m3.csv",
+    "size_bytes": 405791,
+    "rows": 6872,
+    "columns": [
+      "ANO",
+      "MÊS",
+      "GRANDE REGIÃO",
+      "UNIDADE DA FEDERAÇÃO",
+      "PRODUTO",
+      "LOCALIZAÇÃO",
+      "REINJETADO"
+    ],
+    "value_column": "REINJETADO",
+    "period_min": "2000-01-01",
+    "period_max": "2026-03-01",
+    "uf_count": 11,
+    "location_values": [
+      "MAR",
+      "TERRA"
+    ],
+    "null_values": 0
+  },
+  {
+    "key": "queima_perda_1000m3",
+    "file": "queima-e-perda-gn-1000m3.csv",
+    "size_bytes": 423050,
+    "rows": 6911,
+    "columns": [
+      "ANO",
+      "MÊS",
+      "GRANDE REGIÃO",
+      "UNIDADE DA FEDERAÇÃO",
+      "PRODUTO",
+      "LOCALIZAÇÃO",
+      "QUEIMADO"
+    ],
+    "value_column": "QUEIMADO",
+    "period_min": "2000-01-01",
+    "period_max": "2026-03-01",
+    "uf_count": 11,
+    "location_values": [
+      "MAR",
+      "TERRA"
+    ],
+    "null_values": 0
+  },
+  {
+    "key": "consumo_proprio_1000m3",
+    "file": "consumo-proprio-gn1000m3.csv",
+    "size_bytes": 423652,
+    "rows": 6902,
+    "columns": [
+      "ANO",
+      "MÊS",
+      "GRANDE REGIÃO",
+      "UNIDADE DA FEDERAÇÃO",
+      "PRODUTO",
+      "LOCALIZAÇÃO",
+      "CONSUMO"
+    ],
+    "value_column": "CONSUMO",
+    "period_min": "2000-01-01",
+    "period_max": "2026-03-01",
+    "uf_count": 11,
+    "location_values": [
+      "MAR",
+      "TERRA"
+    ],
+    "null_values": 0
+  },
+  {
+    "key": "gn_disponivel_1000m3",
+    "file": "gn-disponivel-1000m3.csv",
+    "size_bytes": 431702,
+    "rows": 6917,
+    "columns": [
+      "ANO",
+      "MÊS",
+      "GRANDE REGIÃO",
+      "UNIDADE DA FEDERAÇÃO",
+      "PRODUTO",
+      "LOCALIZAÇÃO",
+      "DISPONÍVEL"
+    ],
+    "value_column": "DISPONÍVEL",
+    "period_min": "2000-01-01",
+    "period_max": "2026-03-01",
+    "uf_count": 11,
+    "location_values": [
+      "MAR",
+      "TERRA"
+    ],
+    "null_values": 0
+  }
+]

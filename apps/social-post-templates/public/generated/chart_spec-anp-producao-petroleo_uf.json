@@ -1,0 +1,51 @@
+{
+  "source": "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/producao-de-petroleo-e-gas-natural-por-estado-e-localizacao",
+  "latest_period": "2026-03-01",
+  "previous_period": "2026-02-01",
+  "yoy_period": "2025-03-01",
+  "panel": "petroleo_uf",
+  "title": "Petróleo por estado",
+  "top_states": [
+    {
+      "uf": "RIO DE JANEIRO",
+      "value": 18028299.72,
+      "share_pct": 86.12
+    },
+    {
+      "uf": "ESPÍRITO SANTO",
+      "value": 1321520.31,
+      "share_pct": 6.31
+    },
+    {
+      "uf": "SÃO PAULO",
+      "value": 1207673.25,
+      "share_pct": 5.77
+    },
+    {
+      "uf": "RIO GRANDE DO NORTE",
+      "value": 131032.38,
+      "share_pct": 0.63
+    },
+    {
+      "uf": "BAHIA",
+      "value": 95883.6,
+      "share_pct": 0.46
+    },
+    {
+      "uf": "SERGIPE",
+      "value": 63903.67,
+      "share_pct": 0.31
+    },
+    {
+      "uf": "AMAZONAS",
+      "value": 48883.9,
+      "share_pct": 0.23
+    },
+    {
+      "uf": "ALAGOAS",
+      "value": 23585.51,
+      "share_pct": 0.11
+    }
+  ],
+  "latest_total_m3": 20933489.71
+}

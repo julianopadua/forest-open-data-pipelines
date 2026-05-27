@@ -530,6 +530,18 @@
           console.warn("Preset bdqueimadas indisponível, usando exemplo padrão.", e);
         }
       }
+      if (params.get("preset") === "anp-producao-petroleo-gas") {
+        try {
+          const r = await fetch("/examples/anp-producao-petroleo-gas.manifest.json");
+          if (!r.ok) throw new Error(r.statusText);
+          const data = await r.json();
+          runId = data.runId;
+          slides = data.slides;
+          chromeSizes = { ...DEFAULT_CHROME, ...(data.sizes || {}) };
+        } catch (e) {
+          console.warn("Preset anp-producao-petroleo-gas indisponível, usando exemplo padrão.", e);
+        }
+      }
       state = {
         theme: "navy",
         runId,
