@@ -50,6 +50,8 @@ Todo preset social automático deve funcionar em um compositor de tema com os me
 
 O compositor deve extrair `topic_tag` e `published_at` de manifests antigos que ainda tragam esses campos dentro de `slides[].slots`, promover os valores para `globalSlots` e omitir esses campos dos editores individuais de slide.
 
+O Estúdio livre deve carregar tanto manifests nativos (`slides[].elements`) quanto manifests dos compositores (`slides[].type + slots`). O carregamento de manifests dos compositores é uma conversão one-way para elementos livres: preserva tema, `globalSlots`, `sizes`, conteúdo, imagens e os estilos compatíveis de `slotStyles`, mas o arquivo salvo depois pelo Studio usa o formato nativo.
+
 ## LLM
 
 - **Uma legenda Instagram** (`carousel_post_description`): chamada única, prompt curto, sem números por slide; prefixo `[YYYY-MM-DD]` obrigatório na primeira linha.

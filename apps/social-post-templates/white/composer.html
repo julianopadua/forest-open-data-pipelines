@@ -360,20 +360,20 @@
     }
 
     const TEXT_STYLE_FIELDS = [
-      { kind: "input", prop: "fontSize", label: "Fonte (px)" },
+      { kind: "number", prop: "fontSize", label: "Fonte", unit: "px", step: "1" },
       { kind: "select", prop: "textAlign", label: "Alinhar",
         options: [["left","esq"],["center","centro"],["right","dir"],["justify","just"]] },
-      { kind: "input", prop: "lineHeight", label: "Entrelinha" },
-      { kind: "input", prop: "letterSpacing", label: "Letter-spc" },
+      { kind: "number", prop: "lineHeight", label: "Entrelinha", step: "0.05" },
+      { kind: "number", prop: "letterSpacing", label: "Letter-spc", unit: "px", step: "1" },
       { kind: "input", prop: "color", label: "Cor (hex)" },
-      { kind: "input", prop: "marginTop", label: "Margem topo" },
-      { kind: "input", prop: "marginLeft", label: "Margem esq" },
-      { kind: "input", prop: "marginRight", label: "Margem dir" },
+      { kind: "number", prop: "marginTop", label: "Margem topo", unit: "px", step: "1" },
+      { kind: "number", prop: "marginLeft", label: "Margem esq", unit: "px", step: "1" },
+      { kind: "number", prop: "marginRight", label: "Margem dir", unit: "px", step: "1" },
     ];
 
     const IMAGE_STYLE_FIELDS = [
-      { kind: "input", prop: "width", label: "Largura" },
-      { kind: "input", prop: "maxHeight", label: "Altura max" },
+      { kind: "number", prop: "width", label: "Largura", unit: "px", step: "1" },
+      { kind: "number", prop: "maxHeight", label: "Altura max", unit: "px", step: "1" },
       { kind: "select", prop: "objectFit", label: "Object-fit",
         options: [["contain","contain"],["cover","cover"],["fill","fill"],["none","none"]] },
       { kind: "select", prop: "objectPosition", label: "Object-pos",
@@ -383,9 +383,74 @@
           ["top left","topo-esq"], ["top right","topo-dir"],
           ["bottom left","base-esq"], ["bottom right","base-dir"],
         ] },
-      { kind: "input", prop: "marginTop", label: "Margem topo" },
-      { kind: "input", prop: "marginLeft", label: "Margem esq" },
+      { kind: "number", prop: "marginTop", label: "Margem topo", unit: "px", step: "1" },
+      { kind: "number", prop: "marginLeft", label: "Margem esq", unit: "px", step: "1" },
     ];
+
+    const STYLE_DEFAULTS = {
+      cover: {
+        series_label: { fontSize: 22, lineHeight: 1.25, letterSpacing: 2.4, color: "var(--accent)" },
+        title: { fontSize: 144, lineHeight: 1, letterSpacing: -2, color: "var(--text-primary)" },
+        summary: { fontSize: 34, lineHeight: 1.6, letterSpacing: 0, color: "var(--text-secondary)" },
+      },
+      body_image_text: {
+        caption: { fontSize: 14, lineHeight: 1.25, letterSpacing: 1.6, color: "var(--accent)" },
+        body_text: { fontSize: 32, lineHeight: 1.6, letterSpacing: 0, color: "var(--text-secondary)" },
+        image_url: { width: "auto", maxHeight: 720, objectFit: "contain", objectPosition: "center" },
+      },
+      body_chart: {
+        caption: { fontSize: 14, lineHeight: 1.25, letterSpacing: 1.6, color: "var(--accent)" },
+        body_text: { fontSize: 30, lineHeight: 1.6, letterSpacing: 0, color: "var(--text-secondary)" },
+        image_url: { width: "auto", maxHeight: 620, objectFit: "contain", objectPosition: "center" },
+      },
+      body_text: {
+        text_col_1: { fontSize: 36, lineHeight: 1.35, letterSpacing: 0, color: "var(--text-secondary)" },
+        text_col_2: { fontSize: 36, lineHeight: 1.35, letterSpacing: 0, color: "var(--text-secondary)" },
+      },
+      body_logo_half: {
+        caption: { fontSize: 56, lineHeight: 1.1, letterSpacing: 0, color: "var(--accent)" },
+        body_text: { fontSize: 36, lineHeight: 1.35, letterSpacing: 0, color: "var(--text-secondary)" },
+      },
+      body_text_image: {
+        caption: { fontSize: 56, lineHeight: 1.1, letterSpacing: 0, color: "var(--accent)" },
+        body_text: { fontSize: 32, lineHeight: 1.45, letterSpacing: 0, color: "var(--text-secondary)" },
+        image_url: { width: "auto", maxHeight: 620, objectFit: "contain", objectPosition: "center" },
+      },
+      cta: {
+        cta_kicker: { fontSize: 30, lineHeight: 1.2, letterSpacing: 3, color: "var(--accent)" },
+        cta_headline: { fontSize: 64, lineHeight: 1.05, letterSpacing: -1, color: "var(--text-primary)" },
+        cta_subline: { fontSize: 28, lineHeight: 1.4, letterSpacing: 0, color: "var(--text-secondary)" },
+        cta_url: { fontSize: 36, lineHeight: 1.2, letterSpacing: 0, color: "var(--accent)" },
+      },
+      any: {
+        marginTop: 0,
+        marginLeft: 0,
+        marginRight: 0,
+        textAlign: "default",
+        objectFit: "contain",
+        objectPosition: "center",
+      },
+    };
+
+    function styleDefaultValue(slide, slotKey, prop) {
+      if (slide.type === "cover" && slotKey === "title" && prop === "fontSize" && state.theme === "green") return 132;
+      return STYLE_DEFAULTS[slide.type]?.[slotKey]?.[prop] ?? STYLE_DEFAULTS.any[prop] ?? "";
+    }
+
+    function stylePlaceholder(slide, slotKey, field) {
+      const value = styleDefaultValue(slide, slotKey, field.prop);
+      if (value === "" || value == null) return "";
+      const text = String(value);
+      if (field.unit && /^-?\d/.test(text)) return `default: ${text}${field.unit}`;
+      return `default: ${text}`;
+    }
+
+    function displayStyleValue(value, field) {
+      if (value == null) return "";
+      const text = String(value);
+      if (field.unit === "px" && text.endsWith("px")) return text.slice(0, -2);
+      return text;
+    }
 
     function updateSlotStyle(slide, slotKey, prop, value) {
       if (!slide.slotStyles) slide.slotStyles = {};
@@ -436,7 +501,7 @@
           control = document.createElement("select");
           const oEmpty = document.createElement("option");
           oEmpty.value = "";
-          oEmpty.textContent = "-";
+          oEmpty.textContent = String(styleDefaultValue(slide, slotKey, f.prop) || "default");
           control.appendChild(oEmpty);
           f.options.forEach(([v, t]) => {
             const o = document.createElement("option");
@@ -446,16 +511,35 @@
           });
           control.value = current[f.prop] ?? "";
           control.onchange = () => updateSlotStyle(slide, slotKey, f.prop, control.value);
+          control.style.fontSize = "0.75rem";
+          control.style.padding = "0.25rem 0.4rem";
+          wrap.appendChild(control);
         } else {
           control = document.createElement("input");
-          control.type = "text";
-          control.placeholder = "-";
-          control.value = current[f.prop] ?? "";
+          control.type = f.kind === "number" ? "number" : "text";
+          if (f.step) control.step = f.step;
+          control.placeholder = stylePlaceholder(slide, slotKey, f);
+          control.value = displayStyleValue(current[f.prop], f);
           control.oninput = () => updateSlotStyle(slide, slotKey, f.prop, control.value);
+          control.style.fontSize = "0.75rem";
+          control.style.padding = "0.25rem 0.4rem";
+          if (f.unit) {
+            const unitWrap = document.createElement("div");
+            unitWrap.style.display = "grid";
+            unitWrap.style.gridTemplateColumns = "1fr auto";
+            unitWrap.style.alignItems = "center";
+            unitWrap.style.gap = "0.25rem";
+            const unit = document.createElement("span");
+            unit.textContent = f.unit;
+            unit.style.fontSize = "0.7rem";
+            unit.style.color = "#94a3b8";
+            unitWrap.appendChild(control);
+            unitWrap.appendChild(unit);
+            wrap.appendChild(unitWrap);
+          } else {
+            wrap.appendChild(control);
+          }
         }
-        control.style.fontSize = "0.75rem";
-        control.style.padding = "0.25rem 0.4rem";
-        wrap.appendChild(control);
         grid.appendChild(wrap);
       });
 

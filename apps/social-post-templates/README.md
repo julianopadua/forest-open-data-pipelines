@@ -128,10 +128,12 @@ Todos os compositores de tema (`green`, `red`, `white` e `navy`) devem expor a m
 - Campo de tamanho do chrome via `sizes`: `topicTagPx`, `datePx`, `pageNumberPx` e `logoHeightPx`.
 - Card de metadados globais via `globalSlots`: `topic_tag` e `published_at`, aplicado a todos os slides e omitido dos editores individuais.
 - Checkbox de visibilidade por slot, serializado como `hiddenSlots` no slide e propagado ao preview como `hide=...`.
-- Painel `Ajustar estilo` por slot, serializado como `slotStyles` no slide e propagado ao preview como `style=<JSON>`.
+- Painel `Ajustar estilo` por slot, serializado como `slotStyles` no slide e propagado ao preview como `style=<JSON>`. Campos dimensionais usam input numérico com sufixo visual `px` e placeholder de default; o manifest continua salvando o valor cru.
 - Exportação normal em ZIP e exportação sem texto para Canva via `blank=1`.
 
 Pipelines sociais devem preservar esses campos quando carregam, editam ou regeneram manifests. Um preset novo só deve entrar em `index.html` quando seu compositor de tema conseguir carregar `globalSlots`, `slotStyles` e `hiddenSlots` sem perder informação.
+
+O Estúdio livre (`/studio/?theme=<tema>`) aceita dois formatos de manifest: o formato nativo do Studio com `slides[].elements` e o formato dos compositores automáticos com `slides[].type`, `slots`, `hiddenSlots` e `slotStyles`. Quando carrega um manifest de compositor, o Studio converte os slides para elementos livres editáveis. O salvamento posterior sai no formato nativo do Studio.
 
 ## Tamanhos default de texto e logo
 

@@ -1,5 +1,5 @@
 /**
- * Forest Studio — free-form WYSIWYG editor.
+ * Forest Studio - free-form WYSIWYG editor.
  * One canvas per slide; each slide is a list of absolute-positioned text/image elements.
  * Drag, resize and snap via Moveable. Inline text edit via contenteditable.
  */
@@ -437,7 +437,7 @@ function attachMoveableHandlers(m) {
 }
 
 function ensureMoveable() {
-  // Compat alias — older code paths still call this. We always have a Moveable
+  // Compat alias - older code paths still call this. We always have a Moveable
   // in `moveable` after the first selection; nothing else uses ensureMoveable.
   return moveable;
 }
@@ -852,6 +852,242 @@ function addSelect(parent, label, key, el, opts, apply) {
   parent.appendChild(wrap);
 }
 
+function themeColor(index) {
+  return THEME.palette[index]?.[1] || "#ffffff";
+}
+
+function extractGlobalSlots(data) {
+  if (data.globalSlots) {
+    return {
+      topic_tag: data.globalSlots.topic_tag ?? state.globalSlots.topic_tag,
+      published_at: data.globalSlots.published_at ?? state.globalSlots.published_at,
+    };
+  }
+  const first = data.slides?.[0]?.slots || {};
+  return {
+    topic_tag: first.topic_tag ?? state.globalSlots.topic_tag,
+    published_at: first.published_at ?? state.globalSlots.published_at,
+  };
+}
+
+function isHidden(slide, slotKey) {
+  return Array.isArray(slide.hiddenSlots) && slide.hiddenSlots.includes(slotKey);
+}
+
+function styleNumber(value) {
+  if (value == null || value === "") return null;
+  const n = Number.parseFloat(String(value).replace("px", ""));
+  return Number.isFinite(n) ? n : null;
+}
+
+function applySlotStyle(el, styles) {
+  if (!styles) return el;
+  const mt = styleNumber(styles.marginTop);
+  const ml = styleNumber(styles.marginLeft);
+  const mr = styleNumber(styles.marginRight);
+  if (mt != null) el.y += mt;
+  if (ml != null) el.x += ml;
+  if (mr != null) el.w = Math.max(40, el.w - mr);
+
+  if (el.type === "text") {
+    const fontSize = styleNumber(styles.fontSize);
+    const letterSpacing = styleNumber(styles.letterSpacing);
+    const lineHeight = styleNumber(styles.lineHeight);
+    if (fontSize != null) el.fontSize = fontSize;
+    if (letterSpacing != null) el.letterSpacing = letterSpacing;
+    if (lineHeight != null) el.lineHeight = lineHeight;
+    if (styles.color) el.color = String(styles.color);
+    if (styles.textAlign) el.textAlign = String(styles.textAlign);
+  } else if (el.type === "image") {
+    const width = styleNumber(styles.width);
+    const maxHeight = styleNumber(styles.maxHeight);
+    if (width != null) el.w = width;
+    if (maxHeight != null) el.h = maxHeight;
+    if (styles.objectFit) el.objectFit = String(styles.objectFit);
+    if (styles.objectPosition) el.objectPosition = String(styles.objectPosition);
+  }
+  return el;
+}
+
+function addComposerText(elements, slide, slotKey, defaults) {
+  if (isHidden(slide, slotKey)) return;
+  const value = slide.slots?.[slotKey];
+  if (value == null || String(value) === "") return;
+  const el = {
+    id: uid("el"),
+    type: "text",
+    content: String(value),
+    fontWeight: 400,
+    textAlign: "left",
+    lineHeight: 1.25,
+    letterSpacing: 0,
+    textTransform: "none",
+    ...defaults,
+  };
+  elements.push(applySlotStyle(el, slide.slotStyles?.[slotKey]));
+}
+
+function addComposerImage(elements, slide, slotKey, defaults) {
+  if (isHidden(slide, slotKey)) return;
+  const value = slide.slots?.[slotKey];
+  if (value == null || String(value) === "") return;
+  const el = {
+    id: uid("el"),
+    type: "image",
+    src: String(value),
+    objectFit: "contain",
+    objectPosition: "center",
+    ...defaults,
+  };
+  elements.push(applySlotStyle(el, slide.slotStyles?.[slotKey]));
+}
+
+function convertComposerSlide(slide) {
+  const elements = [];
+  const accent = themeColor(0);
+  const textPrimary = themeColor(2);
+  const textSecondary = themeColor(3);
+  const titleSize = state.theme === "green" ? 132 : 144;
+
+  if (slide.type === "cover") {
+    addComposerText(elements, slide, "series_label", {
+      x: 480, y: 220, w: 552, h: 42, fontSize: 22, color: accent, fontWeight: 600,
+      textAlign: "right", lineHeight: 1.25, letterSpacing: 2.4, textTransform: "uppercase",
+    });
+    addComposerText(elements, slide, "title", {
+      x: 60, y: 264, w: 980, h: 400, fontSize: titleSize, color: textPrimary, fontWeight: 900,
+      textAlign: "right", lineHeight: 1, letterSpacing: -2,
+    });
+    addComposerText(elements, slide, "summary", {
+      x: 48, y: 920, w: 520, h: 210, fontSize: 34, color: textSecondary,
+      textAlign: "left", lineHeight: 1.35,
+    });
+  } else if (slide.type === "body_chart") {
+    addComposerImage(elements, slide, "image_url", {
+      x: 48, y: 150, w: 984, h: 600, objectFit: "contain", objectPosition: "center",
+    });
+    addComposerText(elements, slide, "caption", {
+      x: 48, y: 770, w: 984, h: 48, fontSize: 14, color: accent, fontWeight: 600,
+      lineHeight: 1.25, letterSpacing: 1.8, textTransform: "uppercase",
+    });
+    addComposerText(elements, slide, "body_text", {
+      x: 48, y: 830, w: 984, h: 260, fontSize: 30, color: textSecondary,
+      lineHeight: 1.45,
+    });
+  } else if (slide.type === "body_image_text") {
+    const imageLeft = (slide.imageSide || "left") === "left";
+    const imageX = imageLeft ? 48 : 560;
+    const textX = imageLeft ? 560 : 48;
+    addComposerImage(elements, slide, "image_url", {
+      x: imageX, y: 165, w: 472, h: 720, objectFit: slide.imageFit === "compact" ? "cover" : "contain",
+      objectPosition: "center",
+    });
+    addComposerText(elements, slide, "caption", {
+      x: textX, y: 265, w: 472, h: 50, fontSize: 14, color: accent, fontWeight: 600,
+      lineHeight: 1.25, letterSpacing: 1.8, textTransform: "uppercase",
+    });
+    addComposerText(elements, slide, "body_text", {
+      x: textX, y: 330, w: 472, h: 520, fontSize: 32, color: textSecondary,
+      lineHeight: 1.45,
+    });
+  } else if (slide.type === "body_text") {
+    const cols = Number(slide.columns ?? 2);
+    if (cols === 1) {
+      addComposerText(elements, slide, "text_col_1", {
+        x: 120, y: 240, w: 840, h: 780, fontSize: 36, color: textSecondary,
+        lineHeight: 1.35,
+      });
+    } else {
+      addComposerText(elements, slide, "text_col_1", {
+        x: 80, y: 240, w: 420, h: 800, fontSize: 34, color: textSecondary,
+        lineHeight: 1.35,
+      });
+      addComposerText(elements, slide, "text_col_2", {
+        x: 580, y: 240, w: 420, h: 800, fontSize: 34, color: textSecondary,
+        lineHeight: 1.35,
+      });
+    }
+  } else if (slide.type === "body_logo_half") {
+    const logoLeft = (slide.logoSide || "right") === "left";
+    const textX = logoLeft ? 560 : 72;
+    const logoX = logoLeft ? 0 : 540;
+    addComposerText(elements, slide, "caption", {
+      x: textX, y: 300, w: 448, h: 90, fontSize: 56, color: accent, fontWeight: 900,
+      lineHeight: 1.1,
+    });
+    addComposerText(elements, slide, "body_text", {
+      x: textX, y: 420, w: 448, h: 430, fontSize: 36, color: textSecondary,
+      lineHeight: 1.35,
+    });
+    elements.push({
+      id: uid("el"), type: "image", x: logoX, y: 330, w: 520, h: 520,
+      src: state.theme === "green" ? "/images/logos/001-glogo.png" : THEME.logo,
+      objectFit: "contain", objectPosition: "center",
+    });
+  } else if (slide.type === "body_text_image") {
+    addComposerText(elements, slide, "caption", {
+      x: 80, y: 155, w: 920, h: 80, fontSize: 56, color: accent, fontWeight: 900,
+      lineHeight: 1.1,
+    });
+    addComposerText(elements, slide, "body_text", {
+      x: 80, y: 260, w: 920, h: 170, fontSize: 32, color: textSecondary,
+      lineHeight: 1.35,
+    });
+    addComposerImage(elements, slide, "image_url", {
+      x: 80, y: 470, w: 920, h: 590, objectFit: "contain", objectPosition: "center",
+    });
+  } else if (slide.type === "cta") {
+    addComposerText(elements, slide, "cta_kicker", {
+      x: 48, y: 240, w: 984, h: 64, fontSize: 30, color: accent, fontWeight: 600,
+      textAlign: "center", lineHeight: 1.2, letterSpacing: 3, textTransform: "uppercase",
+    });
+    addComposerText(elements, slide, "cta_headline", {
+      x: 48, y: 320, w: 984, h: 220, fontSize: 64, color: textPrimary, fontWeight: 900,
+      textAlign: "center", lineHeight: 1.05, letterSpacing: -1,
+    });
+    addComposerText(elements, slide, "cta_subline", {
+      x: 130, y: 560, w: 820, h: 200, fontSize: 28, color: textSecondary,
+      textAlign: "center", lineHeight: 1.4,
+    });
+    addComposerText(elements, slide, "cta_url", {
+      x: 48, y: 820, w: 984, h: 64, fontSize: 36, color: accent, fontWeight: 600,
+      textAlign: "center", lineHeight: 1.2,
+    });
+  }
+
+  return {
+    id: uid("slide"),
+    kind: slide.type === "cta" ? "cta" : slide.type === "cover" ? "cover" : "blank",
+    elements,
+  };
+}
+
+function normalizeLoadedManifest(data) {
+  const slides = Array.isArray(data.slides) ? data.slides : [];
+  if (!slides.length) {
+    return {
+      globalSlots: data.globalSlots || state.globalSlots,
+      sizes: { ...DEFAULT_CHROME, ...(data.sizes || {}) },
+      slides: [blankSlide()],
+    };
+  }
+  if (Array.isArray(slides[0].elements)) {
+    return {
+      globalSlots: data.globalSlots || state.globalSlots,
+      sizes: { ...DEFAULT_CHROME, ...(data.sizes || {}) },
+      slides,
+    };
+  }
+  if (slides[0].type) {
+    return {
+      globalSlots: extractGlobalSlots(data),
+      sizes: { ...DEFAULT_CHROME, ...(data.sizes || {}) },
+      slides: slides.map(convertComposerSlide),
+    };
+  }
+  throw new Error("Formato de manifest não reconhecido.");
+}
+
 // ---------- Save / Load manifest ----------
 document.getElementById("btnSave").onclick = () => {
   const data = JSON.stringify({
@@ -881,9 +1117,10 @@ loadFile.addEventListener("change", (e) => {
         return;
       }
       pushHistory({ force: true });
-      state.globalSlots = data.globalSlots || state.globalSlots;
-      state.sizes = { ...DEFAULT_CHROME, ...(data.sizes || {}) };
-      state.slides = data.slides && data.slides.length ? data.slides : [blankSlide()];
+      const loaded = normalizeLoadedManifest(data);
+      state.globalSlots = loaded.globalSlots;
+      state.sizes = loaded.sizes;
+      state.slides = loaded.slides;
       state.selectedSlideIdx = 0;
       state.selectedElementId = null;
       globalTopic.value = state.globalSlots.topic_tag;
