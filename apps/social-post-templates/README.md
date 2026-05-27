@@ -118,6 +118,17 @@ Comentários `<!-- slot: name -->` marcam áreas lógicas; elementos editáveis 
 
 **CTA:** `topic_tag`, `published_at`, `cta_kicker`, `cta_headline`, `cta_subline`, `cta_url`, `card_number`
 
+## Controles padronizados do compositor
+
+Todos os compositores de tema (`green`, `red`, `white` e `navy`) devem expor a mesma base de edição para qualquer preset automático:
+
+- Campo de tamanho do chrome via `sizes`: `topicTagPx`, `datePx`, `pageNumberPx` e `logoHeightPx`.
+- Checkbox de visibilidade por slot, serializado como `hiddenSlots` no slide e propagado ao preview como `hide=...`.
+- Painel `Ajustar estilo` por slot, serializado como `slotStyles` no slide e propagado ao preview como `style=<JSON>`.
+- Exportação normal em ZIP e exportação sem texto para Canva via `blank=1`.
+
+Pipelines sociais devem preservar esses campos quando carregam, editam ou regeneram manifests. Um preset novo só deve entrar em `index.html` quando seu compositor de tema conseguir carregar `slotStyles` e `hiddenSlots` sem perder informação.
+
 ## Tamanhos default de texto e logo
 
 Dois níveis de configuração de tamanho convivem nos slides:

@@ -12,7 +12,7 @@ Equivale a `python -m forest_pipelines.social --data-dir data/inpe_bdqueimadas -
 
 Para **só** gráficos e manifest sem chamadas à API (sem key): `make bdqueimadas-social-assets`.
 
-Para ver o compositor no browser: `cd apps/social-post-templates && npm run dev` e abrir o preset BDQueimadas (`/green/composer.html?preset=bdqueimadas`). O pipeline só grava arquivos em `public/`; não sobe servidor HTTP.
+Para ver o compositor no browser: `cd apps/social-post-templates && npm run dev` e abrir o preset BDQueimadas (`/red/composer.html?preset=bdqueimadas`). O pipeline só grava arquivos em `public/`; não sobe servidor HTTP.
 
 ## Visão geral
 
@@ -43,6 +43,10 @@ Com `--emit-manifest`, o JSON do compositor tem **6 entradas** em `slides`:
 | 5      | `cta`      | Encerramento estático. |
 
 Cada `body_chart` pode incluir `generation: { ok, error }` em falhas de dados ou de LLM. O campo opcional `instagram_caption_draft` guarda a legenda única gerada quando `--llm` está ativo.
+
+## Padrão de compositor
+
+Todo preset social automático deve funcionar em um compositor de tema com os mesmos controles básicos: `sizes` para chrome, `hiddenSlots` para esconder slots, `slotStyles` para ajuste fino por slot e exportação sem texto via `blank=1`. Os pipelines devem emitir manifests compatíveis com esse contrato e nunca remover `hiddenSlots` ou `slotStyles` ao regenerar um preset existente.
 
 ## LLM
 

@@ -49,7 +49,7 @@
   <div class="layout">
     <div class="panel">
       <h1>Compositor · tema branco</h1>
-      <p class="sub">Monte a sequência de slides, gere o <code>manifest.json</code> e baixe um <strong>ZIP com as imagens</strong> (PNG 1080×1350) direto no browser — ou use o script Playwright para PNGs idênticos ao servidor de preview.</p>
+      <p class="sub">Monte a sequência de slides, gere o <code>manifest.json</code> e baixe um <strong>ZIP com as imagens</strong> (PNG 1080×1350) direto no browser, ou use o script Playwright para PNGs idênticos ao servidor de preview.</p>
       <p style="display:flex;gap:0.85rem;flex-wrap:wrap;align-items:center;margin:0 0 1rem"><a class="back" href="../index.html">← Início</a><a class="back" href="./index.html">← Hub do tema branco</a></p>
 
       <div class="toolbar">
@@ -94,6 +94,7 @@
 
       <div class="toolbar" style="margin-top:0.75rem">
         <button type="button" class="primary" id="btnZipImages">Baixar ZIP (imagens)</button>
+        <button type="button" id="btnZipBlank">Baixar ZIP sem texto (chrome, p/ Canva)</button>
         <button type="button" class="primary" id="btnDownload">Baixar manifest.json</button>
         <button type="button" id="btnCopy">Copiar comando de export</button>
       </div>
@@ -292,6 +293,12 @@
       });
       if (slide.type === "body_image_text") p.set("side", slide.imageSide || "left");
       if (slide.type === "body_text") p.set("cols", String(slide.columns ?? 2));
+      if (Array.isArray(slide.hiddenSlots) && slide.hiddenSlots.length) {
+        p.set("hide", slide.hiddenSlots.join(","));
+      }
+      if (slide.slotStyles && Object.keys(slide.slotStyles).length) {
+        p.set("style", JSON.stringify(slide.slotStyles));
+      }
       const c = state.chromeSizes;
       p.set("chrome_topic", String(c.topicTagPx));
       p.set("chrome_date", String(c.datePx));
@@ -301,10 +308,120 @@
       return `${base}${path}?${p.toString()}`;
     }
 
+    function previewUrlBlank(index) {
+      const url = previewUrl(index);
+      const sep = url.includes("?") ? "&" : "?";
+      return `${url}${sep}blank=1`;
+    }
+
     function refreshPreview() {
       const iframe = document.getElementById("preview");
       const url = previewUrl(previewIndex);
       iframe.src = url;
+    }
+
+    const TEXT_STYLE_FIELDS = [
+      { kind: "input", prop: "fontSize", label: "Fonte (px)" },
+      { kind: "select", prop: "textAlign", label: "Alinhar",
+        options: [["left","esq"],["center","centro"],["right","dir"],["justify","just"]] },
+      { kind: "input", prop: "lineHeight", label: "Entrelinha" },
+      { kind: "input", prop: "letterSpacing", label: "Letter-spc" },
+      { kind: "input", prop: "color", label: "Cor (hex)" },
+      { kind: "input", prop: "marginTop", label: "Margem topo" },
+      { kind: "input", prop: "marginLeft", label: "Margem esq" },
+      { kind: "input", prop: "marginRight", label: "Margem dir" },
+    ];
+
+    const IMAGE_STYLE_FIELDS = [
+      { kind: "input", prop: "width", label: "Largura" },
+      { kind: "input", prop: "maxHeight", label: "Altura max" },
+      { kind: "select", prop: "objectFit", label: "Object-fit",
+        options: [["contain","contain"],["cover","cover"],["fill","fill"],["none","none"]] },
+      { kind: "select", prop: "objectPosition", label: "Object-pos",
+        options: [
+          ["top center","topo"], ["center","centro"], ["bottom center","base"],
+          ["left center","esquerda"], ["right center","direita"],
+          ["top left","topo-esq"], ["top right","topo-dir"],
+          ["bottom left","base-esq"], ["bottom right","base-dir"],
+        ] },
+      { kind: "input", prop: "marginTop", label: "Margem topo" },
+      { kind: "input", prop: "marginLeft", label: "Margem esq" },
+    ];
+
+    function updateSlotStyle(slide, slotKey, prop, value) {
+      if (!slide.slotStyles) slide.slotStyles = {};
+      if (!slide.slotStyles[slotKey]) slide.slotStyles[slotKey] = {};
+      if (value === "" || value == null) {
+        delete slide.slotStyles[slotKey][prop];
+      } else {
+        slide.slotStyles[slotKey][prop] = String(value);
+      }
+      if (Object.keys(slide.slotStyles[slotKey]).length === 0) delete slide.slotStyles[slotKey];
+      if (Object.keys(slide.slotStyles).length === 0) delete slide.slotStyles;
+      syncManifestTextarea();
+      refreshPreview();
+    }
+
+    function renderStylePanel(slide, slotKey) {
+      const details = document.createElement("details");
+      details.style.marginTop = "0.35rem";
+
+      const summary = document.createElement("summary");
+      summary.textContent = "Ajustar estilo";
+      summary.style.fontSize = "0.7rem";
+      summary.style.color = "#94a3b8";
+      summary.style.cursor = "pointer";
+      summary.style.textTransform = "uppercase";
+      summary.style.letterSpacing = "0.05em";
+      details.appendChild(summary);
+
+      const grid = document.createElement("div");
+      grid.style.display = "grid";
+      grid.style.gridTemplateColumns = "1fr 1fr";
+      grid.style.gap = "0.25rem 0.5rem";
+      grid.style.marginTop = "0.4rem";
+
+      const fields = slotKey === "image_url" ? IMAGE_STYLE_FIELDS : TEXT_STYLE_FIELDS;
+      const current = slide.slotStyles?.[slotKey] || {};
+
+      fields.forEach((f) => {
+        const wrap = document.createElement("div");
+        const l = document.createElement("label");
+        l.textContent = f.label;
+        l.style.marginTop = "0";
+        l.style.fontSize = "0.65rem";
+        wrap.appendChild(l);
+
+        let control;
+        if (f.kind === "select") {
+          control = document.createElement("select");
+          const oEmpty = document.createElement("option");
+          oEmpty.value = "";
+          oEmpty.textContent = "-";
+          control.appendChild(oEmpty);
+          f.options.forEach(([v, t]) => {
+            const o = document.createElement("option");
+            o.value = v;
+            o.textContent = t;
+            control.appendChild(o);
+          });
+          control.value = current[f.prop] ?? "";
+          control.onchange = () => updateSlotStyle(slide, slotKey, f.prop, control.value);
+        } else {
+          control = document.createElement("input");
+          control.type = "text";
+          control.placeholder = "-";
+          control.value = current[f.prop] ?? "";
+          control.oninput = () => updateSlotStyle(slide, slotKey, f.prop, control.value);
+        }
+        control.style.fontSize = "0.75rem";
+        control.style.padding = "0.25rem 0.4rem";
+        wrap.appendChild(control);
+        grid.appendChild(wrap);
+      });
+
+      details.appendChild(grid);
+      return details;
     }
 
     function renderSlides() {
@@ -373,8 +490,40 @@
         }
 
         Object.keys(slide.slots).forEach((key) => {
+          const labRow = document.createElement("div");
+          labRow.style.display = "flex";
+          labRow.style.alignItems = "center";
+          labRow.style.gap = "0.5rem";
+          labRow.style.marginTop = "0.5rem";
+
+          const vis = document.createElement("input");
+          vis.type = "checkbox";
+          vis.title = "Mostrar este campo no slide";
+          vis.style.width = "auto";
+          vis.style.margin = "0";
+          const isHidden = Array.isArray(slide.hiddenSlots) && slide.hiddenSlots.includes(key);
+          vis.checked = !isHidden;
+          vis.onchange = () => {
+            if (!Array.isArray(slide.hiddenSlots)) slide.hiddenSlots = [];
+            const hiddenIndex = slide.hiddenSlots.indexOf(key);
+            if (vis.checked) {
+              if (hiddenIndex >= 0) slide.hiddenSlots.splice(hiddenIndex, 1);
+            } else {
+              if (hiddenIndex < 0) slide.hiddenSlots.push(key);
+            }
+            if (slide.hiddenSlots.length === 0) delete slide.hiddenSlots;
+            syncManifestTextarea();
+            refreshPreview();
+          };
+
           const lab = document.createElement("label");
           lab.textContent = key;
+          lab.style.margin = "0";
+          lab.style.flex = "1";
+
+          labRow.appendChild(vis);
+          labRow.appendChild(lab);
+
           const input =
             key === "summary" || key.includes("text_col") || key === "body_text" || key === "cta_subline"
               ? document.createElement("textarea")
@@ -385,8 +534,9 @@
             slide.slots[key] = input.value;
             syncManifestTextarea();
           };
-          block.appendChild(lab);
+          block.appendChild(labRow);
           block.appendChild(input);
+          block.appendChild(renderStylePanel(slide, key));
         });
 
         root.appendChild(block);
@@ -508,6 +658,9 @@
       getSlideUrls() {
         return state.slides.map((_, i) => previewUrl(i));
       },
+      getSlideUrlsBlank() {
+        return state.slides.map((_, i) => previewUrlBlank(i));
+      },
       getRunId() {
         return document.getElementById("runId").value.trim() || "post";
       },
@@ -546,34 +699,48 @@
     import { downloadCarouselZip } from "/src/shared/composerZipExport.js";
 
     const zipBtn = document.getElementById("btnZipImages");
+    const zipBlankBtn = document.getElementById("btnZipBlank");
     const zipHint = document.getElementById("zipHint");
 
-    zipBtn.addEventListener("click", async () => {
+    async function runZip({ button, urlsFn, runIdSuffix, doneLabel }) {
       const api = window.__composerZip;
       if (!api?.getSlideUrls) return;
-      const urls = api.getSlideUrls();
+      const urls = urlsFn();
       if (!urls.length) {
         zipHint.textContent = "Adicione pelo menos um slide.";
         return;
       }
-      zipBtn.disabled = true;
+      button.disabled = true;
       zipHint.textContent = "";
       try {
         await downloadCarouselZip({
-          getSlideUrls: () => api.getSlideUrls(),
-          getRunId: () => api.getRunId(),
+          getSlideUrls: urlsFn,
+          getRunId: () => api.getRunId() + (runIdSuffix || ""),
           onProgress: (done, total) => {
-            zipHint.textContent = `Gerando imagens… ${done}/${total}`;
+            zipHint.textContent = `Gerando imagens... ${done}/${total}`;
           },
         });
-        zipHint.textContent = "Download iniciado: ZIP com img01.png, img02.png, …";
+        zipHint.textContent = doneLabel;
       } catch (e) {
         console.error(e);
         zipHint.textContent = e instanceof Error ? e.message : String(e);
       } finally {
-        zipBtn.disabled = false;
+        button.disabled = false;
       }
-    });
+    }
+
+    zipBtn.addEventListener("click", () => runZip({
+      button: zipBtn,
+      urlsFn: () => window.__composerZip.getSlideUrls(),
+      doneLabel: "Download iniciado: ZIP com img01.png, img02.png, ...",
+    }));
+
+    zipBlankBtn.addEventListener("click", () => runZip({
+      button: zipBlankBtn,
+      urlsFn: () => window.__composerZip.getSlideUrlsBlank(),
+      runIdSuffix: "-blank",
+      doneLabel: "Download iniciado: ZIP sem texto (chrome only) para edição no Canva.",
+    }));
   </script>
 </body>
 </html>
