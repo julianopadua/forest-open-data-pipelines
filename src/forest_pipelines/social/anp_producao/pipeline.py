@@ -748,6 +748,14 @@ def build_manifest(
             },
         },
     ]
+    global_slots = {
+        "topic_tag": "ANP Energia",
+        "published_at": published_at,
+    }
+    for slide in slides:
+        slots = slide.get("slots", {})
+        slots.pop("topic_tag", None)
+        slots.pop("published_at", None)
     return {
         "theme": "navy",
         "runId": "anp-producao-petroleo-gas",
@@ -757,6 +765,7 @@ def build_manifest(
             "pageNumberPx": 24,
             "logoHeightPx": 54,
         },
+        "globalSlots": global_slots,
         "slides": slides,
         "sources": {
             "anp_landing_url": ANP_LANDING_URL,

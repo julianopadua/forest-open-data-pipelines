@@ -410,7 +410,7 @@ def compute_chart_spec(
             },
             "avg_5y": {
                 "key": "avg_5y",
-                "label": f"Média {y0}–{y1} (por mês)",
+                "label": f"Média {y0}-{y1} (por mês)",
                 "values": series_avg_5y,
             },
         },
@@ -618,7 +618,7 @@ def _monthly_all_payload_to_by_calendar_month(
     *,
     data_year: int,
 ) -> dict[str, int]:
-    """Mapeia mês civil 1–12 -> focos (só linhas cujo year bate com data_year)."""
+    """Mapeia mês civil 1-12 -> focos (só linhas cujo year bate com data_year)."""
     out: dict[str, int] = {}
     for row in monthly_all:
         try:
@@ -1238,7 +1238,7 @@ def write_bdqueimadas_carousel_manifest(
                     f"Brasil, Amazônia, Cerrado e Pantanal - "
                     f"{ly} vs "
                     f"{py if py is not None else '-'} "
-                    f"e média por mês ({y0}–{y1})."
+                    f"e média por mês ({y0}-{y1})."
                 ),
             },
         },
@@ -1295,6 +1295,14 @@ def write_bdqueimadas_carousel_manifest(
             },
         },
     )
+    global_slots = {
+        "topic_tag": "Queimadas & Focos",
+        "published_at": published_at,
+    }
+    for slide in slides:
+        slots = slide.get("slots", {})
+        slots.pop("topic_tag", None)
+        slots.pop("published_at", None)
 
     manifest: dict[str, Any] = {
         "theme": "red",
@@ -1305,6 +1313,7 @@ def write_bdqueimadas_carousel_manifest(
             "pageNumberPx": 24,
             "logoHeightPx": 54,
         },
+        "globalSlots": global_slots,
         "slides": slides,
     }
     if post_caption_text is not None:
@@ -1515,7 +1524,7 @@ def main(argv: list[str] | None = None) -> int:
     meta = spec["metadata"]
     print(
         f"OK: {args.out_png} e {args.out_json} "
-        f"(ano atual {meta['latest_year']}, média {meta['avg_window_years_from']}–{meta['avg_window_years_to']}, "
+        f"(ano atual {meta['latest_year']}, média {meta['avg_window_years_from']}-{meta['avg_window_years_to']}, "
         f"publicação {meta.get('published_at_label', '')})"
     )
     if args.emit_manifest:

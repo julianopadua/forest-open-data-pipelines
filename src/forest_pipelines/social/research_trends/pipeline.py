@@ -194,7 +194,7 @@ def _reconstruct_abstract(work: dict[str, Any]) -> str:
     idx = work.get("abstract_inverted_index") or {}
     if not idx:
         return ""
-    # idx is {word: [positions]} — we just need the unique tokens for membership tests.
+    #idx maps word tokens to positions; membership only needs token keys.
     return " ".join(idx.keys())
 
 
@@ -680,6 +680,14 @@ def _build_manifest(
             },
         ]
     )
+    global_slots = {
+        "topic_tag": topic.cover_topic_tag,
+        "published_at": published_at,
+    }
+    for slide in slides:
+        slots = slide.get("slots", {})
+        slots.pop("topic_tag", None)
+        slots.pop("published_at", None)
 
     return {
         "theme": "white",
@@ -690,6 +698,7 @@ def _build_manifest(
             "pageNumberPx": 24,
             "logoHeightPx": 54,
         },
+        "globalSlots": global_slots,
         "slides": slides,
         "sources": {
             "openalex": "https://api.openalex.org/works",
@@ -752,7 +761,7 @@ def run(config: PipelineConfig) -> None:
         )
     if not works:
         LOG.warning(
-            "research_trends.no_results — 0 works after topical filter (raw=%d). "
+            "research_trends.no_results - 0 works after topical filter (raw=%d). "
             "Conferir search=%r e required_terms=%s do tópico.",
             len(raw_works),
             config.topic.search_query,
@@ -762,7 +771,7 @@ def run(config: PipelineConfig) -> None:
     agg = _aggregate(works, config.topic)
 
     # Always pull a 10-year yearly histogram for the topic via OpenAlex
-    # group_by — this is one cheap request and decouples the bar chart from
+        #group_by is one cheap request and decouples the bar chart from
     # the mode's date window. Without this, recent-mode runs would render a
     # single-bar chart (only the current year), which is misleading.
     today = date.today()
@@ -856,7 +865,7 @@ def _resolve_window(args: argparse.Namespace) -> tuple[str, date, date | None]:
         mode = args.mode or "recent"
         from_d = args.to_date - timedelta(days=30)
         return mode, from_d, args.to_date
-    # No explicit window flags — fall back to mode defaults.
+    #no explicit window flags; fall back to mode defaults.
     mode = args.mode or "historical"
     if mode == "recent":
         return mode, today - timedelta(days=30), today

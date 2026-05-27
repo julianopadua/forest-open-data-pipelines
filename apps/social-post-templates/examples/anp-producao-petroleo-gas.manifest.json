@@ -11,8 +11,6 @@
     {
       "type": "cover",
       "slots": {
-        "topic_tag": "ANP Energia",
-        "published_at": "Mar 2026",
         "series_label": "Séries mensais",
         "title": "Produção de petróleo e gás natural no Brasil",
         "summary": "Dados oficiais ANP por estado e localização. Último mês comum positivo: Mar 2026."
@@ -21,8 +19,6 @@
     {
       "type": "body_chart",
       "slots": {
-        "topic_tag": "ANP Energia",
-        "published_at": "Mar 2026",
         "caption": "Brasil: petróleo (m3) e gás natural (mil m3) · ANP",
         "image_url": "/generated/anp-producao-national.png",
         "body_text": "A produção de petróleo aumentou 15,79 % em relação ao mês anterior e 17,3 % em relação ao mesmo período do ano passado, totalizando 20933489,71 m3. O gás natural cresceu 14,35 % em relação ao mês anterior e 23,31 % em relação ao mesmo período do ano passado, totalizando 6327449,81 mil m3."
@@ -36,8 +32,6 @@
     {
       "type": "body_chart",
       "slots": {
-        "topic_tag": "ANP Energia",
-        "published_at": "Mar 2026",
         "caption": "Petróleo por estado · ANP",
         "image_url": "/generated/anp-producao-petroleo-ufs.png",
         "body_text": "RIO DE JANEIRO lidera o recorte com 86.1% do total. ESPÍRITO SANTO aparece em seguida, com 6.3%. A produção segue concentrada, com baixa dispersão entre os demais estados."
@@ -51,8 +45,6 @@
     {
       "type": "body_chart",
       "slots": {
-        "topic_tag": "ANP Energia",
-        "published_at": "Mar 2026",
         "caption": "Gás natural por estado · ANP",
         "image_url": "/generated/anp-producao-gas-ufs.png",
         "body_text": "RIO DE JANEIRO lidera o recorte com 76.4% do total. AMAZONAS aparece em seguida, com 6.9%. A produção segue concentrada, com baixa dispersão entre os demais estados."
@@ -66,8 +58,6 @@
     {
       "type": "cta",
       "slots": {
-        "topic_tag": "ANP Energia",
-        "published_at": "Mar 2026",
         "cta_kicker": "Quer continuar acompanhando?",
         "cta_headline": "Mais dados abertos de energia",
         "cta_subline": "Acesse séries, fontes oficiais e metadados no Forest.",
@@ -87,5 +77,9 @@
     "gas_mom_pct": 14.35,
     "gas_yoy_pct": 23.31
   },
-  "generated_at": "2026-05-27T01:01:12.656898+00:00"
+  "generated_at": "2026-05-27T01:01:12.656898+00:00",
+  "globalSlots": {
+    "topic_tag": "ANP Energia",
+    "published_at": "Mar 2026"
+  }
 }

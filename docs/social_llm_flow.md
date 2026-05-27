@@ -39,14 +39,16 @@ Com `--emit-manifest`, o JSON do compositor tem **6 entradas** em `slides`:
 | Índice | Tipo        | Conteúdo |
 |--------|------------|----------|
 | 0      | `cover`    | Capa estática (título/sumário do carrossel). |
-| 1–4    | `body_chart` | Nacional + três biomas; `image_url` aponta para o PNG correspondente; `body_text` = texto LLM do slide ou mensagem de fallback se falha. |
+| 1-4    | `body_chart` | Nacional + três biomas; `image_url` aponta para o PNG correspondente; `body_text` = texto LLM do slide ou mensagem de fallback se falha. |
 | 5      | `cta`      | Encerramento estático. |
 
 Cada `body_chart` pode incluir `generation: { ok, error }` em falhas de dados ou de LLM. O campo opcional `instagram_caption_draft` guarda a legenda única gerada quando `--llm` está ativo.
 
 ## Padrão de compositor
 
-Todo preset social automático deve funcionar em um compositor de tema com os mesmos controles básicos: `sizes` para chrome, `hiddenSlots` para esconder slots, `slotStyles` para ajuste fino por slot e exportação sem texto via `blank=1`. Os pipelines devem emitir manifests compatíveis com esse contrato e nunca remover `hiddenSlots` ou `slotStyles` ao regenerar um preset existente.
+Todo preset social automático deve funcionar em um compositor de tema com os mesmos controles básicos: `globalSlots` para metadados repetidos em todos os slides (`topic_tag` e `published_at`), `sizes` para chrome, `hiddenSlots` para esconder slots, `slotStyles` para ajuste fino por slot e exportação sem texto via `blank=1`. Os pipelines devem emitir manifests compatíveis com esse contrato e nunca remover `globalSlots`, `hiddenSlots` ou `slotStyles` ao regenerar um preset existente.
+
+O compositor deve extrair `topic_tag` e `published_at` de manifests antigos que ainda tragam esses campos dentro de `slides[].slots`, promover os valores para `globalSlots` e omitir esses campos dos editores individuais de slide.
 
 ## LLM
 

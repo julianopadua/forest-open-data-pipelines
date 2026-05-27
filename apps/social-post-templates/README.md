@@ -19,9 +19,9 @@ openAbrir no browser:
 | `http://localhost:5173/`                                           | Seletor com os quatro temas (Verde · Vermelho · Branco · Azul Marinho) |
 | `http://localhost:5173/green/index.html`                           | Hub do tema verde (links para slides + compositor)                     |
 | `http://localhost:5173/green/composer.html`                        | Compositor do tema verde                                               |
-| `http://localhost:5173/red/index.html`                             | Hub do tema vermelho — host atual do deck BDQueimadas                  |
+| `http://localhost:5173/red/index.html`                             | Hub do tema vermelho, host atual do deck BDQueimadas                  |
 | `http://localhost:5173/red/composer.html?preset=bdqueimadas`       | Compositor com deck BDQueimadas pré-carregado                          |
-| `http://localhost:5173/white/index.html`                           | Hub do tema branco — host do deck de pesquisa                          |
+| `http://localhost:5173/white/index.html`                           | Hub do tema branco, host do deck de pesquisa                          |
 | `http://localhost:5173/white/composer.html?preset=research-trends` | Compositor com deck Research Trends pré-carregado                      |
 | `http://localhost:5173/navy/index.html`                            | Hub do tema azul marinho                                               |
 | `http://localhost:5173/navy/composer.html?preset=anp-producao-petroleo-gas` | Compositor com deck ANP produção pré-carregado                |
@@ -32,7 +32,7 @@ openAbrir no browser:
 
 | Tema                 | Cor de destaque | Caso de uso                       | Preset automático                                                                      |
 | -------------------- | --------------- | --------------------------------- | -------------------------------------------------------------------------------------- |
-| Verde (Forest)       | `#2ECC9A`       | Conteúdo geral, séries de análise | —                                                                                      |
+| Verde (Forest)       | `#2ECC9A`       | Conteúdo geral, séries de análise | Sem preset automático dedicado                                                          |
 | Vermelho (Wildfire)  | `#E53E3E`       | Queimadas e focos de calor        | `preset=bdqueimadas` (Python: `python -m forest_pipelines.social`)                     |
 | Branco (Research)    | `#0B7B56`       | Indicadores de pesquisa           | `preset=research-trends` (Python: `python -m forest_pipelines.social.research_trends`) |
 | Azul Marinho (Ocean) | `#4A9EFF`       | Monitoramento ambiental e energia | `preset=anp-producao-petroleo-gas` (Python: `python -m forest_pipelines.social.anp_producao`) |
@@ -58,7 +58,7 @@ Slides atômicos em `green/slides/`:
 
 Tokens compartilhados: `[src/green/theme.css](src/green/theme.css)` (importa `[src/chrome/chrome-ui.css](src/chrome/chrome-ui.css)`). Preenchimento por query string ou por `window.applySlots` (export).
 
-**Tamanhos do canto (tópico, data, número da página, altura do logo):** editáveis no [compositor](green/composer.html) (painel “Metadados · tamanhos”), refletidos no preview e no export via objeto `sizes` no manifest ou query `?chrome_topic=&chrome_date=&chrome_page=&chrome_logo=` (valores em px). Implementação: `[src/chrome/sizes.js](src/chrome/sizes.js)`.
+**Metadados globais e tamanhos do canto:** editáveis no [compositor](green/composer.html) (painel “Metadados · texto + tamanhos”), refletidos no preview e no export via objetos `globalSlots` e `sizes` no manifest. `globalSlots` centraliza `topic_tag` e `published_at` para todos os slides. `sizes` controla `topicTagPx`, `datePx`, `pageNumberPx` e `logoHeightPx`; query equivalente: `?chrome_topic=&chrome_date=&chrome_page=&chrome_logo=` (valores em px). Implementação: `[src/chrome/sizes.js](src/chrome/sizes.js)`.
 
 Exemplos de manifest: `[examples/green-manifest.example.json](examples/green-manifest.example.json)`, `[examples/bdqueimadas-social.manifest.json](examples/bdqueimadas-social.manifest.json)` (pipeline BDQueimadas; cópia servida ao preset em `[public/examples/bdqueimadas-social.manifest.json](public/examples/bdqueimadas-social.manifest.json)`).
 
@@ -67,13 +67,14 @@ Exemplos de manifest: `[examples/green-manifest.example.json](examples/green-man
 - `theme`: `"green"`
 - `runId`: nome da pasta de saída em `dist-exports/green/<runId>/`
 - `sizes` (opcional): `{ "topicTagPx", "datePx", "pageNumberPx", "logoHeightPx" }` - números em pixels
+- `globalSlots` (opcional): `{ "topic_tag", "published_at" }` - metadados iguais em todos os slides
 - `slides`: array ordenado; cada item tem:
   - `type`: `cover` | `body_image_text` | `body_chart` | `body_text` | `cta`
-  - `slots`: objeto string → string (conteúdo dos `data-slot`)
+  - `slots`: objeto string → string (conteúdo específico do slide; não repetir `topic_tag` nem `published_at`)
   - `imageSide` (opcional, para `body_image_text`): `"left"` | `"right"`
   - `columns` (opcional, para `body_text`): `1` | `2`
 
-O campo `card_number` é preenchido automaticamente na exportação (`01 / N`, …).
+Os campos `topic_tag`, `published_at` e `card_number` são preenchidos automaticamente no preview e na exportação (`01 / N`, …).
 
 ## Logo (rodapé)
 
@@ -108,32 +109,35 @@ Comentários `<!-- slot: name -->` marcam áreas lógicas; elementos editáveis 
 
 ## Slots por slide
 
-**Capa (`cover`):** `topic_tag`, `published_at`, `series_label`, `title`, `summary`, `card_number`
+`topic_tag`, `published_at` e `card_number` são slots globais aplicados automaticamente a todos os slides. No manifest editável eles vivem em `globalSlots`, não dentro de `slides[].slots`.
 
-**Imagem + texto:** `topic_tag`, `published_at`, `caption`, `body_text`, `image_url`, `card_number`
+**Capa (`cover`):** `series_label`, `title`, `summary`
 
-**Gráfico + texto (`body_chart`):** `topic_tag`, `published_at`, `caption`, `image_url`, `body_text`, `card_number`
+**Imagem + texto:** `caption`, `body_text`, `image_url`
 
-**Só texto:** `topic_tag`, `published_at`, `text_col_1`, `text_col_2`, `card_number` (com uma coluna, `text_col_2` fica oculto)
+**Gráfico + texto (`body_chart`):** `caption`, `image_url`, `body_text`
 
-**CTA:** `topic_tag`, `published_at`, `cta_kicker`, `cta_headline`, `cta_subline`, `cta_url`, `card_number`
+**Só texto:** `text_col_1`, `text_col_2` (com uma coluna, `text_col_2` fica oculto)
+
+**CTA:** `cta_kicker`, `cta_headline`, `cta_subline`, `cta_url`
 
 ## Controles padronizados do compositor
 
 Todos os compositores de tema (`green`, `red`, `white` e `navy`) devem expor a mesma base de edição para qualquer preset automático:
 
 - Campo de tamanho do chrome via `sizes`: `topicTagPx`, `datePx`, `pageNumberPx` e `logoHeightPx`.
+- Card de metadados globais via `globalSlots`: `topic_tag` e `published_at`, aplicado a todos os slides e omitido dos editores individuais.
 - Checkbox de visibilidade por slot, serializado como `hiddenSlots` no slide e propagado ao preview como `hide=...`.
 - Painel `Ajustar estilo` por slot, serializado como `slotStyles` no slide e propagado ao preview como `style=<JSON>`.
 - Exportação normal em ZIP e exportação sem texto para Canva via `blank=1`.
 
-Pipelines sociais devem preservar esses campos quando carregam, editam ou regeneram manifests. Um preset novo só deve entrar em `index.html` quando seu compositor de tema conseguir carregar `slotStyles` e `hiddenSlots` sem perder informação.
+Pipelines sociais devem preservar esses campos quando carregam, editam ou regeneram manifests. Um preset novo só deve entrar em `index.html` quando seu compositor de tema conseguir carregar `globalSlots`, `slotStyles` e `hiddenSlots` sem perder informação.
 
 ## Tamanhos default de texto e logo
 
 Dois níveis de configuração de tamanho convivem nos slides:
 
-**1. Chrome metadata (tópico, data, número da página, altura do logo).** Ajuste por slide no compositor (painel "Metadados · tamanhos") ou via objeto `sizes` no manifest: `{ "topicTagPx", "datePx", "pageNumberPx", "logoHeightPx" }`. Implementação em `[src/chrome/sizes.js](src/chrome/sizes.js)`; aplicado em runtime via CSS variables. Default em `DEFAULT_CHROME` (mesmo arquivo). Querystring equivalente: `?chrome_topic=24&chrome_date=26&chrome_page=24&chrome_logo=54`.
+**1. Chrome metadata (tópico, data, número da página, altura do logo).** Ajuste global no compositor (painel "Metadados · texto + tamanhos") ou via objetos `globalSlots` e `sizes` no manifest. `globalSlots` define `topic_tag` e `published_at`; `sizes` define `{ "topicTagPx", "datePx", "pageNumberPx", "logoHeightPx" }`. Implementação em `[src/chrome/sizes.js](src/chrome/sizes.js)`; aplicado em runtime via CSS variables. Default em `DEFAULT_CHROME` (mesmo arquivo). Querystring equivalente: `?chrome_topic=24&chrome_date=26&chrome_page=24&chrome_logo=54`.
 
 **2. Fonte e tamanho do corpo do slide (título, CTA, body_text, etc.).** Estão inline no HTML de cada slide (`<theme>/slides/*.html`), em `style="font-size: NNpx"`. Para mudar global, edite o slide HTML do tema; o mesmo `font-size` propaga via Tailwind/inline para todas as ocorrências do `data-slot`. Locais relevantes:
 
@@ -240,7 +244,7 @@ Variantes mais granulares (só legenda, só textos por slide, recorte de data) e
 
 Na **raiz do repositório** `forest-open-data-pipelines`, com venv ativo e `pip install -e .`:
 
-- **ZIPs anuais** `focos_br_ref_*.zip` em `data/inpe_bdqueimadas/` (para o ano anterior e a média de 5 anos por mês, ex. 2021–2025).
+- **ZIPs anuais** `focos_br_ref_*.zip` em `data/inpe_bdqueimadas/` (para o ano anterior e a média de 5 anos por mês, ex. 2021-2025).
 - **Arquivos mensais** do ano civil em curso: baixados automaticamente do [listagem INPE mensal Brasil](https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/mensal/Brasil/) (`focos_mensal_br_YYYYMM.csv` ou `.zip`) para `data/inpe_bdqueimadas/mensal/` (cache reutilizável).
 
 A **linha do ano atual** no gráfico e nas estatísticas usa **apenas meses civis já encerrados**: o último ponto é o mês anterior ao mês civil corrente (ex.: em 18 de abril, até março; em 1º de maio, até abril). Não entra o mês em curso. A data de referência do comando (`--as-of`, default: hoje) define esse recorte.

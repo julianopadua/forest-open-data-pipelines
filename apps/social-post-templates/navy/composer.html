@@ -62,8 +62,18 @@
       </div>
 
       <div class="slide-block" id="chromePanel" style="margin-bottom:1rem">
-        <div class="slide-head"><strong>Metadados · tamanhos (canto)</strong></div>
-        <p class="hint" style="margin:0 0 0.5rem">Ajusta tópico, data, número da página e altura do logo. Vale no preview e nos PNGs exportados (campo <code>sizes</code> no manifest).</p>
+        <div class="slide-head"><strong>Metadados · texto + tamanhos (canto)</strong></div>
+        <p class="hint" style="margin:0 0 0.5rem">Valem em todos os slides. Topic tag e data ficam no canto superior; tamanhos controlam a tipografia do chrome e altura do logo.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem 1rem;margin-bottom:0.5rem">
+          <div>
+            <label for="globalTopic">Topic tag (todos os slides)</label>
+            <input type="text" id="globalTopic" value="Instituto Forest" />
+          </div>
+          <div>
+            <label for="globalPubAt">Publicado em (todos os slides)</label>
+            <input type="text" id="globalPubAt" value="Mai 2026" />
+          </div>
+        </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem 1rem">
           <div>
             <label for="chromeTopic">Tópico (px)</label>
@@ -185,12 +195,34 @@
       cta: "/navy/slides/cta.html",
     };
 
+    const DEFAULT_GLOBAL_SLOTS = {
+      topic_tag: "Instituto Forest",
+      published_at: "Mai 2026",
+    };
+
+    const GLOBAL_SLOT_KEYS = ["topic_tag", "published_at"];
+
     let state = {
       theme: "navy",
       runId: "my-run",
       slides: [],
       chromeSizes: { ...DEFAULT_CHROME },
+      globalSlots: { ...DEFAULT_GLOBAL_SLOTS },
     };
+
+    function stripGlobalSlotsFromSlide(slide) {
+      if (!slide || !slide.slots) return;
+      GLOBAL_SLOT_KEYS.forEach((k) => { delete slide.slots[k]; });
+    }
+
+    function extractGlobalSlotsFromManifest(data) {
+      if (data && data.globalSlots) return { ...DEFAULT_GLOBAL_SLOTS, ...data.globalSlots };
+      const first = data?.slides?.[0]?.slots || {};
+      return {
+        topic_tag: first.topic_tag ?? DEFAULT_GLOBAL_SLOTS.topic_tag,
+        published_at: first.published_at ?? DEFAULT_GLOBAL_SLOTS.published_at,
+      };
+    }
 
     let previewIndex = 0;
 
@@ -254,6 +286,7 @@
     function newSlide(type) {
       const meta = SLIDE_META[type];
       const slide = { type, slots: { ...meta.defaults } };
+      stripGlobalSlotsFromSlide(slide);
       if (type === "body_image_text") slide.imageSide = meta.imageSide || "left";
       if (type === "body_text") slide.columns = meta.columns ?? 2;
       return slide;
@@ -265,8 +298,10 @@
         theme: "navy",
         runId,
         sizes: { ...state.chromeSizes },
+        globalSlots: { ...state.globalSlots },
         slides: state.slides.map((s) => {
           const copy = JSON.parse(JSON.stringify(s));
+          stripGlobalSlotsFromSlide(copy);
           return copy;
         }),
       };
@@ -286,7 +321,11 @@
       const slide = state.slides[Math.min(index, total - 1)];
       const i = Math.min(index, total - 1);
       const path = PATHS[slide.type];
-      const slots = { ...slide.slots, card_number: cardNumber(i, total) };
+      const slots = {
+        ...slide.slots,
+        ...state.globalSlots,
+        card_number: cardNumber(i, total),
+      };
       const p = new URLSearchParams();
       Object.entries(slots).forEach(([k, v]) => {
         if (v != null && v !== "") p.set(k, String(v));
@@ -490,6 +529,7 @@
         }
 
         Object.keys(slide.slots).forEach((key) => {
+          if (GLOBAL_SLOT_KEYS.includes(key)) return;
           const labRow = document.createElement("div");
           labRow.style.display = "flex";
           labRow.style.alignItems = "center";
@@ -589,6 +629,8 @@
       document.getElementById("chromeDate").value = String(state.chromeSizes.datePx);
       document.getElementById("chromePage").value = String(state.chromeSizes.pageNumberPx);
       document.getElementById("chromeLogo").value = String(state.chromeSizes.logoHeightPx);
+      document.getElementById("globalTopic").value = state.globalSlots.topic_tag ?? "";
+      document.getElementById("globalPubAt").value = state.globalSlots.published_at ?? "";
     }
 
     function readChromeInputs() {
@@ -608,12 +650,27 @@
       });
     });
 
+    document.getElementById("globalTopic").addEventListener("input", (e) => {
+      state.globalSlots.topic_tag = e.target.value;
+      syncManifestTextarea();
+      refreshPreview();
+    });
+    document.getElementById("globalPubAt").addEventListener("input", (e) => {
+      state.globalSlots.published_at = e.target.value;
+      syncManifestTextarea();
+      refreshPreview();
+    });
+
     document.getElementById("btnLoadExample").onclick = () => {
+      const slides = JSON.parse(JSON.stringify(DEFAULT_EXAMPLE.slides));
+      const globalSlots = extractGlobalSlotsFromManifest(DEFAULT_EXAMPLE);
+      slides.forEach(stripGlobalSlotsFromSlide);
       state = {
         theme: DEFAULT_EXAMPLE.theme,
         runId: DEFAULT_EXAMPLE.runId,
-        slides: JSON.parse(JSON.stringify(DEFAULT_EXAMPLE.slides)),
+        slides,
         chromeSizes: { ...(DEFAULT_EXAMPLE.sizes || DEFAULT_CHROME) },
+        globalSlots,
       };
       document.getElementById("runId").value = state.runId;
       syncChromeInputsFromState();
@@ -670,6 +727,7 @@
       let runId = DEFAULT_EXAMPLE.runId;
       let slides = JSON.parse(JSON.stringify(DEFAULT_EXAMPLE.slides));
       let chromeSizes = { ...(DEFAULT_EXAMPLE.sizes || DEFAULT_CHROME) };
+      let source = DEFAULT_EXAMPLE;
       const params = new URLSearchParams(window.location.search);
       if (params.get("preset") === "bdqueimadas") {
         try {
@@ -679,6 +737,7 @@
           runId = data.runId;
           slides = data.slides;
           chromeSizes = { ...DEFAULT_CHROME, ...(data.sizes || {}) };
+          source = data;
         } catch (e) {
           console.warn("Preset bdqueimadas indisponível, usando exemplo padrão.", e);
         }
@@ -691,15 +750,19 @@
           runId = data.runId;
           slides = data.slides;
           chromeSizes = { ...DEFAULT_CHROME, ...(data.sizes || {}) };
+          source = data;
         } catch (e) {
           console.warn("Preset anp-producao-petroleo-gas indisponível, usando exemplo padrão.", e);
         }
       }
+      const globalSlots = extractGlobalSlotsFromManifest(source);
+      slides.forEach(stripGlobalSlotsFromSlide);
       state = {
         theme: "navy",
         runId,
         slides,
         chromeSizes,
+        globalSlots,
       };
       document.getElementById("runId").value = state.runId;
       syncChromeInputsFromState();
