@@ -1,0 +1,5 @@
+id: anp_dados_cadastrais_dos_revendedores_varejistas_de_combustiveis_automotivos
+title: Dados Cadastrais dos Revendedores Varejistas de Combustíveis Automotivos
+source_url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/dados-cadastrais-dos-revendedores-varejistas-de-combustiveis-automotivos
+bucket_prefix: anp/dados-cadastrais-dos-revendedores-varejistas-de-combustiveis-automotivos
+runner: anp_govbr

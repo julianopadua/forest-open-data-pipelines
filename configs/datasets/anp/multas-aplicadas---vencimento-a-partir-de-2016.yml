@@ -1,0 +1,5 @@
+id: anp_multas_aplicadas___vencimento_a_partir_de_2016
+title: Multas aplicadas com vencimento a partir de 2016
+source_url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/multas-aplicadas-com-vencimento-a-partir-de-2016
+bucket_prefix: anp/multas-aplicadas---vencimento-a-partir-de-2016
+runner: anp_govbr

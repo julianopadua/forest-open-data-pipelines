@@ -1,42 +1,36 @@
-import json
-
 from forest_pipelines.catalog.build import build_open_data_catalog, build_reports_catalog
 
 
-def test_open_data_catalog_uses_compact_anp_descriptions(tmp_path):
+def test_open_data_catalog_uses_base_dataset_entries(tmp_path):
     base_path = tmp_path / "open_data.yml"
-    base_path.write_text("datasets: []\n", encoding="utf-8")
-
-    anp_path = tmp_path / "anp_catalog_compact.json"
-    long_notes = " ".join(["texto"] * 300)
-    anp_path.write_text(
-        json.dumps(
-            {
-                "schema_version": "1.0",
-                "generated_at": "2026-01-01T00:00:00Z",
-                "datasets": [
-                    {
-                        "slug": "precos-de-combustiveis",
-                        "title": "Precos de combustiveis",
-                        "notes_plain": long_notes,
-                    }
-                ],
-            }
-        ),
+    base_path.write_text(
+        """
+datasets:
+  - id: anp_teste
+    category_title: "Mercado de commodities"
+    segment_title: "Energia"
+    subcategory_title: "Petróleo e gás"
+    source_id: anp
+    source_title: ANP
+    slug: teste
+    title: "Teste ANP"
+    description: "Entrada ANP normal no catalogo base."
+    manifest_path: anp/teste/manifest.json
+    source_url: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/teste"
+""".lstrip(),
         encoding="utf-8",
     )
 
     warnings: list[str] = []
     env = build_open_data_catalog(
         base_config_path=base_path,
-        anp_compact_path=anp_path,
         warnings_bucket=warnings,
     )
 
     dataset = env["datasets"][0]
-    assert len(dataset["description"]) <= 240
-    assert "description_en" in dataset
-    assert long_notes[:80] not in dataset["description"]
+    assert dataset["id"] == "anp_teste"
+    assert dataset["manifest_path"] == "anp/teste/manifest.json"
+    assert warnings == []
 
 
 def test_reports_catalog_adds_card_metadata_from_report_document(tmp_path):

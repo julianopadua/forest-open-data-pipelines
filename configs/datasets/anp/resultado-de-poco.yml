@@ -1,0 +1,5 @@
+id: anp_resultado_de_poco
+title: Resultado de poço
+source_url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/resultados-de-poco
+bucket_prefix: anp/resultado-de-poco
+runner: anp_govbr

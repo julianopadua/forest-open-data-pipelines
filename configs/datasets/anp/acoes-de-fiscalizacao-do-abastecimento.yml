@@ -1,0 +1,5 @@
+id: anp_acoes_de_fiscalizacao_do_abastecimento
+title: Ações de Fiscalização do Abastecimento
+source_url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/acoes-de-fiscalizacao
+bucket_prefix: anp/acoes-de-fiscalizacao-do-abastecimento
+runner: anp_govbr

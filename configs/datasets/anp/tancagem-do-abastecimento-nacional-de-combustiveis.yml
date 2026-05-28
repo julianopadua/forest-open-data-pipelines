@@ -1,0 +1,5 @@
+id: anp_tancagem_do_abastecimento_nacional_de_combustiveis
+title: Tancagem do Abastecimento Nacional de Combustíveis
+source_url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/tancagem-do-abastecimento-nacional-de-combustiveis
+bucket_prefix: anp/tancagem-do-abastecimento-nacional-de-combustiveis
+runner: anp_govbr

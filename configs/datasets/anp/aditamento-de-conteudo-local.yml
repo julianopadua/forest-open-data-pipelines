@@ -1,0 +1,5 @@
+id: anp_aditamento_de_conteudo_local
+title: Aditamento de conteúdo local
+source_url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/aditamento-conteudo-local
+bucket_prefix: anp/aditamento-de-conteudo-local
+runner: anp_govbr

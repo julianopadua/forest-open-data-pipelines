@@ -1,4 +1,4 @@
-"""Port of scripts/generate-anp-catalog.mjs placement logic to Python.
+"""ANP catalog placement logic shared by generated catalog entries.
 
 Deterministic categorization of ANP datasets from the compact envelope
 into (category_title, segment_title, subcategory_title).
@@ -107,7 +107,7 @@ def _has_any(haystack: str, needles: tuple[str, ...]) -> bool:
 
 
 def placement_for_dataset(ds: dict[str, Any]) -> Placement:
-    """Mirror of placementForDataset() from scripts/generate-anp-catalog.mjs."""
+    """Return catalog placement for one ANP title and slug."""
     slug = ds.get("slug") or ""
     legacy = LEGACY_PLACEMENT_BY_SLUG.get(slug)
     if legacy:

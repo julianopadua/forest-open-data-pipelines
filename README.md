@@ -2,7 +2,7 @@
 
 Python monorepo that discovers official open-data source URLs, profiles each resource locally, publishes catalog and manifest JSON to Supabase Storage, and powers the [Instituto Forest](https://institutoforest.org) portal, the public read-only HTTP API at `https://institutoforest.org/api/v1`, and the [`forest-data`](#using-the-data-the-forest-data-python-sdk) Python SDK on PyPI.
 
-> **First time here?** Most users do **not** need to run this repo at all. If you just want to **consume Forest open data**, install the SDK — see [Using the data: the `forest-data` Python SDK](#using-the-data-the-forest-data-python-sdk) below. The instructions further down are for contributors who maintain or extend the pipelines.
+> **First time here?** Most users do **not** need to run this repo at all. If you just want to **consume Forest open data**, install the SDK. See [Using the data: the `forest-data` Python SDK](#using-the-data-the-forest-data-python-sdk) below. The instructions further down are for contributors who maintain or extend the pipelines.
 
 ---
 
@@ -33,7 +33,7 @@ Python monorepo that discovers official open-data source URLs, profiles each res
 
 ## What this repo does
 
-**Dataset sync.** Discovers official source URLs for open datasets (CVM, INPE, EIA, INMET, MMA/CNUC, Noticias Agricolas, ANP), downloads resources temporarily for local profiling, deletes the temporary payloads by default, and publishes a `manifest.json` at each dataset prefix in Supabase Storage. Dataset payload bytes are **not** uploaded to Supabase — consumers fetch them from the official source listed in each item's `source_url`.
+**Dataset sync.** Discovers official source URLs for open datasets (CVM, INPE, EIA, INMET, MMA/CNUC, Noticias Agricolas, ANP), downloads resources temporarily for local profiling, deletes the temporary payloads by default, and publishes a `manifest.json` at each dataset prefix in Supabase Storage. Dataset payload bytes are **not** uploaded to Supabase. Consumers fetch them from the official source listed in each item's `source_url`.
 
 Incremental by default: before profiling, the pipeline reads the existing published `manifest.json`. URLs already profiled are reused; new URLs are profiled and added. Use `make sync-force` to reprofile everything.
 
@@ -80,7 +80,7 @@ paths = client.download("inpe_bdqueimadas_focos", path="./data")
 - **HTTP API reference** (what the SDK wraps): <https://institutoforest.org/docs/api/v1>
 - **Source**: [sdk/forest_data/](sdk/forest_data/)
 
-The SDK lives under `sdk/forest_data/` with its own `pyproject.toml`. It is a self-contained package that shares no runtime code with the pipeline — only the manifest schema. Co-locating both lets schema changes ship as a single atomic PR across pipeline, portal, and SDK.
+The SDK lives under `sdk/forest_data/` with its own `pyproject.toml`. It is a self-contained package that shares no runtime code with the pipeline, only the manifest schema. Co-locating both lets schema changes ship as a single atomic PR across pipeline, portal, and SDK.
 
 ---
 
@@ -97,7 +97,7 @@ The portal exposes a public, read-only REST API at `https://institutoforest.org/
 | `GET /api/v1/sources` | Source agencies + counts |
 | `GET /api/v1/openapi.json` | OpenAPI 3.1 spec |
 
-The API is metadata-only — it never serves dataset payload bytes. Hit each item's `source_url` for the raw file. See the human-readable reference at <https://institutoforest.org/docs/api/v1>.
+The API is metadata-only. It never serves dataset payload bytes. Hit each item's `source_url` for the raw file. See the human-readable reference at <https://institutoforest.org/docs/api/v1>.
 
 ---
 
@@ -111,7 +111,7 @@ INPE (BDQueimadas)  ─────┤
 EIA (API)           ─────┤                                                                       forest-portal
 INMET (FTP/HTTP)    ─────┼──► forest-pipelines CLI ───────►    public bucket                ┌──► (Next.js)
 MMA / CNUC (CKAN)   ─────┤        (Typer)                       manifest.json      ────────┤
-ANP (dados.gov.br)  ─────┤                                      + catalog envelopes         │   public HTTP API
+ANP (gov.br HTML)   ─────┤                                      + catalog envelopes         │   public HTTP API
 Noticias Agricolas  ─────┘                                                                  ├──► /api/v1
                                        │                                                    │
                                 Groq LLM (optional)                                         └──► forest-data SDK
@@ -127,7 +127,7 @@ The portal and API fetch manifests and catalog envelopes from Storage. Dataset b
 | Path | Role |
 | --- | --- |
 | `src/forest_pipelines/` | CLI, settings, dataset runners, storage client, manifests, reports, audits, LLM, social generation. |
-| `src/forest_pipelines/dados_abertos/` | ANP catalog scraping from dados.gov.br. |
+| `src/forest_pipelines/datasets/anp/` | ANP gov.br open-data discovery and manifest publication. |
 | `sdk/forest_data/` | Public Python SDK published to PyPI as `forest-data`. Independent package. |
 | `configs/app.yml` | Directory paths, Supabase bucket env var name, LLM defaults. |
 | `configs/datasets/` | One YAML per dataset (landing-page source URLs, `bucket_prefix`, sync parameters). |
@@ -172,7 +172,7 @@ Copy `.env.example` to `.env` and set:
 | Variable | Required | Purpose |
 | --- | --- | --- |
 | `SUPABASE_URL` | yes | Supabase project URL |
-| `SUPABASE_SERVICE_ROLE_KEY` | yes | Service role key for Storage uploads — keep secret |
+| `SUPABASE_SERVICE_ROLE_KEY` | yes | Service role key for Storage uploads. Keep secret |
 | `SUPABASE_BUCKET_OPEN_DATA` | yes | Bucket name, e.g. `open-data` |
 | `GROQ_API_KEY` | for LLM targets only | Required by `bdqueimadas-social-full`, BDQueimadas report LLM mode, and any report using LLM captions |
 
@@ -228,13 +228,6 @@ Run `make` or `make help` to see this list in your terminal.
 | --- | --- |
 | `make audit-bdqueimadas` | Run audit on INPE BDQueimadas dataset; output under `docs/audits/` |
 
-### ANP open data
-
-| Target | Description |
-| --- | --- |
-| `make anp-catalog` | Scrape full ANP catalog from dados.gov.br (all pages) |
-| `make anp-catalog-smoke` | Quick smoke test — fetch first 5 pages only, no Supabase needed |
-
 ### Portal catalog
 
 | Target | Description |
@@ -246,7 +239,7 @@ Run `make` or `make help` to see this list in your terminal.
 | Target | Description |
 | --- | --- |
 | `make bdqueimadas-social-assets` | Generate BDQueimadas carousel charts + manifest (no LLM required) |
-| `make bdqueimadas-social-full` | Generate carousel + LLM captions — requires `GROQ_API_KEY` |
+| `make bdqueimadas-social-full` | Generate carousel + LLM captions. Requires `GROQ_API_KEY` |
 
 ### Tests and cleanup
 
@@ -287,7 +280,7 @@ forest-pipelines sync-all [--force] [--publish-catalog/--no-publish-catalog]
 Rebuilds and uploads `catalog/open_data_catalog.json` and `catalog/reports_catalog.json` without re-running any dataset sync. Use this after editing `configs/catalog/*.yml`.
 
 ```
-forest-pipelines publish-catalog [--bucket-prefix catalog] [--anp-compact PATH]
+forest-pipelines publish-catalog [--bucket-prefix catalog]
 ```
 
 ### `build-report`
@@ -310,36 +303,6 @@ forest-pipelines audit-dataset <dataset_id> [--config-path PATH]
 
 Currently registered: `inpe_bdqueimadas_focos`.
 
-### `anp-catalog`
-
-Scrapes the dados.gov.br CKAN API for one organization (default: ANP), paginates through all results, and extracts direct CSV download links. Writes `anp_catalogo_supabase.json` and `anp_catalogo_supabase.csv`. No Supabase credentials required.
-
-```
-forest-pipelines anp-catalog [--org-id UUID] [--offset-start N] [--limit N] [--output-dir PATH]
-```
-
-Use `--limit 5` for a smoke test without fetching all pages.
-
-### `anp-compact`
-
-Transforms a raw ANP portal snapshot JSON (produced by `anp-catalog`) into a compact canonical envelope with schema validation.
-
-```
-forest-pipelines anp-compact <input_json> [--output PATH] [--validate/--no-validate]
-```
-
-### `anp-publish`
-
-Uploads a compact ANP catalog envelope to Supabase Storage and prints the public catalog URL.
-
-```
-forest-pipelines anp-publish <compact_json> [--config-path PATH] [--bucket-prefix PREFIX] [--validate/--no-validate]
-```
-
-Default prefix: `anp/catalog`.
-
----
-
 ## Registered datasets
 
 | Identifier | Source |
@@ -360,6 +323,7 @@ Default prefix: `anp/catalog`.
 | `inpe_area_queimada_focos1km` | INPE |
 | `inmet_dados_historicos` | INMET |
 | `mma_cnuc_unidades_conservacao` | MMA / CNUC |
+| `anp_*` | ANP |
 | `noticias_agricolas_news` | Noticias Agricolas |
 
 `noticias_agricolas_news` publishes a JSON news feed (not file downloads) under `news/noticias-agricolas/` and does not use `--latest-months`. See [docs/datasets/noticias_agricolas_news.md](docs/datasets/noticias_agricolas_news.md) for contract details.
@@ -370,8 +334,8 @@ Default prefix: `anp/catalog`.
 
 The portal and the public HTTP API both read two catalog envelopes from Supabase Storage:
 
-- `catalog/open_data_catalog.json` — built from `configs/catalog/open_data.yml` and the ANP compact envelope.
-- `catalog/reports_catalog.json` — built from `configs/catalog/reports.yml`.
+- `catalog/open_data_catalog.json`: built from `configs/catalog/open_data.yml`.
+- `catalog/reports_catalog.json`: built from `configs/catalog/reports.yml`.
 
 Both envelopes share the manifest envelope shape: `schema_version`, `generated_at`, `generation_status`, `warnings[]`, plus the payload array.
 
@@ -380,7 +344,7 @@ Both envelopes share the manifest envelope shape: `schema_version`, `generated_a
 1. Register a runner + YAML in `configs/datasets/<source>/<id>.yml` (publishes the manifest).
 2. Add an entry to `configs/catalog/open_data.yml` (publishes to the catalog).
 
-Then run `make sync` (or `forest-pipelines publish-catalog` if only metadata changed). Do **not** edit the portal source — the portal fetches the catalog at runtime.
+Then run `make sync` (or `forest-pipelines publish-catalog` if only metadata changed). Do **not** edit the portal source. The portal fetches the catalog at runtime.
 
 ---
 
@@ -430,7 +394,7 @@ The `docs/` directory contains active operational notes for datasets, integratio
 
 **Catalog out of date in the portal.** Run `make publish-catalog`. The portal caches the catalog for up to one hour.
 
-**`anp-catalog` returns HTTP 401.** The dados.gov.br public API is rate-limiting or blocking the request. Try from a different network or confirm the API is accessible at [dados.gov.br](https://dados.gov.br).
+**ANP gov.br scraping returns no resources.** Check whether the detail page changed its article structure or resource section labels. The runner uses fixtures for CI and keeps official indirect links as skipped items when a public system page has no direct file URL.
 
 **GitHub Actions failures.** Confirm all three secrets (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_BUCKET_OPEN_DATA`) are set on the repository under Settings → Secrets and variables → Actions.
 

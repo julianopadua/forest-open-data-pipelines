@@ -1,0 +1,5 @@
+id: anp_distribuidores_de_combustiveis_liquidos
+title: Distribuidores de combustíveis líquidos
+source_url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/dados-abertos-distribuidores-de-combustiveis-liquidos
+bucket_prefix: anp/distribuidores-de-combustiveis-liquidos
+runner: anp_govbr

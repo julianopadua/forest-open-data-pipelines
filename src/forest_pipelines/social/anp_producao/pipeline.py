@@ -36,9 +36,6 @@ ANP_LANDING_URL = (
     "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/"
     "producao-de-petroleo-e-gas-natural-por-estado-e-localizacao"
 )
-ANP_COMPACT_PATH = (
-    REPO_ROOT / "src" / "forest_pipelines" / "dados_abertos" / "anp_catalog_compact.json"
-)
 
 MONTH_TO_NUMBER = {
     "JAN": 1,
@@ -190,30 +187,6 @@ def discover_resource_urls_from_html(page_html: str) -> dict[str, str]:
     return urls
 
 
-def discover_resource_urls_from_compact(compact_path: Path = ANP_COMPACT_PATH) -> dict[str, str]:
-    if not compact_path.exists():
-        return {}
-    data = json.loads(compact_path.read_text(encoding="utf-8"))
-    packages = data.get("packages") or data.get("datasets") or []
-    target = None
-    for package in packages:
-        if package.get("slug") == "producao-de-petroleo-e-gas-natural-por-estado-e-localizacao":
-            target = package
-            break
-    if not target:
-        return {}
-    urls: dict[str, str] = {}
-    for resource in target.get("resources") or []:
-        if resource.get("kind") != "data":
-            continue
-        url = normalize_source_url(str(resource.get("url") or ""))
-        low = url.lower()
-        for item in RESOURCE_DEFS:
-            if any(token in low for token in item.match_tokens):
-                urls[item.key] = url
-    return urls
-
-
 def fetch_landing_html(landing_url: str, timeout_s: int = 60) -> str:
     req = urllib.request.Request(
         landing_url,
@@ -229,12 +202,10 @@ def discover_resource_urls(landing_url: str) -> dict[str, str]:
     except Exception as exc:
         LOG.warning("anp_producao.discovery_html_failed error=%s", exc)
         urls = {}
-    fallback = discover_resource_urls_from_compact()
-    merged = {**fallback, **urls}
-    missing = [item.key for item in RESOURCE_DEFS if item.key not in merged]
+    missing = [item.key for item in RESOURCE_DEFS if item.key not in urls]
     if missing:
         raise RuntimeError(f"Não foi possível descobrir URLs ANP para: {missing}")
-    return merged
+    return urls
 
 
 def _download(url: str, target: Path, timeout_s: int = 120) -> None:

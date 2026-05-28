@@ -33,8 +33,7 @@ Requisitos comuns
   • Variáveis de ambiente (sync, build-report): SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY (obrigatórias).
     O nome do bucket vem da env cujo nome está em app.yml em supabase.bucket_open_data_env
     (ex.: SUPABASE_BUCKET_OPEN_DATA); se ausente, o default é o bucket "open-data".
-  • sync, build-report e anp-publish publicam no Storage do Supabase (mesmas envs);
-    anp-catalog e anp-compact podem só gerar arquivos locais.
+  • sync e build-report publicam no Storage do Supabase (mesmas envs).
 
 IDs registrados - sync (dataset_id)
 {_bullet_list(datasets)}
@@ -48,44 +47,6 @@ IDs registrados - audit-dataset (dataset_id)
 
 
 # --- Docstrings por comando (primeira linha = resumo curto para uma linha no --help) ---
-
-ANP_CATALOG_DOC = """\
-Catálogo de links CSV da organização ANP no dados.gov.br (API CKAN pública).
-
-Consulta package_search com fq=organization:<UUID>, paginação start/rows (50 por página),
-extrai recursos com format CSV e grava anp_catalogo_supabase.json e .csv no diretório de saída.
-
-Saídas: JSON (lista de dicts) + CSV com colunas dataset_title, file_name, download_url.
-
-Exemplos:
-  forest-pipelines anp-catalog
-  forest-pipelines anp-catalog --limit 5 --output-dir ./out
-"""
-
-
-ANP_COMPACT_DOC = """\
-Converte um snapshot exportado do portal (anp.json com registros/totalRegistros) em JSON compacto
-para modelagem/Supabase: metadados do conjunto, temas/tags, merge de resourcesAcessoRapido ∪ resourcesFormatado.
-
-Saída padrão: anp_catalog_compact.json (UTF-8, acentos literais). Validação opcional com JSON Schema v1.
-
-Exemplos:
-  forest-pipelines anp-compact src/forest_pipelines/dados_abertos/anp.json -o compact.json
-  forest-pipelines anp-compact ./anp.json --no-validate
-"""
-
-
-ANP_PUBLISH_DOC = """\
-Envia o JSON compacto do catálogo ANP para o bucket Storage open-data (prefixo padrão anp/catalog):
-anp_catalog_compact.json e manifest.json com URLs públicas.
-
-Requer as mesmas variáveis que sync/build-report (SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, bucket via app.yml).
-
-Exemplos:
-  forest-pipelines anp-publish ./anp_catalog_compact.json
-  forest-pipelines anp-publish ./compact.json --bucket-prefix anp/catalog/v1
-"""
-
 
 SYNC_DOC = """\
 Executa o pipeline registrado para o dataset_id: descobre URLs oficiais, perfila recursos localmente quando necessário
@@ -140,15 +101,10 @@ Gera e publica os catálogos consolidados (open_data_catalog.json e reports_cata
 sob o prefixo catalog/ por padrão. O frontend do portal consome esses JSONs e elimina arrays hardcoded.
 
 Fontes (SSOT):
-  • configs/catalog/open_data.yml - datasets não-ANP (UI metadata: category, segment, subcategory, source)
+  • configs/catalog/open_data.yml - datasets abertos (UI metadata: category, segment, subcategory, source)
   • configs/catalog/reports.yml - catálogo de relatórios (slug, título, layout, hero, etc.)
-  • anp_catalog_compact.json (na raiz do repo) - catálogo ANP já transformado (gerado por anp-compact)
-
-Se o arquivo compacto da ANP não existir, o catálogo é publicado sem os datasets ANP e uma warning é
-registrada no envelope (generation_status=success_partial_fallback).
 
 Exemplos:
   forest-pipelines publish-catalog
   forest-pipelines publish-catalog --bucket-prefix catalog/v1
-  forest-pipelines publish-catalog --anp-compact ./some-other/anp_catalog_compact.json
 """

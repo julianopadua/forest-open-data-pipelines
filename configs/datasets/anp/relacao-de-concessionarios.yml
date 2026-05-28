@@ -1,0 +1,5 @@
+id: anp_relacao_de_concessionarios
+title: Relação de Concessionários
+source_url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/relacao-de-concessionarios
+bucket_prefix: anp/relacao-de-concessionarios
+runner: anp_govbr

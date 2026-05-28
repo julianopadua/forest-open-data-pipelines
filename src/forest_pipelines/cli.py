@@ -11,9 +11,6 @@ import yaml
 
 from forest_pipelines.audits.registry import get_audit_runner
 from forest_pipelines.cli_help import (
-    ANP_CATALOG_DOC,
-    ANP_COMPACT_DOC,
-    ANP_PUBLISH_DOC,
     AUDIT_DATASET_DOC,
     BUILD_REPORT_DOC,
     PUBLISH_CATALOG_DOC,
@@ -27,7 +24,6 @@ from forest_pipelines.profiling import profile_cache_from_manifest, use_profile_
 from forest_pipelines.registry.datasets import get_dataset_runner
 from forest_pipelines.reports.publish.supabase import publish_report_package
 from forest_pipelines.reports.registry.reports import get_report_runner
-from forest_pipelines.dados_abertos.publish_anp_catalog import DEFAULT_ANP_CATALOG_PREFIX
 from forest_pipelines.settings import load_settings
 from forest_pipelines.storage.supabase_storage import SupabaseStorage
 
@@ -98,152 +94,6 @@ def _resolve_reference_month_mode_for_cli(
     )
     selected = typer.prompt("Opção (1 ou 2)", default="1").strip()
     return "current" if selected == "2" else "previous"
-
-
-@app.command(
-    "anp-catalog",
-    rich_help_panel="Dados abertos",
-    help=ANP_CATALOG_DOC,
-    short_help=short_command_summary(ANP_CATALOG_DOC),
-)
-def anp_catalog_cmd(
-    org_id: str = typer.Option(
-        "88609f8c-a0ee-46eb-9294-f2175a6b561e",
-        "--org-id",
-        help="UUID da organização no CKAN (filtro fq=organization:<UUID>). Padrão: ANP.",
-    ),
-    offset_start: int = typer.Option(
-        0,
-        "--offset-start",
-        help="Parâmetro CKAN `start` (deslocamento da página; incremento automático a cada lote).",
-    ),
-    limit: int | None = typer.Option(
-        None,
-        "--limit",
-        help="Máximo de datasets a processar (corta a paginação cedo; útil para teste de fumaça).",
-    ),
-    output_dir: str | None = typer.Option(
-        None,
-        "--output-dir",
-        help="Diretório de saída para anp_catalogo_supabase.json e anp_catalogo_supabase.csv (padrão: cwd).",
-    ),
-) -> None:
-    from pathlib import Path
-
-    from forest_pipelines.dados_abertos.anp_catalog import run_anp_catalog
-
-    out = Path(output_dir).resolve() if output_dir else None
-    code = run_anp_catalog(
-        org_id=org_id,
-        offset_start=offset_start,
-        limit=limit,
-        output_dir=out,
-    )
-    raise typer.Exit(code=code)
-
-
-@app.command(
-    "anp-compact",
-    rich_help_panel="Dados abertos",
-    help=ANP_COMPACT_DOC,
-    short_help=short_command_summary(ANP_COMPACT_DOC),
-)
-def anp_compact_cmd(
-    input_json: str = typer.Argument(
-        ...,
-        help="Snapshot do portal: JSON com 'registros' (lista) e opcionalmente 'totalRegistros'.",
-    ),
-    output_json: str = typer.Option(
-        "anp_catalog_compact.json",
-        "--output",
-        "-o",
-        help="Arquivo JSON de saída (envelope com schema_version, generated_at, datasets[]).",
-    ),
-    validate: bool = typer.Option(
-        True,
-        "--validate/--no-validate",
-        help="Validar o envelope contra o JSON Schema v1 (pacote jsonschema). Use --no-validate para só gerar o arquivo.",
-    ),
-) -> None:
-    from pathlib import Path
-
-    from forest_pipelines.dados_abertos.anp_catalog_compact import (
-        load_anp_snapshot,
-        transform_anp_snapshot,
-        validate_compact_envelope,
-        write_compact_catalog,
-    )
-
-    inp = Path(input_json).resolve()
-    out = Path(output_json).resolve()
-    if not inp.is_file():
-        raise typer.BadParameter(f"Arquivo não encontrado: {inp}")
-
-    data = load_anp_snapshot(inp)
-    envelope = transform_anp_snapshot(data)
-    write_compact_catalog(out, envelope)
-    if validate:
-        validate_compact_envelope(envelope)
-    typer.echo(f"Escrito: {out}")
-
-
-@app.command(
-    "anp-publish",
-    rich_help_panel="Dados abertos",
-    help=ANP_PUBLISH_DOC,
-    short_help=short_command_summary(ANP_PUBLISH_DOC),
-)
-def anp_publish_cmd(
-    compact_json: str = typer.Argument(
-        ...,
-        help="Arquivo JSON do envelope compacto (schema_version, generated_at, datasets).",
-    ),
-    config_path: str = typer.Option(
-        "configs/app.yml",
-        "--config-path",
-        help="YAML principal (bucket Supabase via supabase.bucket_open_data_env).",
-    ),
-    bucket_prefix: str = typer.Option(
-        DEFAULT_ANP_CATALOG_PREFIX,
-        "--bucket-prefix",
-        help="Prefixo dentro do bucket (sem barra final); padrão: anp/catalog.",
-    ),
-    validate: bool = typer.Option(
-        True,
-        "--validate/--no-validate",
-        help="Validar envelope com JSON Schema v1 antes do upload.",
-    ),
-) -> None:
-    from pathlib import Path
-
-    from forest_pipelines.dados_abertos.anp_catalog_compact import validate_compact_envelope
-    from forest_pipelines.dados_abertos.publish_anp_catalog import publish_anp_catalog_compact
-
-    path = Path(compact_json).resolve()
-    if not path.is_file():
-        raise typer.BadParameter(f"Arquivo não encontrado: {path}")
-
-    envelope = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(envelope, dict):
-        raise typer.BadParameter("JSON raiz deve ser um objeto")
-    if validate:
-        validate_compact_envelope(envelope)
-
-    settings = load_settings(config_path)
-    logger = get_logger(settings.logs_dir, "anp/publish")
-
-    storage = SupabaseStorage.from_env(
-        logger=logger,
-        bucket_open_data=settings.supabase_bucket_open_data,
-    )
-
-    manifest = publish_anp_catalog_compact(
-        storage,
-        envelope,
-        logger,
-        bucket_prefix=bucket_prefix,
-    )
-    typer.echo(manifest["public_urls"]["catalog"])
 
 
 @app.command(
@@ -670,14 +520,7 @@ def publish_catalog_cmd(
         "--bucket-prefix",
         help="Prefixo dentro do bucket (sem barra final); padrão: catalog.",
     ),
-    anp_compact: str | None = typer.Option(
-        None,
-        "--anp-compact",
-        help="Caminho para anp_catalog_compact.json. Padrão: <root>/anp_catalog_compact.json.",
-    ),
 ) -> None:
-    from pathlib import Path
-
     from forest_pipelines.catalog.build import (
         build_catalogs_from_defaults,
         make_storage_manifest_loader,
@@ -695,10 +538,8 @@ def publish_catalog_cmd(
         bucket_open_data=settings.supabase_bucket_open_data,
     )
 
-    override = Path(anp_compact).resolve() if anp_compact else None
     open_envelope, reports_envelope = build_catalogs_from_defaults(
         settings.root,
-        anp_compact_override=override,
         manifest_loader=make_storage_manifest_loader(storage, logger),
     )
 

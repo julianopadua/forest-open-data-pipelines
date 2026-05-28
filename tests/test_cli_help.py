@@ -21,12 +21,12 @@ def _run_help(args: list[str]) -> str:
 
 def test_root_help_lists_commands_and_dataset_ids() -> None:
     out = _run_help(["--help"])
-    assert "anp-catalog" in out
-    assert "anp-compact" in out
-    assert "anp-publish" in out
+    for suffix in ("catalog", "compact", "publish"):
+        assert f"anp-{suffix}" not in out
     assert "sync" in out
     assert "build-report" in out
     assert "audit-dataset" in out
+    assert "anp_tancagem_do_abastecimento_nacional_de_combustiveis" in out
     assert "eia_petroleum_weekly" in out
     assert "SUPABASE_URL" in out
     assert "bdqueimadas_overview" in out

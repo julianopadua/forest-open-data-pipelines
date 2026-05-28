@@ -6,7 +6,7 @@ The package wraps `https://institutoforest.org/api/v1`. The API returns metadata
 
 The SDK is dataset-focused. Forest report pages and report JSON artifacts are not part of the public API v1 or SDK contract.
 
-**Coverage.** All registered open-data sources are reachable through the same `Client.list_datasets()` / `Client.get_dataset(id)` surface, including ANP (dados.gov.br / CKAN) datasets. ANP items currently surface with `profile_status="skipped"` because the ANP pipeline indexes the CKAN catalog without locally downloading each resource; the official `source_url` is always present and `download()` works for them like any other dataset.
+**Coverage.** All registered open-data sources are reachable through the same `Client.list_datasets()` / `Client.get_dataset(id)` surface, including ANP gov.br datasets. ANP items expose official `source_url` values and profiling status like any other dataset.
 
 **Security.** `Client.download()` contains every write to the chosen target directory. Manifest items with absolute filenames, `..` traversal segments, or Windows drive letters raise `UnsafeFilenameError` before any HTTP request. This is enforced from `0.1.0a1` onwards. Earlier versions allowed traversal; upgrade with `pip install -U forest-data`.
 

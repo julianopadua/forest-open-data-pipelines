@@ -1,0 +1,5 @@
+id: anp_acervo_de_dados_tecnicos
+title: Acervo de Dados Técnicos
+source_url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/acervo-de-dados-tecnicos
+bucket_prefix: anp/acervo-de-dados-tecnicos
+runner: anp_govbr

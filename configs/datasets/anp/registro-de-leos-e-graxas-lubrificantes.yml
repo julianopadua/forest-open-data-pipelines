@@ -1,0 +1,5 @@
+id: anp_registro_de_leos_e_graxas_lubrificantes
+title: Registro de Óleos e Graxas Lubrificantes
+source_url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/registro-de-oleos-e-graxas-lubrificantes
+bucket_prefix: anp/registro-de-leos-e-graxas-lubrificantes
+runner: anp_govbr

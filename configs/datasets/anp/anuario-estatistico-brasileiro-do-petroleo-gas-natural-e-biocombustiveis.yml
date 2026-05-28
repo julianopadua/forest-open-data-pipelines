@@ -1,0 +1,5 @@
+id: anp_anuario_estatistico_brasileiro_do_petroleo_gas_natural_e_biocombustiveis
+title: Anuário Estatístico Brasileiro do Petróleo, Gás Natural e Biocombustíveis
+source_url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/anuario-estatistico-brasileiro-do-petroleo-gas-natural-e-biocombustiveis
+bucket_prefix: anp/anuario-estatistico-brasileiro-do-petroleo-gas-natural-e-biocombustiveis
+runner: anp_govbr

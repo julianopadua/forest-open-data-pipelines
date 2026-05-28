@@ -1,0 +1,5 @@
+id: anp_pontos_de_abastecimento_autorizados
+title: Pontos de Abastecimento Autorizados
+source_url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/pontos-de-abastecimento-autorizados
+bucket_prefix: anp/pontos-de-abastecimento-autorizados
+runner: anp_govbr

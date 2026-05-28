@@ -1,0 +1,5 @@
+id: anp_participacoes_governamentais
+title: Participações Governamentais
+source_url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/participacoes-governamentais
+bucket_prefix: anp/participacoes-governamentais
+runner: anp_govbr

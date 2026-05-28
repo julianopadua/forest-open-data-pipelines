@@ -1,0 +1,5 @@
+id: anp_pesquisa_e_desenvolvimento_e_inovacao_pdi
+title: Pesquisa, Desenvolvimento e Inovação
+source_url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/dados-abertos-pesquisa-e-desenvolvimento-e-inovacao-pd-i
+bucket_prefix: anp/pesquisa-e-desenvolvimento-e-inovacao-pdi
+runner: anp_govbr

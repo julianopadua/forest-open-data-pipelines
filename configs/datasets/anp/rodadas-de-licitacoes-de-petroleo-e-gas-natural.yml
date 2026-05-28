@@ -1,0 +1,5 @@
+id: anp_rodadas_de_licitacoes_de_petroleo_e_gas_natural
+title: Rodadas de Licitações de Petróleo e Gás Natural
+source_url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/rodadas-de-licitacoes-de-petroleo-e-gas-natural
+bucket_prefix: anp/rodadas-de-licitacoes-de-petroleo-e-gas-natural
+runner: anp_govbr

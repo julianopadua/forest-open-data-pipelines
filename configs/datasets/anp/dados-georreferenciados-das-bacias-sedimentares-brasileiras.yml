@@ -1,0 +1,5 @@
+id: anp_dados_georreferenciados_das_bacias_sedimentares_brasileiras
+title: Dados Georreferenciados das Bacias Sedimentares Brasileiras
+source_url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/dados-georreferenciados-das-bacias-sedimentares-brasileiras
+bucket_prefix: anp/dados-georreferenciados-das-bacias-sedimentares-brasileiras
+runner: anp_govbr

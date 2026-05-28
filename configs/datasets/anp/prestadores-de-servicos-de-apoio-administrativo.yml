@@ -1,0 +1,5 @@
+id: anp_prestadores_de_servicos_de_apoio_administrativo
+title: Prestadores de serviço de apoio administrativo
+source_url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/prestadores-de-servicos-de-apoio-administrativo
+bucket_prefix: anp/prestadores-de-servicos-de-apoio-administrativo
+runner: anp_govbr

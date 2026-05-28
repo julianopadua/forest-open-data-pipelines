@@ -1,0 +1,5 @@
+id: anp_serie_historica_de_precos_de_combustiveis_e_de_glp
+title: Série Histórica de Preços de Combustíveis e de GLP
+source_url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/serie-historica-de-precos-de-combustiveis
+bucket_prefix: anp/serie-historica-de-precos-de-combustiveis-e-de-glp
+runner: anp_govbr

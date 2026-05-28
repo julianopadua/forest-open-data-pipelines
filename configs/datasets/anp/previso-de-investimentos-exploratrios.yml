@@ -1,0 +1,5 @@
+id: anp_previso_de_investimentos_exploratrios
+title: Previsão de Atividades e Investimentos Exploratórios
+source_url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/previsao-de-exploracao
+bucket_prefix: anp/previso-de-investimentos-exploratrios
+runner: anp_govbr

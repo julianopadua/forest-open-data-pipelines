@@ -1,0 +1,5 @@
+id: anp_capacidade_de_armazenagem_de_terminais
+title: Capacidade de Armazenagem de Terminais
+source_url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/capacidade-de-armazenagem-de-terminais
+bucket_prefix: anp/capacidade-de-armazenagem-de-terminais
+runner: anp_govbr

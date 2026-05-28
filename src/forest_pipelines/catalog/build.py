@@ -2,7 +2,7 @@
 
 The portal fetches two catalog envelopes from Supabase Storage:
 
-- catalog/open_data_catalog.json - all visible open-data datasets (base YAML + ANP compact)
+- catalog/open_data_catalog.json - all visible open-data datasets from the base YAML
 - catalog/reports_catalog.json - all visible reports
 
 This module is the sole producer of those files.
@@ -17,13 +17,9 @@ from typing import Any, Callable, Iterable
 
 import yaml
 
-from forest_pipelines.catalog.anp_placement import anp_id_from_slug, placement_for_dataset
-
 #schema 1.2: adds compact bilingual card fields and report card metadata.
 CATALOG_SCHEMA_VERSION = "1.2"
 DEFAULT_CATALOG_BUCKET_PREFIX = "catalog"
-ANP_CATALOG_DATASET_PATH = "anp/catalog/anp_catalog_compact.json"
-MAX_DATASET_DESCRIPTION_CHARS = 240
 MAX_REPORT_EXCERPT_CHARS = 260
 
 ManifestLoader = Callable[[str], dict[str, Any] | None]
@@ -47,11 +43,6 @@ def _load_yaml(path: Path) -> dict[str, Any]:
     return data
 
 
-_BR_DATETIME_RE = re.compile(
-    r"^(\d{1,2})/(\d{1,2})/(\d{4})(?:\s+(\d{1,2}):(\d{1,2}):(\d{1,2}))?$"
-)
-
-
 def _parse_iso_or_none(value: str | None) -> str | None:
     if not value:
         return None
@@ -67,48 +58,6 @@ def _parse_iso_or_none(value: str | None) -> str | None:
         return dt.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
     except ValueError:
         return None
-
-
-def _parse_anp_br_datetime(value: str | None) -> str | None:
-    if not value:
-        return None
-    s = str(value).strip()
-    m = _BR_DATETIME_RE.match(s)
-    if m:
-        day = int(m.group(1))
-        month = int(m.group(2))
-        year = int(m.group(3))
-        hour = int(m.group(4)) if m.group(4) is not None else 12
-        minute = int(m.group(5)) if m.group(5) is not None else 0
-        second = int(m.group(6)) if m.group(6) is not None else 0
-        try:
-            dt = datetime(year, month, day, hour, minute, second, tzinfo=timezone.utc)
-            return dt.isoformat().replace("+00:00", "Z")
-        except ValueError:
-            return None
-    return _parse_iso_or_none(s)
-
-
-def _generated_at_for_anp_dataset(
-    ds: dict[str, Any],
-    root_generated_at: str,
-) -> str:
-    """Mirror the portal's generatedAtForDataset() so both repos agree."""
-    from_exported = _parse_anp_br_datetime(ds.get("source_exported_at"))
-    if from_exported:
-        return from_exported
-    extra = ds.get("extra_fields") or {}
-    if isinstance(extra, dict):
-        from_meta = _parse_anp_br_datetime(extra.get("ultima_atualizacao_metadados"))
-        if from_meta:
-            return from_meta
-        from_data = _parse_iso_or_none(extra.get("ultima_atualizacao_dados"))
-        if from_data:
-            return from_data
-    from_root = _parse_iso_or_none(root_generated_at)
-    if from_root:
-        return from_root
-    return _now_iso()
 
 
 def _enrich_with_manifest(
@@ -218,67 +167,17 @@ def _localized_text(value: Any, locale: str) -> str:
     return _clean_text(value)
 
 
-def _compact_anp_description(title: str, locale: str) -> str:
-    if locale == "en":
-        return _truncate_words(
-            f"Public ANP dataset for {title}, indexed from the official dados.gov.br catalog.",
-            MAX_DATASET_DESCRIPTION_CHARS,
-        )
-    return _truncate_words(
-        f"Dataset publico da ANP sobre {title}, indexado a partir do catalogo oficial dados.gov.br.",
-        MAX_DATASET_DESCRIPTION_CHARS,
-    )
-
-
-def _dataset_entry_from_anp(
-    ds: dict[str, Any],
-    *,
-    root_generated_at: str,
-) -> dict[str, Any] | None:
-    slug = ds.get("slug")
-    if not slug:
-        return None
-    placement = placement_for_dataset(ds)
-    title = _clean_text(ds.get("title") or slug)
-    description = _compact_anp_description(title, "pt")
-    description_en = _compact_anp_description(title, "en")
-
-    entry: dict[str, Any] = {
-        "id": anp_id_from_slug(slug),
-        "category_title": placement["category_title"],
-        "subcategory_title": placement["subcategory_title"],
-        "source_id": "anp",
-        "source_title": "ANP",
-        "slug": slug,
-        "title": title,
-        "description": description,
-        "description_en": description_en,
-        "manifest_path": ANP_CATALOG_DATASET_PATH,
-        "source_url": f"https://dados.gov.br/dados/conjuntos-dados/{slug}",
-        "generated_at": _generated_at_for_anp_dataset(ds, root_generated_at),
-    }
-    if placement.get("segment_title"):
-        entry["segment_title"] = placement["segment_title"]
-    return entry
-
-
 def build_open_data_catalog(
     *,
     base_config_path: Path,
-    anp_compact_path: Path | None,
     warnings_bucket: list[str],
     manifest_loader: ManifestLoader | None = None,
 ) -> dict[str, Any]:
     """Assemble the open-data catalog envelope.
 
-    anp_compact_path is optional - if missing, only base datasets are included
-    and a warning is added. This lets catalog publishes proceed even when the
-    ANP pipeline has not been run locally.
-
     manifest_loader is optional. When provided, base entries are enriched with
     generated_at (and last_release_iso when present) so the portal can render
-    the dataset list without N browser fetches. ANP entries derive generated_at
-    directly from the compact envelope and need no loader.
+    the dataset list without N browser fetches.
     """
     base_cfg = _load_yaml(base_config_path)
     base_list = base_cfg.get("datasets") or []
@@ -290,19 +189,6 @@ def build_open_data_catalog(
         )
         for d in base_list
     ]
-
-    if anp_compact_path and anp_compact_path.is_file():
-        with open(anp_compact_path, "r", encoding="utf-8") as f:
-            envelope = json.load(f)
-        root_generated_at = str(envelope.get("generated_at") or "")
-        for ds in envelope.get("datasets") or []:
-            entry = _dataset_entry_from_anp(ds, root_generated_at=root_generated_at)
-            if entry:
-                datasets.append(entry)
-    else:
-        warnings_bucket.append(
-            "ANP compact catalog not found; open-data catalog omits ANP datasets."
-        )
 
     return {
         "schema_version": CATALOG_SCHEMA_VERSION,
@@ -503,15 +389,9 @@ def _default_reports_config_path(root: Path) -> Path:
     return root / "configs" / "catalog" / "reports.yml"
 
 
-def _default_anp_compact_path(root: Path) -> Path:
-    #project-standard location produced by `anp-compact`.
-    return root / "src" / "forest_pipelines" / "dados_abertos" / "anp_catalog_compact.json"
-
-
 def build_catalogs_from_defaults(
     root: Path,
     *,
-    anp_compact_override: Path | None = None,
     manifest_loader: ManifestLoader | None = None,
     report_loader: ManifestLoader | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
@@ -519,7 +399,6 @@ def build_catalogs_from_defaults(
     open_warnings: list[str] = []
     open_envelope = build_open_data_catalog(
         base_config_path=_default_base_config_path(root),
-        anp_compact_path=anp_compact_override or _default_anp_compact_path(root),
         warnings_bucket=open_warnings,
         manifest_loader=manifest_loader,
     )
@@ -564,7 +443,6 @@ def make_storage_manifest_loader(
 __all__ = [
     "CATALOG_SCHEMA_VERSION",
     "DEFAULT_CATALOG_BUCKET_PREFIX",
-    "ANP_CATALOG_DATASET_PATH",
     "ManifestLoader",
     "build_open_data_catalog",
     "build_reports_catalog",

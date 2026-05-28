@@ -1,0 +1,5 @@
+id: anp_amostras_de_rochas_e_fluidos
+title: Amostras de Rochas e Fluidos
+source_url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/amostras-de-rochas-e-fluidos
+bucket_prefix: anp/amostras-de-rochas-e-fluidos
+runner: anp_govbr

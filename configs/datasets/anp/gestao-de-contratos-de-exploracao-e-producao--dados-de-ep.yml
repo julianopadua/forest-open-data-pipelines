@@ -1,0 +1,5 @@
+id: anp_gestao_de_contratos_de_exploracao_e_producao__dados_de_ep
+title: Gestão de Contratos de Exploração e Produção - Dados de E&P
+source_url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/gestao-contratos-exploracao-producao-dados-e-p
+bucket_prefix: anp/gestao-de-contratos-de-exploracao-e-producao--dados-de-ep
+runner: anp_govbr

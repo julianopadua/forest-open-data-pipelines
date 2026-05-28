@@ -1,0 +1,5 @@
+id: anp_importacoes_e_exportacoes
+title: Importações e exportações
+source_url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/importacoes-e-exportacoes
+bucket_prefix: anp/importacoes-e-exportacoes
+runner: anp_govbr

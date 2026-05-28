@@ -1,0 +1,5 @@
+id: anp_dados_cadastrais_das_revendas_de_gas_liquefeito_de_petroleo_glp
+title: Dados Cadastrais das Revendas de Gás Liquefeito de Petróleo (GLP)
+source_url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/dados-cadastrais-das-revendas-de-gas-liquefeito-de-petroleo
+bucket_prefix: anp/dados-cadastrais-das-revendas-de-gas-liquefeito-de-petroleo-glp
+runner: anp_govbr

@@ -33,7 +33,6 @@ endif
 .PHONY: build-report-bdqueimadas build-report-bdqueimadas-force
 .PHONY: build-report-bdqueimadas-no-llm build-report-bdqueimadas-force-no-llm
 .PHONY: audit-bdqueimadas
-.PHONY: anp-catalog anp-catalog-smoke
 .PHONY: publish-catalog
 .PHONY: bdqueimadas-social-assets bdqueimadas-social-full
 .PHONY: anp-producao-social-assets anp-producao-social-full
@@ -133,14 +132,6 @@ build-report-bdqueimadas-refresh: ## Build BDQueimadas report with refreshed men
 ## Audits
 audit-bdqueimadas: ## Run audit on INPE BDQueimadas focus dataset; output under docs/audits/
 	$(FPIPE) audit-dataset inpe_bdqueimadas_focos
-
-# ── ANP Open Data ─────────────────────────────────────────────────────────────
-## ANP Open Data
-anp-catalog: ## Scrape full ANP catalog from dados.gov.br (all pages)
-	$(FPIPE) anp-catalog
-
-anp-catalog-smoke: ## Quick smoke test, fetch first 5 pages only (no SUPABASE needed)
-	$(FPIPE) anp-catalog --limit 5
 
 # ── Portal Catalog (SSOT) ─────────────────────────────────────────────────────
 ## Portal Catalog

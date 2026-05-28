@@ -35,8 +35,5 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools]
 package-dir = {"" = "src"}
 
-[tool.setuptools.package-data]
-"forest_pipelines.dados_abertos" = ["schemas/*.json"]
-
 [tool.pytest.ini_options]
 testpaths = ["tests"]

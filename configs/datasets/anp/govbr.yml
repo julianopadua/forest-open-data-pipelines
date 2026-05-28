@@ -1,0 +1,8 @@
+http:
+  timeout_s: 30
+  retry_count: 3
+  delay_min_s: 0.25
+  delay_max_s: 0.50
+profile:
+  timeout_s: 180
+  max_archive_members: 8

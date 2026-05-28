@@ -1,0 +1,5 @@
+id: anp_dados_de_incidentes_de_exploracao_e_producao_de_petroleo_e_gas_natural
+title: Incidentes de Exploração e Produção de Petróleo e Gás Natural
+source_url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/incidentes-seguranca-operacional
+bucket_prefix: anp/dados-de-incidentes-de-exploracao-e-producao-de-petroleo-e-gas-natural
+runner: anp_govbr

@@ -1,0 +1,5 @@
+id: anp_pmqc___programa_de_monitoramento_da_qualidade_dos_combustiveis
+title: Programa de Monitoramento da Qualidade dos Combustíveis (PMQC)
+source_url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/pmqc-programa-de-monitoramento-da-qualidade-dos-combustiveis
+bucket_prefix: anp/pmqc---programa-de-monitoramento-da-qualidade-dos-combustiveis
+runner: anp_govbr

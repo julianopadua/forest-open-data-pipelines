@@ -1,8 +1,8 @@
 # configs/catalog/open_data.yml
 #
 # Presentation metadata for the open-data catalog consumed by the portal.
-# The pipeline `publish-catalog` command merges this with the ANP compact
-# catalog and uploads a single consolidated JSON to Supabase Storage
+# The pipeline `publish-catalog` command reads this file and uploads a single
+# consolidated JSON to Supabase Storage
 # (catalog/open_data_catalog.json).
 #
 # Schema stability: this file is the SSOT for the open-data catalog UI.
@@ -720,3 +720,501 @@ datasets:
     description: "Listagens semestrais e recortes do Cadastro Nacional de Unidades de Conservação (CNUC), polígonos em ZIP/SHP e dicionários em PDF, via Portal de Dados Abertos do MMA (CKAN)."
     manifest_path: mma/cnuc/unidades_conservacao/manifest.json
     source_url: "https://dados.mma.gov.br/dataset/unidadesdeconservacao"
+
+  # =========================================
+  # Mercado de commodities -> Energia -> ANP
+  # =========================================
+  - id: anp_acervo_de_dados_tecnicos
+    category_title: "Mercado de commodities"
+    segment_title: "Energia"
+    subcategory_title: "Petróleo e gás"
+    source_id: anp
+    source_title: ANP
+    slug: acervo-de-dados-tecnicos
+    title: "Acervo de Dados Técnicos"
+    description: "Dados abertos oficiais da ANP sobre Acervo de Dados Técnicos, indexados a partir do hub gov.br da agência."
+    manifest_path: anp/acervo-de-dados-tecnicos/manifest.json
+    source_url: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/acervo-de-dados-tecnicos"
+
+  - id: anp_acoes_de_fiscalizacao_do_abastecimento
+    category_title: "Outros"
+    subcategory_title: "Administração"
+    source_id: anp
+    source_title: ANP
+    slug: acoes-de-fiscalizacao-do-abastecimento
+    title: "Ações de Fiscalização do Abastecimento"
+    description: "Dados abertos oficiais da ANP sobre Ações de Fiscalização do Abastecimento, indexados a partir do hub gov.br da agência."
+    manifest_path: anp/acoes-de-fiscalizacao-do-abastecimento/manifest.json
+    source_url: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/acoes-de-fiscalizacao"
+
+  - id: anp_aditamento_de_conteudo_local
+    category_title: "Outros"
+    subcategory_title: "Administração"
+    source_id: anp
+    source_title: ANP
+    slug: aditamento-de-conteudo-local
+    title: "Aditamento de conteúdo local"
+    description: "Dados abertos oficiais da ANP sobre Aditamento de conteúdo local, indexados a partir do hub gov.br da agência."
+    manifest_path: anp/aditamento-de-conteudo-local/manifest.json
+    source_url: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/aditamento-conteudo-local"
+
+  - id: anp_amostras_de_rochas_e_fluidos
+    category_title: "Mercado de commodities"
+    segment_title: "Energia"
+    subcategory_title: "Petróleo e gás"
+    source_id: anp
+    source_title: ANP
+    slug: amostras-de-rochas-e-fluidos
+    title: "Amostras de Rochas e Fluidos"
+    description: "Dados abertos oficiais da ANP sobre Amostras de Rochas e Fluidos, indexados a partir do hub gov.br da agência."
+    manifest_path: anp/amostras-de-rochas-e-fluidos/manifest.json
+    source_url: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/amostras-de-rochas-e-fluidos"
+
+  - id: anp_anuario_estatistico_brasileiro_do_petroleo_gas_natural_e_biocombustiveis
+    category_title: "Outros"
+    subcategory_title: "Pesquisa e desenvolvimento"
+    source_id: anp
+    source_title: ANP
+    slug: anuario-estatistico-brasileiro-do-petroleo-gas-natural-e-biocombustiveis
+    title: "Anuário Estatístico Brasileiro do Petróleo, Gás Natural e Biocombustíveis"
+    description: "Tabelas anuais em dados abertos do Anuário Estatístico Brasileiro do Petróleo, Gás Natural e Biocombustíveis."
+    manifest_path: anp/anuario-estatistico-brasileiro-do-petroleo-gas-natural-e-biocombustiveis/manifest.json
+    source_url: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/anuario-estatistico-brasileiro-do-petroleo-gas-natural-e-biocombustiveis"
+
+  - id: anp_aquisicao_processamento_e_estudo_de_dados
+    category_title: "Mercado de commodities"
+    segment_title: "Energia"
+    subcategory_title: "Petróleo e gás"
+    source_id: anp
+    source_title: ANP
+    slug: aquisicao-processamento-e-estudo-de-dados
+    title: "Aquisição, Processamento e Estudo de Dados"
+    description: "Dados abertos oficiais da ANP sobre Aquisição, Processamento e Estudo de Dados, indexados a partir do hub gov.br da agência."
+    manifest_path: anp/aquisicao-processamento-e-estudo-de-dados/manifest.json
+    source_url: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/aquisicao-procedimento-e-estudo-de-dados"
+
+  - id: anp_autorizacoes_de_gas_natural
+    category_title: "Outros"
+    subcategory_title: "Administração"
+    source_id: anp
+    source_title: ANP
+    slug: autorizacoes-de-gas-natural
+    title: "Autorizações de gás natural"
+    description: "Dados abertos oficiais da ANP sobre Autorizações de gás natural, indexados a partir do hub gov.br da agência."
+    manifest_path: anp/autorizacoes-de-gas-natural/manifest.json
+    source_url: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/dados-abertos-autorizacoes-gas-natural"
+
+  - id: anp_blocos_com_fase_exploratoria_encerrada
+    category_title: "Mercado de commodities"
+    segment_title: "Energia"
+    subcategory_title: "Petróleo e gás"
+    source_id: anp
+    source_title: ANP
+    slug: blocos-com-fase-exploratoria-encerrada
+    title: "Blocos com Fase Exploratória Encerrada"
+    description: "Dados abertos oficiais da ANP sobre Blocos com Fase Exploratória Encerrada, indexados a partir do hub gov.br da agência."
+    manifest_path: anp/blocos-com-fase-exploratoria-encerrada/manifest.json
+    source_url: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/blocos-com-fase-exploratoria-encerrada"
+
+  - id: anp_capacidade_de_armazenagem_de_terminais
+    category_title: "Mercado de commodities"
+    segment_title: "Energia"
+    subcategory_title: "Petróleo e gás"
+    source_id: anp
+    source_title: ANP
+    slug: capacidade-de-armazenagem-de-terminais
+    title: "Capacidade de Armazenagem de Terminais"
+    description: "Dados abertos oficiais da ANP sobre Capacidade de Armazenagem de Terminais, indexados a partir do hub gov.br da agência."
+    manifest_path: anp/capacidade-de-armazenagem-de-terminais/manifest.json
+    source_url: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/capacidade-de-armazenagem-de-terminais"
+
+  - id: anp_comercializacao_de_gas_natural
+    category_title: "Mercado de commodities"
+    segment_title: "Energia"
+    subcategory_title: "Petróleo e gás"
+    source_id: anp
+    source_title: ANP
+    slug: comercializacao-de-gas-natural
+    title: "Comercialização de Gás Natural"
+    description: "Dados abertos oficiais da ANP sobre Comercialização de Gás Natural, indexados a partir do hub gov.br da agência."
+    manifest_path: anp/comercializacao-de-gas-natural/manifest.json
+    source_url: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/comercializacao-de-gas-natural"
+
+  - id: anp_dados_cadastrais_das_revendas_de_gas_liquefeito_de_petroleo_glp
+    category_title: "Mercado de commodities"
+    segment_title: "Energia"
+    subcategory_title: "Petróleo e gás"
+    source_id: anp
+    source_title: ANP
+    slug: dados-cadastrais-das-revendas-de-gas-liquefeito-de-petroleo-glp
+    title: "Dados Cadastrais das Revendas de Gás Liquefeito de Petróleo (GLP)"
+    description: "Dados abertos oficiais da ANP sobre revendas de GLP, indexados a partir do hub gov.br da agência."
+    manifest_path: anp/dados-cadastrais-das-revendas-de-gas-liquefeito-de-petroleo-glp/manifest.json
+    source_url: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/dados-cadastrais-das-revendas-de-gas-liquefeito-de-petroleo"
+
+  - id: anp_dados_cadastrais_dos_revendedores_varejistas_de_combustiveis_automotivos
+    category_title: "Mercado de commodities"
+    segment_title: "Energia"
+    subcategory_title: "Abastecimento e mercado"
+    source_id: anp
+    source_title: ANP
+    slug: dados-cadastrais-dos-revendedores-varejistas-de-combustiveis-automotivos
+    title: "Dados Cadastrais dos Revendedores Varejistas de Combustíveis Automotivos"
+    description: "Dados abertos oficiais da ANP sobre revendedores varejistas de combustíveis automotivos."
+    manifest_path: anp/dados-cadastrais-dos-revendedores-varejistas-de-combustiveis-automotivos/manifest.json
+    source_url: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/dados-cadastrais-dos-revendedores-varejistas-de-combustiveis-automotivos"
+
+  - id: anp_gestao_de_contratos_de_exploracao_e_producao__dados_de_ep
+    category_title: "Mercado de commodities"
+    segment_title: "Energia"
+    subcategory_title: "Petróleo e gás"
+    source_id: anp
+    source_title: ANP
+    slug: gestao-de-contratos-de-exploracao-e-producao--dados-de-ep
+    title: "Gestão de Contratos de Exploração e Produção - Dados de E&P"
+    description: "Dados abertos oficiais da ANP sobre contratos de exploração e produção."
+    manifest_path: anp/gestao-de-contratos-de-exploracao-e-producao--dados-de-ep/manifest.json
+    source_url: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/gestao-contratos-exploracao-producao-dados-e-p"
+
+  - id: anp_dados_georreferenciados_das_bacias_sedimentares_brasileiras
+    category_title: "Mercado de commodities"
+    segment_title: "Energia"
+    subcategory_title: "Petróleo e gás"
+    source_id: anp
+    source_title: ANP
+    slug: dados-georreferenciados-das-bacias-sedimentares-brasileiras
+    title: "Dados Georreferenciados das Bacias Sedimentares Brasileiras"
+    description: "Dados abertos oficiais da ANP sobre bacias sedimentares brasileiras."
+    manifest_path: anp/dados-georreferenciados-das-bacias-sedimentares-brasileiras/manifest.json
+    source_url: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/dados-georreferenciados-das-bacias-sedimentares-brasileiras"
+
+  - id: anp_distribuidores_de_combustiveis_liquidos
+    category_title: "Mercado de commodities"
+    segment_title: "Energia"
+    subcategory_title: "Abastecimento e mercado"
+    source_id: anp
+    source_title: ANP
+    slug: distribuidores-de-combustiveis-liquidos
+    title: "Distribuidores de combustíveis líquidos"
+    description: "Dados abertos oficiais da ANP sobre distribuidores de combustíveis líquidos."
+    manifest_path: anp/distribuidores-de-combustiveis-liquidos/manifest.json
+    source_url: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/dados-abertos-distribuidores-de-combustiveis-liquidos"
+
+  - id: anp_fase_de_exploracao
+    category_title: "Mercado de commodities"
+    segment_title: "Energia"
+    subcategory_title: "Petróleo e gás"
+    source_id: anp
+    source_title: ANP
+    slug: fase-de-exploracao
+    title: "Fase de Exploração"
+    description: "Dados abertos oficiais da ANP sobre a fase de exploração."
+    manifest_path: anp/fase-de-exploracao/manifest.json
+    source_url: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/fase-exploracao"
+
+  - id: anp_fase_de_desenvolvimento_e_producao
+    category_title: "Mercado de commodities"
+    segment_title: "Energia"
+    subcategory_title: "Petróleo e gás"
+    source_id: anp
+    source_title: ANP
+    slug: fase-de-desenvolvimento-e-producao
+    title: "Fase de Desenvolvimento e Produção"
+    description: "Dados abertos oficiais da ANP sobre a fase de desenvolvimento e produção."
+    manifest_path: anp/fase-de-desenvolvimento-e-producao/manifest.json
+    source_url: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/fase-de-desenvolvimento-e-producao"
+
+  - id: anp_fiscalizacao_de_conteudo_local
+    category_title: "Outros"
+    subcategory_title: "Administração"
+    source_id: anp
+    source_title: ANP
+    slug: fiscalizacao-de-conteudo-local
+    title: "Fiscalização de Conteúdo Local"
+    description: "Dados abertos oficiais da ANP sobre fiscalização de conteúdo local."
+    manifest_path: anp/fiscalizacao-de-conteudo-local/manifest.json
+    source_url: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/dados-abertos-fiscalizacao-de-conteudo-local"
+
+  - id: anp_importacoes_e_exportacoes
+    category_title: "Mercado de commodities"
+    segment_title: "Energia"
+    subcategory_title: "Abastecimento e mercado"
+    source_id: anp
+    source_title: ANP
+    slug: importacoes-e-exportacoes
+    title: "Importações e exportações"
+    description: "Dados abertos oficiais da ANP sobre importações e exportações."
+    manifest_path: anp/importacoes-e-exportacoes/manifest.json
+    source_url: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/importacoes-e-exportacoes"
+
+  - id: anp_dados_de_incidentes_de_exploracao_e_producao_de_petroleo_e_gas_natural
+    category_title: "Mercado de commodities"
+    segment_title: "Energia"
+    subcategory_title: "Petróleo e gás"
+    source_id: anp
+    source_title: ANP
+    slug: dados-de-incidentes-de-exploracao-e-producao-de-petroleo-e-gas-natural
+    title: "Incidentes de Exploração e Produção de Petróleo e Gás Natural"
+    description: "Dados abertos oficiais da ANP sobre incidentes de exploração e produção."
+    manifest_path: anp/dados-de-incidentes-de-exploracao-e-producao-de-petroleo-e-gas-natural/manifest.json
+    source_url: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/incidentes-seguranca-operacional"
+
+  - id: anp_movimentacao_de_derivados_de_petroleo_e_biocombustiveis
+    category_title: "Mercado de commodities"
+    segment_title: "Energia"
+    subcategory_title: "Biocombustíveis e renováveis"
+    source_id: anp
+    source_title: ANP
+    slug: movimentacao-de-derivados-de-petroleo-e-biocombustiveis
+    title: "Movimentação de derivados de petróleo e gás natural e biocombustíveis"
+    description: "Dados abertos oficiais da ANP sobre movimentação de derivados de petróleo, gás natural e biocombustíveis."
+    manifest_path: anp/movimentacao-de-derivados-de-petroleo-e-biocombustiveis/manifest.json
+    source_url: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/dados-abertos-movimentacao-de-derivados-de-petroleo"
+
+  - id: anp_movimentacao_dos_terminais_aquaviarios
+    category_title: "Mercado de commodities"
+    segment_title: "Energia"
+    subcategory_title: "Abastecimento e mercado"
+    source_id: anp
+    source_title: ANP
+    slug: movimentacao-dos-terminais-aquaviarios
+    title: "Movimentação dos Terminais Aquaviários"
+    description: "Dados abertos oficiais da ANP sobre movimentação dos terminais aquaviários."
+    manifest_path: anp/movimentacao-dos-terminais-aquaviarios/manifest.json
+    source_url: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/movimentacao-dos-terminais-aquaviarios"
+
+  - id: anp_dados_consolidados_de_movimentacao_de_gas_natural_em_gasodutos_de_transporte
+    category_title: "Mercado de commodities"
+    segment_title: "Energia"
+    subcategory_title: "Petróleo e gás"
+    source_id: anp
+    source_title: ANP
+    slug: dados-consolidados-de-movimentacao-de-gas-natural-em-gasodutos-de-transporte
+    title: "Movimentação de Gás Natural em Gasodutos de Transporte"
+    description: "Dados abertos oficiais da ANP sobre movimentação de gás natural em gasodutos de transporte."
+    manifest_path: anp/dados-consolidados-de-movimentacao-de-gas-natural-em-gasodutos-de-transporte/manifest.json
+    source_url: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/dados-consolidados-movimentacao-de-gas-natural-em-gasodutos-de-transporte"
+
+  - id: anp_multas_aplicadas___vencimento_a_partir_de_2016
+    category_title: "Outros"
+    subcategory_title: "Administração"
+    source_id: anp
+    source_title: ANP
+    slug: multas-aplicadas---vencimento-a-partir-de-2016
+    title: "Multas aplicadas com vencimento a partir de 2016"
+    description: "Dados abertos oficiais da ANP sobre multas aplicadas com vencimento a partir de 2016."
+    manifest_path: anp/multas-aplicadas---vencimento-a-partir-de-2016/manifest.json
+    source_url: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/multas-aplicadas-com-vencimento-a-partir-de-2016"
+
+  - id: anp_participacoes_governamentais
+    category_title: "Mercado de commodities"
+    segment_title: "Energia"
+    subcategory_title: "Petróleo e gás"
+    source_id: anp
+    source_title: ANP
+    slug: participacoes-governamentais
+    title: "Participações Governamentais"
+    description: "Dados abertos oficiais da ANP sobre participações governamentais."
+    manifest_path: anp/participacoes-governamentais/manifest.json
+    source_url: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/participacoes-governamentais"
+
+  - id: anp_pesquisa_e_desenvolvimento_e_inovacao_pdi
+    category_title: "Outros"
+    subcategory_title: "Pesquisa e desenvolvimento"
+    source_id: anp
+    source_title: ANP
+    slug: pesquisa-e-desenvolvimento-e-inovacao-pdi
+    title: "Pesquisa, Desenvolvimento e Inovação"
+    description: "Dados abertos oficiais da ANP sobre pesquisa, desenvolvimento e inovação."
+    manifest_path: anp/pesquisa-e-desenvolvimento-e-inovacao-pdi/manifest.json
+    source_url: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/dados-abertos-pesquisa-e-desenvolvimento-e-inovacao-pd-i"
+
+  - id: anp_pontos_de_abastecimento_autorizados
+    category_title: "Mercado de commodities"
+    segment_title: "Energia"
+    subcategory_title: "Abastecimento e mercado"
+    source_id: anp
+    source_title: ANP
+    slug: pontos-de-abastecimento-autorizados
+    title: "Pontos de Abastecimento Autorizados"
+    description: "Dados abertos oficiais da ANP sobre pontos de abastecimento autorizados."
+    manifest_path: anp/pontos-de-abastecimento-autorizados/manifest.json
+    source_url: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/pontos-de-abastecimento-autorizados"
+
+  - id: anp_pmqc___programa_de_monitoramento_da_qualidade_dos_combustiveis
+    category_title: "Mercado de commodities"
+    segment_title: "Energia"
+    subcategory_title: "Abastecimento e mercado"
+    source_id: anp
+    source_title: ANP
+    slug: pmqc---programa-de-monitoramento-da-qualidade-dos-combustiveis
+    title: "Programa de Monitoramento da Qualidade dos Combustíveis (PMQC)"
+    description: "Dados abertos oficiais da ANP sobre o Programa de Monitoramento da Qualidade dos Combustíveis."
+    manifest_path: anp/pmqc---programa-de-monitoramento-da-qualidade-dos-combustiveis/manifest.json
+    source_url: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/pmqc-programa-de-monitoramento-da-qualidade-dos-combustiveis"
+
+  - id: anp_programa_de_monitoramento_dos_lubrificantes_pml
+    category_title: "Mercado de commodities"
+    segment_title: "Energia"
+    subcategory_title: "Lubrificantes"
+    source_id: anp
+    source_title: ANP
+    slug: programa-de-monitoramento-dos-lubrificantes-pml
+    title: "Programa de Monitoramento dos Lubrificantes (PML)"
+    description: "Dados abertos oficiais da ANP sobre o Programa de Monitoramento dos Lubrificantes."
+    manifest_path: anp/programa-de-monitoramento-dos-lubrificantes-pml/manifest.json
+    source_url: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/o-programa-de-monitoramento-dos-lubrificantes-pml"
+
+  - id: anp_prestadores_de_servicos_de_apoio_administrativo
+    category_title: "Outros"
+    subcategory_title: "Administração"
+    source_id: anp
+    source_title: ANP
+    slug: prestadores-de-servicos-de-apoio-administrativo
+    title: "Prestadores de serviço de apoio administrativo"
+    description: "Dados abertos oficiais da ANP sobre prestadores de serviço de apoio administrativo."
+    manifest_path: anp/prestadores-de-servicos-de-apoio-administrativo/manifest.json
+    source_url: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/prestadores-de-servicos-de-apoio-administrativo"
+
+  - id: anp_previso_de_investimentos_exploratrios
+    category_title: "Mercado de commodities"
+    segment_title: "Energia"
+    subcategory_title: "Petróleo e gás"
+    source_id: anp
+    source_title: ANP
+    slug: previso-de-investimentos-exploratrios
+    title: "Previsão de Atividades e Investimentos Exploratórios"
+    description: "Dados abertos oficiais da ANP sobre previsão de atividades e investimentos exploratórios."
+    manifest_path: anp/previso-de-investimentos-exploratrios/manifest.json
+    source_url: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/previsao-de-exploracao"
+
+  - id: anp_processamento_de_petroleo_e_producao_de_derivados
+    category_title: "Mercado de commodities"
+    segment_title: "Energia"
+    subcategory_title: "Petróleo e gás"
+    source_id: anp
+    source_title: ANP
+    slug: processamento-de-petroleo-e-producao-de-derivados
+    title: "Processamento de petróleo e produção de derivados"
+    description: "Dados abertos oficiais da ANP sobre processamento de petróleo e produção de derivados."
+    manifest_path: anp/processamento-de-petroleo-e-producao-de-derivados/manifest.json
+    source_url: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/processamento-de-petroleo-e-producao-de-derivados"
+
+  - id: anp_producao_de_biocombustiveis
+    category_title: "Mercado de commodities"
+    segment_title: "Energia"
+    subcategory_title: "Biocombustíveis e renováveis"
+    source_id: anp
+    source_title: ANP
+    slug: producao-de-biocombustiveis
+    title: "Produção de biocombustíveis"
+    description: "Dados abertos oficiais da ANP sobre produção de biocombustíveis."
+    manifest_path: anp/producao-de-biocombustiveis/manifest.json
+    source_url: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/producao-de-biocombustiveis"
+
+  - id: anp_producao_de_petroleo_e_gas_natural_por_estado_e_localizacao
+    category_title: "Mercado de commodities"
+    segment_title: "Energia"
+    subcategory_title: "Petróleo e gás"
+    source_id: anp
+    source_title: ANP
+    slug: producao-de-petroleo-e-gas-natural-por-estado-e-localizacao
+    title: "Produção de petróleo e gás natural por estado e localização"
+    description: "Dados abertos oficiais da ANP sobre produção de petróleo e gás natural por estado e localização."
+    manifest_path: anp/producao-de-petroleo-e-gas-natural-por-estado-e-localizacao/manifest.json
+    source_url: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/producao-de-petroleo-e-gas-natural-por-estado-e-localizacao"
+
+  - id: anp_producao_de_petroleo_e_gas_natural_por_poco
+    category_title: "Mercado de commodities"
+    segment_title: "Energia"
+    subcategory_title: "Petróleo e gás"
+    source_id: anp
+    source_title: ANP
+    slug: producao-de-petroleo-e-gas-natural-por-poco
+    title: "Produção de Petróleo e Gás Natural por Poço"
+    description: "Dados abertos oficiais da ANP sobre produção de petróleo e gás natural por poço."
+    manifest_path: anp/producao-de-petroleo-e-gas-natural-por-poco/manifest.json
+    source_url: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/producao-de-petroleo-e-gas-natural-por-poco"
+
+  - id: anp_relacao_de_concessionarios
+    category_title: "Mercado de commodities"
+    segment_title: "Energia"
+    subcategory_title: "Petróleo e gás"
+    source_id: anp
+    source_title: ANP
+    slug: relacao-de-concessionarios
+    title: "Relação de Concessionários"
+    description: "Dados abertos oficiais da ANP sobre relação de concessionários."
+    manifest_path: anp/relacao-de-concessionarios/manifest.json
+    source_url: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/relacao-de-concessionarios"
+
+  - id: anp_registro_de_leos_e_graxas_lubrificantes
+    category_title: "Outros"
+    subcategory_title: "Comércio e serviços"
+    source_id: anp
+    source_title: ANP
+    slug: registro-de-leos-e-graxas-lubrificantes
+    title: "Registro de Óleos e Graxas Lubrificantes"
+    description: "Dados abertos oficiais da ANP sobre registro de óleos e graxas lubrificantes."
+    manifest_path: anp/registro-de-leos-e-graxas-lubrificantes/manifest.json
+    source_url: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/registro-de-oleos-e-graxas-lubrificantes"
+
+  - id: anp_resultado_de_poco
+    category_title: "Mercado de commodities"
+    segment_title: "Energia"
+    subcategory_title: "Petróleo e gás"
+    source_id: anp
+    source_title: ANP
+    slug: resultado-de-poco
+    title: "Resultado de poço"
+    description: "Dados abertos oficiais da ANP sobre resultado de poço."
+    manifest_path: anp/resultado-de-poco/manifest.json
+    source_url: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/resultados-de-poco"
+
+  - id: anp_rodadas_de_licitacoes_de_petroleo_e_gas_natural
+    category_title: "Mercado de commodities"
+    segment_title: "Energia"
+    subcategory_title: "Petróleo e gás"
+    source_id: anp
+    source_title: ANP
+    slug: rodadas-de-licitacoes-de-petroleo-e-gas-natural
+    title: "Rodadas de Licitações de Petróleo e Gás Natural"
+    description: "Dados abertos oficiais da ANP sobre rodadas de licitações de petróleo e gás natural."
+    manifest_path: anp/rodadas-de-licitacoes-de-petroleo-e-gas-natural/manifest.json
+    source_url: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/rodadas-de-licitacoes-de-petroleo-e-gas-natural"
+
+  - id: anp_serie_historica_de_precos_de_combustiveis_e_de_glp
+    category_title: "Mercado de commodities"
+    segment_title: "Energia"
+    subcategory_title: "Abastecimento e mercado"
+    source_id: anp
+    source_title: ANP
+    slug: serie-historica-de-precos-de-combustiveis-e-de-glp
+    title: "Série Histórica de Preços de Combustíveis e de GLP"
+    description: "Dados abertos oficiais da ANP sobre preços de combustíveis e de GLP."
+    manifest_path: anp/serie-historica-de-precos-de-combustiveis-e-de-glp/manifest.json
+    source_url: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/serie-historica-de-precos-de-combustiveis"
+
+  - id: anp_tancagem_do_abastecimento_nacional_de_combustiveis
+    category_title: "Mercado de commodities"
+    segment_title: "Energia"
+    subcategory_title: "Abastecimento e mercado"
+    source_id: anp
+    source_title: ANP
+    slug: tancagem-do-abastecimento-nacional-de-combustiveis
+    title: "Tancagem do Abastecimento Nacional de Combustíveis"
+    description: "Dados abertos oficiais da ANP sobre tancagem do abastecimento nacional de combustíveis."
+    manifest_path: anp/tancagem-do-abastecimento-nacional-de-combustiveis/manifest.json
+    source_url: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/tancagem-do-abastecimento-nacional-de-combustiveis"
+
+  - id: anp_vendas_de_derivados_de_petroleo_e_biocombustiveis
+    category_title: "Mercado de commodities"
+    segment_title: "Energia"
+    subcategory_title: "Biocombustíveis e renováveis"
+    source_id: anp
+    source_title: ANP
+    slug: vendas-de-derivados-de-petroleo-e-biocombustiveis
+    title: "Vendas de derivados de petróleo e biocombustíveis"
+    description: "Dados abertos oficiais da ANP sobre vendas de derivados de petróleo e biocombustíveis."
+    manifest_path: anp/vendas-de-derivados-de-petroleo-e-biocombustiveis/manifest.json
+    source_url: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/vendas-de-derivados-de-petroleo-e-biocombustiveis"

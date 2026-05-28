@@ -1,0 +1,5 @@
+id: anp_producao_de_petroleo_e_gas_natural_por_poco
+title: Produção de Petróleo e Gás Natural por Poço
+source_url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/producao-de-petroleo-e-gas-natural-por-poco
+bucket_prefix: anp/producao-de-petroleo-e-gas-natural-por-poco
+runner: anp_govbr

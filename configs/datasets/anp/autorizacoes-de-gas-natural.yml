@@ -1,0 +1,5 @@
+id: anp_autorizacoes_de_gas_natural
+title: Autorizações de gás natural
+source_url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/dados-abertos-autorizacoes-gas-natural
+bucket_prefix: anp/autorizacoes-de-gas-natural
+runner: anp_govbr
