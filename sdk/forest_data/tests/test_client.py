@@ -73,49 +73,14 @@ def test_list_datasets_parses_envelope():
 
 
 @respx.mock
-def test_list_reports_parses_card_metadata():
-    reports_payload = {
-        "schema_version": "2.0",
-        "api_version": "v1",
-        "generated_at": "2026-05-22T12:00:00Z",
-        "generation_status": "success",
-        "warnings": [],
-        "reports": [
-            {
-                "id": "bdqueimadas_overview",
-                "slug": "bdqueimadas-overview",
-                "title": "BDQueimadas",
-                "title_en": "BDQueimadas",
-                "description": "Fallback",
-                "description_en": "Fallback EN",
-                "excerpt": "Resumo do card",
-                "excerpt_en": "Card summary",
-                "generated_at": "2026-05-22T12:00:00Z",
-                "coverage": {
-                    "first_year": 2003,
-                    "latest_year": 2026,
-                    "year_range": "2003-2026",
-                    "latest_period": "2026-05",
-                },
-                "source_title": "INPE",
-                "source_title_en": "INPE",
-                "category_title": "Meio ambiente",
-                "category_title_en": "Environment",
-                "manifest_path": "reports/bdqueimadas/overview/manifest.json",
-                "stable_report_path": "reports/bdqueimadas/overview/report.json",
-                "tags": ["queimadas"],
-            }
-        ],
-    }
-    respx.get("https://example.test/api/v1/catalog/reports").mock(
-        return_value=httpx.Response(200, json=reports_payload),
-    )
+def test_report_helpers_are_not_public_sdk_surface():
+    import forest_data
+
     client = Client(base_url="https://example.test/api/v1")
-    reports = client.list_reports()
-    assert len(reports) == 1
-    assert reports[0].excerpt_en == "Card summary"
-    assert reports[0].coverage is not None
-    assert reports[0].coverage.year_range == "2003-2026"
+    assert not hasattr(client, "list_reports")
+    assert not hasattr(client, "get_report")
+    assert "ReportSummary" not in forest_data.__all__
+    assert "ReportSummaryCoverage" not in forest_data.__all__
 
 
 @respx.mock

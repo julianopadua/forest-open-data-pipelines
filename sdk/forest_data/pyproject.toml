@@ -1,6 +1,6 @@
 [project]
 name = "forest-data"
-version = "0.1.0a1"
+version = "0.1.0a2"
 description = "Public Python client for the Instituto Forest open-data API."
 readme = "README.md"
 requires-python = ">=3.10"

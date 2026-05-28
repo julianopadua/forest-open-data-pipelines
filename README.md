@@ -37,7 +37,7 @@ Python monorepo that discovers official open-data source URLs, profiles each res
 
 Incremental by default: before profiling, the pipeline reads the existing published `manifest.json`. URLs already profiled are reused; new URLs are profiled and added. Use `make sync-force` to reprofile everything.
 
-**Portal catalog.** Builds and publishes `catalog/open_data_catalog.json` and `catalog/reports_catalog.json` — the two envelopes consumed by the portal and by the public HTTP API.
+**Portal catalog.** Builds and publishes `catalog/open_data_catalog.json` for the portal and public HTTP API, plus `catalog/reports_catalog.json` for portal report pages.
 
 **Reports.** Aggregates datasets into structured report packages (e.g., BDQueimadas fire overview) and publishes them as report JSON with their own manifest, ready to embed in the portal.
 
@@ -92,10 +92,8 @@ The portal exposes a public, read-only REST API at `https://institutoforest.org/
 |------|---------|
 | `GET /api/v1/health` | Service + schema version probe |
 | `GET /api/v1/catalog` | Compact dataset list |
-| `GET /api/v1/catalog/reports` | Compact report list |
 | `GET /api/v1/datasets/{id}` | Full dataset manifest |
 | `GET /api/v1/datasets/{id}/items` | Items array only |
-| `GET /api/v1/reports/{id}` | Full report manifest |
 | `GET /api/v1/sources` | Source agencies + counts |
 | `GET /api/v1/openapi.json` | OpenAPI 3.1 spec |
 

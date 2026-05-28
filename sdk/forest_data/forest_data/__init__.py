@@ -11,11 +11,9 @@ from .models import (
     DatasetSummary,
     OpenDataItem,
     ProfileWarning,
-    ReportSummary,
-    ReportSummaryCoverage,
 )
 
-__version__ = "0.1.0a1"
+__version__ = "0.1.0a2"
 __all__ = [
     "Client",
     "DatasetManifest",
@@ -24,8 +22,6 @@ __all__ = [
     "NotFoundError",
     "OpenDataItem",
     "ProfileWarning",
-    "ReportSummary",
-    "ReportSummaryCoverage",
     "UnsafeFilenameError",
     "UpstreamError",
     "__version__",

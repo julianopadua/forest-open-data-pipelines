@@ -8,10 +8,10 @@ from typing import Any
 
 import httpx
 
-from .models import DatasetManifest, DatasetSummary, OpenDataItem, ReportSummary
+from .models import DatasetManifest, DatasetSummary, OpenDataItem
 
 DEFAULT_BASE_URL = "https://institutoforest.org/api/v1"
-USER_AGENT = "forest-data/0.1.0a1 (+https://institutoforest.org/docs/api/v1)"
+USER_AGENT = "forest-data/0.1.0a2 (+https://institutoforest.org/docs/api/v1)"
 
 
 class ForestDataError(Exception):
@@ -108,17 +108,9 @@ class Client:
         body = self._get("/catalog")
         return [DatasetSummary.from_dict(d) for d in body.get("datasets", [])]
 
-    def list_reports(self) -> list[ReportSummary]:
-        body = self._get("/catalog/reports")
-        return [ReportSummary.from_dict(r) for r in body.get("reports", [])]
-
     def get_dataset(self, id_or_slug: str) -> DatasetManifest:
         body = self._get(f"/datasets/{id_or_slug}")
         return DatasetManifest.from_dict(body["manifest"])
-
-    def get_report(self, id_or_slug: str) -> dict[str, Any]:
-        body = self._get(f"/reports/{id_or_slug}")
-        return body["manifest"]
 
     def get_dataset_items(self, id_or_slug: str) -> list[OpenDataItem]:
         body = self._get(f"/datasets/{id_or_slug}/items")
