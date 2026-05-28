@@ -12,7 +12,7 @@ from forest_pipelines.datasets.anp.govbr import (
     resolve_final_url,
 )
 from forest_pipelines.profiling import ProfileOptions
-from forest_pipelines.registry.datasets import ANP_DATASET_IDS as REGISTRY_ANP_DATASET_IDS
+from forest_pipelines.registry.datasets import RUNNERS
 
 
 HUB_HTML = """
@@ -65,7 +65,10 @@ def test_discover_collections_ignores_navigation_and_files() -> None:
 
 
 def test_registry_anp_ids_match_runner_ids() -> None:
-    assert REGISTRY_ANP_DATASET_IDS == ANP_DATASET_IDS
+    for dataset_id in ANP_DATASET_IDS:
+        assert dataset_id in RUNNERS
+    anp_runners = [key for key in RUNNERS if key.startswith("anp_")]
+    assert sorted(anp_runners) == sorted(ANP_DATASET_IDS)
 
 
 def test_extract_resource_links_keeps_files_and_indirect_official_pages() -> None:

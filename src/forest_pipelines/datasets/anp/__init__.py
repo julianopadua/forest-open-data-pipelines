@@ -1,4 +1,5 @@
 from forest_pipelines.datasets.anp.govbr import (
+    ANP_DATASET_IDS,
     ANP_HUB_URL,
     discover_collections,
     make_sync,
@@ -6,6 +7,7 @@ from forest_pipelines.datasets.anp.govbr import (
 )
 
 __all__ = [
+    "ANP_DATASET_IDS",
     "ANP_HUB_URL",
     "discover_collections",
     "make_sync",
