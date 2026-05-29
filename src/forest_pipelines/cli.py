@@ -18,6 +18,7 @@ from forest_pipelines.cli_help import (
     build_app_help,
     short_command_summary,
 )
+from forest_pipelines.freshness.cli import app as freshness_app
 from forest_pipelines.logging_ import get_logger
 from forest_pipelines.manifests.build_manifest import build_manifest
 from forest_pipelines.profiling import profile_cache_from_manifest, use_profile_cache
@@ -33,6 +34,7 @@ app = typer.Typer(
     add_completion=False,
     no_args_is_help=True,
 )
+app.add_typer(freshness_app, name="freshness", rich_help_panel="Freshness")
 
 _PT_MONTH_NAMES = [
     "janeiro",

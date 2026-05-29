@@ -191,6 +191,13 @@ def _source_signal_allows_cache(
     return profiled_at >= source_modified_at
 
 
+def freshness_signal_allows_cache(
+    cached_profile: dict[str, Any],
+    freshness_signal: FreshnessSignal,
+) -> bool:
+    return _source_signal_allows_cache(cached_profile, freshness_signal)
+
+
 def _same_http_datetime(left: Any, right: Any) -> bool:
     parsed_left = _parse_http_datetime(left)
     parsed_right = _parse_http_datetime(right)

@@ -151,9 +151,7 @@ def append_observations(
 
 def write_latest_snapshot(path: str | Path, observations: list[FreshnessObservation]) -> None:
     snapshot_path = Path(path)
-    latest = _latest_by_key(load_observations(snapshot_path.with_suffix(".csv")))
-    for observation in observations:
-        latest[observation.key()] = observation
+    latest = _latest_by_key(observations)
     by_watch: dict[str, dict[str, dict[str, str]]] = {}
     for observation in latest.values():
         by_watch.setdefault(observation.watch_id, {})[observation.resource_key] = observation.as_row()

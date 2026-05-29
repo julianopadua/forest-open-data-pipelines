@@ -1,0 +1,31 @@
+schema_version: "1.0"
+default_timeout_s: 60
+watches:
+  - watch_id: anp_producao_petroleo_gas
+    dataset_id: anp_producao_de_petroleo_e_gas_natural_por_estado_e_localizacao
+    source_dataset_url: https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/producao-de-petroleo-e-gas-natural-por-estado-e-localizacao
+    social_presets:
+      - anp-producao-petroleo-gas
+    signal_strategy: anp_govbr_resource_label
+    suggested_cadence: monthly
+
+  - watch_id: inpe_bdqueimadas_mensal
+    dataset_id: inpe_bdqueimadas_focos
+    source_dataset_url: https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/mensal/Brasil/
+    social_presets:
+      - bdqueimadas
+    signal_strategy: http_listing_last_modified
+    suggested_cadence: monthly
+    resource_pattern: "focos_mensal_br_\\d{6}\\.(csv|zip)$"
+    latest_resources: 1
+    resource_key: latest_monthly_file
+
+  - watch_id: research_trends_brazil_wildfire
+    dataset_id: external_openalex_crossref_trends
+    source_url: https://api.openalex.org/works
+    social_presets:
+      - research-trends
+    signal_strategy: api_window_clock
+    suggested_cadence: weekly
+    resource_key: openalex_recent_query
+    clock_interval_days: 7

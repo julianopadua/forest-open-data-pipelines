@@ -37,6 +37,7 @@ endif
 .PHONY: bdqueimadas-social-assets bdqueimadas-social-full
 .PHONY: anp-producao-social-assets anp-producao-social-full
 .PHONY: research-social-assets research-social-recent research-social-weekly research-social-refresh
+.PHONY: freshness-watch freshness-report freshness-classify
 .PHONY: test test-verbose
 .PHONY: clean
 
@@ -162,6 +163,16 @@ research-social-weekly: ## Research deck (recent, last 7d)
 
 research-social-refresh: ## Drop the current topic/mode/window cache and rerun historical
 	$(PYTHON) -m forest_pipelines.social.research_trends --mode historical --refresh --verbose
+
+# Freshness Watch
+freshness-watch: ## Observe source freshness signals for social cadence
+	$(FPIPE) freshness watch --config configs/freshness/watch.yml
+
+freshness-report: ## Generate social cadence freshness report
+	$(FPIPE) freshness report --format md --out data/freshness_watch/reports/social_cadence.md
+
+freshness-classify: ## Classify social presets from freshness history
+	$(FPIPE) freshness classify-presets --config configs/freshness/watch.yml --out data/freshness_watch/classification.csv
 
 # ── Tests ─────────────────────────────────────────────────────────────────────
 ## Tests
