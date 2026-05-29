@@ -3,10 +3,12 @@ from __future__ import annotations
 import inspect
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
+import forest_pipelines.cli as cli_module
+from forest_pipelines.cli import _merge_incremental_manifest_items, _run_dataset_sync
 from forest_pipelines.manifests.build_manifest import build_manifest
 from forest_pipelines.registry.datasets import RUNNERS
-from forest_pipelines.cli import _merge_incremental_manifest_items
 
 
 def test_registered_dataset_runners_do_not_upload_payload_files() -> None:
@@ -114,3 +116,52 @@ def test_incremental_manifest_merge_retains_existing_source_urls() -> None:
         "https://source.test/new.csv",
         "https://source.test/old.csv",
     ]
+
+
+def test_force_profile_bypasses_existing_manifest_download(monkeypatch) -> None:
+    class Logger:
+        def info(self, *args: object, **kwargs: object) -> None:
+            return None
+
+    class Storage:
+        def download_bytes(self, path: str) -> bytes:
+            raise AssertionError("existing manifest should not be downloaded")
+
+        def upload_bytes(self, **kwargs: object) -> None:
+            return None
+
+        def public_url(self, path: str) -> str:
+            return f"https://storage.test/{path}"
+
+    def runner(**kwargs: object) -> dict:
+        return build_manifest(
+            "dataset",
+            "Dataset",
+            "https://source.test/page",
+            "source/dataset",
+            [
+                {
+                    "kind": "data",
+                    "period": "2025",
+                    "filename": "data.csv",
+                    "source_url": "https://source.test/data.csv",
+                    "profile_status": "ok",
+                    "profile_warnings": [],
+                }
+            ],
+            meta={},
+        )
+
+    monkeypatch.setattr(cli_module, "get_dataset_runner", lambda dataset_id: runner)
+
+    manifest = _run_dataset_sync(
+        dataset_id="dataset",
+        settings=SimpleNamespace(),
+        storage=Storage(),
+        logger=Logger(),
+        latest_months=None,
+        force_profile=True,
+        existing_manifest_path="source/dataset/manifest.json",
+    )
+
+    assert manifest["dataset_id"] == "dataset"

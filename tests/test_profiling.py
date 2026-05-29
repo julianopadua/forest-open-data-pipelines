@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import zipfile
+from datetime import datetime, timezone
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
@@ -9,6 +10,7 @@ import pytest
 
 import forest_pipelines.profiling as profiling_module
 from forest_pipelines.profiling import (
+    FreshnessSignal,
     profile_cache_from_manifest,
     profile_downloaded_file,
     profile_source_url,
@@ -18,10 +20,20 @@ from forest_pipelines.profiling import (
 
 
 class FakeResponse:
-    headers = {"Content-Type": "text/csv", "Last-Modified": "Wed, 01 Jan 2025 00:00:00 GMT"}
-
-    def __init__(self, body: bytes) -> None:
+    def __init__(
+        self,
+        body: bytes,
+        *,
+        status_code: int = 200,
+        headers: dict[str, str] | None = None,
+    ) -> None:
         self.body = body
+        self.status_code = status_code
+        self.headers = headers or {
+            "Content-Type": "text/csv",
+            "Last-Modified": "Wed, 01 Jan 2025 00:00:00 GMT",
+        }
+        self.iterated = False
 
     def __enter__(self) -> "FakeResponse":
         return self
@@ -33,6 +45,7 @@ class FakeResponse:
         return None
 
     def iter_content(self, chunk_size: int):
+        self.iterated = True
         yield self.body
 
 
@@ -114,7 +127,7 @@ def test_profile_source_url_deletes_temp_file(tmp_path: Path, monkeypatch: pytes
     assert not created[0].exists()
 
 
-def test_profile_source_url_uses_manifest_cache(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_profile_source_url_uses_fresh_source_signal_cache(monkeypatch: pytest.MonkeyPatch) -> None:
     def fail_get(*args, **kwargs):
         raise AssertionError("network should not be used")
 
@@ -127,6 +140,86 @@ def test_profile_source_url_uses_manifest_cache(monkeypatch: pytest.MonkeyPatch)
                 "size_bytes": 12,
                 "sha256": "a" * 64,
                 "row_count": 2,
+                "profiled_at": "2026-05-29T00:00:00Z",
+                "profile_status": "ok",
+                "profile_warnings": [],
+            }
+        ]
+    }
+    signal = FreshnessSignal(
+        source_modified_at=datetime(2026, 5, 28, tzinfo=timezone.utc),
+        precision="date",
+        method="test",
+        raw_label="28/05/2026",
+    )
+
+    with use_profile_cache(profile_cache_from_manifest(manifest)):
+        profile = profile_source_url(
+            "https://example.test/cached.csv",
+            filename="cached.csv",
+            freshness_signal=signal,
+        )
+
+    assert profile["size_bytes"] == 12
+    assert profile["row_count"] == 2
+    assert profile["profile_status"] == "ok"
+
+
+def test_profile_source_url_reprofiles_stale_source_signal(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    manifest = {
+        "items": [
+            {
+                "source_url": "https://example.test/cached.csv",
+                "filename": "cached.csv",
+                "size_bytes": 12,
+                "sha256": "a" * 64,
+                "row_count": 2,
+                "profiled_at": "2026-05-27T00:00:00Z",
+                "profile_status": "ok",
+                "profile_warnings": [],
+            }
+        ]
+    }
+    signal = FreshnessSignal(
+        source_modified_at=datetime(2026, 5, 28, 12, 0, tzinfo=timezone.utc),
+        precision="datetime",
+        method="test",
+        raw_label="28/05/2026 12h00",
+    )
+    monkeypatch.setattr(
+        profiling_module.requests,
+        "get",
+        lambda *args, **kwargs: FakeResponse(b"a,b\n1,2\n3,4\n5,6\n"),
+    )
+
+    with use_profile_cache(profile_cache_from_manifest(manifest)):
+        profile = profile_source_url(
+            "https://example.test/cached.csv",
+            filename="cached.csv",
+            freshness_signal=signal,
+        )
+
+    assert profile["row_count"] == 3
+    assert profile["sha256"] != "a" * 64
+
+
+def test_profile_source_url_uses_http_304_cache(monkeypatch: pytest.MonkeyPatch) -> None:
+    def fake_get(*args, **kwargs):
+        assert kwargs["headers"] == {"If-Modified-Since": "Wed, 01 Jan 2025 00:00:00 GMT"}
+        return FakeResponse(b"", status_code=304)
+
+    monkeypatch.setattr(profiling_module.requests, "get", fake_get)
+    manifest = {
+        "items": [
+            {
+                "source_url": "https://example.test/cached.csv",
+                "filename": "cached.csv",
+                "size_bytes": 12,
+                "sha256": "a" * 64,
+                "row_count": 2,
+                "last_modified": "Wed, 01 Jan 2025 00:00:00 GMT",
                 "profile_status": "ok",
                 "profile_warnings": [],
             }
@@ -136,9 +229,74 @@ def test_profile_source_url_uses_manifest_cache(monkeypatch: pytest.MonkeyPatch)
     with use_profile_cache(profile_cache_from_manifest(manifest)):
         profile = profile_source_url("https://example.test/cached.csv", filename="cached.csv")
 
-    assert profile["size_bytes"] == 12
+    assert profile["sha256"] == "a" * 64
     assert profile["row_count"] == 2
-    assert profile["profile_status"] == "ok"
+
+
+def test_profile_source_url_uses_unchanged_http_headers_cache(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    response = FakeResponse(
+        b"would-not-be-read",
+        headers={
+            "Content-Type": "text/csv",
+            "Last-Modified": "Wed, 01 Jan 2025 00:00:00 GMT",
+            "Content-Length": "12",
+        },
+    )
+    monkeypatch.setattr(profiling_module.requests, "get", lambda *args, **kwargs: response)
+    manifest = {
+        "items": [
+            {
+                "source_url": "https://example.test/cached.csv",
+                "filename": "cached.csv",
+                "size_bytes": 12,
+                "sha256": "a" * 64,
+                "row_count": 2,
+                "last_modified": "Wed, 01 Jan 2025 00:00:00 GMT",
+                "profile_status": "ok",
+                "profile_warnings": [],
+            }
+        ]
+    }
+
+    with use_profile_cache(profile_cache_from_manifest(manifest)):
+        profile = profile_source_url("https://example.test/cached.csv", filename="cached.csv")
+
+    assert profile["sha256"] == "a" * 64
+    assert not response.iterated
+
+
+def test_profile_source_url_without_validator_reprofiles(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        profiling_module.requests,
+        "get",
+        lambda *args, **kwargs: FakeResponse(
+            b"a,b\n1,2\n3,4\n",
+            headers={"Content-Type": "text/csv"},
+        ),
+    )
+    manifest = {
+        "items": [
+            {
+                "source_url": "https://example.test/cached.csv",
+                "filename": "cached.csv",
+                "size_bytes": 12,
+                "sha256": "a" * 64,
+                "row_count": 9,
+                "profile_status": "ok",
+                "profile_warnings": [],
+            }
+        ]
+    }
+
+    with use_profile_cache(profile_cache_from_manifest(manifest)):
+        profile = profile_source_url("https://example.test/cached.csv", filename="cached.csv")
+
+    assert profile["row_count"] == 2
+    assert profile["sha256"] != "a" * 64
 
 
 def test_profiled_item_keeps_current_identity_with_cached_profile(
@@ -156,17 +314,25 @@ def test_profiled_item_keeps_current_identity_with_cached_profile(
                 "filename": "old.csv",
                 "source_url": "https://example.test/cached.csv",
                 "row_count": 9,
+                "profiled_at": "2026-05-29T00:00:00Z",
                 "profile_status": "ok",
                 "profile_warnings": [],
             }
         ]
     }
+    signal = FreshnessSignal(
+        source_modified_at=datetime(2026, 5, 28, tzinfo=timezone.utc),
+        precision="date",
+        method="test",
+        raw_label="28/05/2026",
+    )
 
     with use_profile_cache(profile_cache_from_manifest(manifest)):
         item = profiled_item(
             source_url="https://example.test/cached.csv",
             filename="new.csv",
             period="2025",
+            freshness_signal=signal,
         )
 
     assert item["filename"] == "new.csv"

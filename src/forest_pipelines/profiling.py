@@ -9,6 +9,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 from pathlib import Path
 from typing import Any, Iterator, Literal
 from urllib.parse import unquote, urlparse
@@ -17,6 +18,7 @@ import pandas as pd
 import requests
 
 ProfileStatus = Literal["ok", "partial", "failed", "skipped"]
+FreshnessPrecision = Literal["date", "datetime"]
 
 TABULAR_SUFFIXES = {".csv", ".txt", ".tsv"}
 EXCEL_SUFFIXES = {".xls", ".xlsx"}
@@ -52,6 +54,14 @@ class ProfileOptions:
     timeout_s: int = 180
     keep_local: bool = False
     max_archive_members: int = 8
+
+
+@dataclass(frozen=True)
+class FreshnessSignal:
+    source_modified_at: datetime
+    precision: FreshnessPrecision
+    method: str
+    raw_label: str
 
 
 def now_iso() -> str:
@@ -135,6 +145,79 @@ def _profile_cache_hit(source_url: str) -> dict[str, Any] | None:
         return None
     profile = cache.get(source_url)
     return dict(profile) if isinstance(profile, dict) else None
+
+
+def _parse_iso_datetime(value: Any) -> datetime | None:
+    if not isinstance(value, str) or not value.strip():
+        return None
+    text = value.strip()
+    try:
+        if text.endswith("Z"):
+            text = text[:-1] + "+00:00"
+        parsed = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def _parse_http_datetime(value: Any) -> datetime | None:
+    if not isinstance(value, str) or not value.strip():
+        return None
+    try:
+        parsed = parsedate_to_datetime(value.strip())
+    except (TypeError, ValueError, IndexError, OverflowError):
+        return None
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def _source_signal_allows_cache(
+    cached: dict[str, Any],
+    freshness_signal: FreshnessSignal,
+) -> bool:
+    profiled_at = _parse_iso_datetime(cached.get("profiled_at"))
+    if profiled_at is None:
+        return False
+    source_modified_at = freshness_signal.source_modified_at
+    if source_modified_at.tzinfo is None:
+        source_modified_at = source_modified_at.replace(tzinfo=timezone.utc)
+    else:
+        source_modified_at = source_modified_at.astimezone(timezone.utc)
+    if freshness_signal.precision == "date":
+        return profiled_at.date() >= source_modified_at.date()
+    return profiled_at >= source_modified_at
+
+
+def _same_http_datetime(left: Any, right: Any) -> bool:
+    parsed_left = _parse_http_datetime(left)
+    parsed_right = _parse_http_datetime(right)
+    if parsed_left is not None and parsed_right is not None:
+        return parsed_left == parsed_right
+    return str(left or "").strip() == str(right or "").strip()
+
+
+def _int_header(value: Any) -> int | None:
+    try:
+        return int(str(value).strip())
+    except (TypeError, ValueError):
+        return None
+
+
+def _http_headers_allow_cache(cached: dict[str, Any], headers: Any) -> bool:
+    response_last_modified = headers.get("Last-Modified") if headers else None
+    cached_last_modified = cached.get("last_modified")
+    if not response_last_modified or not cached_last_modified:
+        return False
+    if not _same_http_datetime(response_last_modified, cached_last_modified):
+        return False
+    response_size = _int_header(headers.get("Content-Length") if headers else None)
+    cached_size = cached.get("size_bytes")
+    if response_size is not None and cached_size is not None:
+        return response_size == cached_size
+    return True
 
 
 def _format_from_filename(filename: str) -> str:
@@ -388,42 +471,35 @@ def profile_downloaded_file(
     return result
 
 
-def profile_source_url(
-    source_url: str,
+def _profile_response_body(
+    response: Any,
     *,
-    filename: str | None = None,
+    source_url: str,
+    filename: str,
+    options: ProfileOptions,
     logger: Any = None,
-    options: ProfileOptions | None = None,
 ) -> dict[str, Any]:
-    cached = _profile_cache_hit(source_url)
-    if cached is not None:
-        if logger:
-            logger.info("Profile cache hit: %s", source_url)
-        return cached
-
-    opts = options or ProfileOptions()
-    name = filename or filename_from_url(source_url)
     tmp_path: Path | None = None
     try:
-        if logger:
-            logger.info("Profiling source URL: %s", source_url)
-        with requests.get(source_url, stream=True, timeout=opts.timeout_s) as response:
-            response.raise_for_status()
-            content_type = response.headers.get("Content-Type")
-            last_modified = response.headers.get("Last-Modified")
-            with tempfile.NamedTemporaryFile(prefix="forest-profile-", suffix=Path(name).suffix, delete=False) as tmp:
-                tmp_path = Path(tmp.name)
-                for chunk in response.iter_content(chunk_size=1024 * 1024):
-                    if not chunk:
-                        continue
-                    tmp.write(chunk)
+        content_type = response.headers.get("Content-Type")
+        last_modified = response.headers.get("Last-Modified")
+        with tempfile.NamedTemporaryFile(
+            prefix="forest-profile-",
+            suffix=Path(filename).suffix,
+            delete=False,
+        ) as tmp:
+            tmp_path = Path(tmp.name)
+            for chunk in response.iter_content(chunk_size=1024 * 1024):
+                if not chunk:
+                    continue
+                tmp.write(chunk)
         profile = profile_downloaded_file(
             tmp_path,
             source_url=source_url,
-            filename=name,
+            filename=filename,
             content_type=content_type,
             last_modified=last_modified,
-            options=opts,
+            options=options,
         )
         if logger:
             logger.info(
@@ -433,6 +509,75 @@ def profile_source_url(
                 profile.get("profile_status"),
             )
         return profile
+    finally:
+        if tmp_path and not options.keep_local:
+            tmp_path.unlink(missing_ok=True)
+
+
+def profile_source_url(
+    source_url: str,
+    *,
+    filename: str | None = None,
+    logger: Any = None,
+    options: ProfileOptions | None = None,
+    freshness_signal: FreshnessSignal | None = None,
+) -> dict[str, Any]:
+    cached = _profile_cache_hit(source_url)
+    opts = options or ProfileOptions()
+    name = filename or filename_from_url(source_url)
+
+    if cached is not None and freshness_signal is not None:
+        if _source_signal_allows_cache(cached, freshness_signal):
+            if logger:
+                logger.info(
+                    "Profile cache fresh: %s method=%s raw=%s",
+                    source_url,
+                    freshness_signal.method,
+                    freshness_signal.raw_label,
+                )
+            return cached
+        if logger:
+            logger.info(
+                "Profile cache stale: %s method=%s raw=%s",
+                source_url,
+                freshness_signal.method,
+                freshness_signal.raw_label,
+            )
+
+    headers: dict[str, str] = {}
+    if cached is not None and freshness_signal is None:
+        last_modified = cached.get("last_modified")
+        if isinstance(last_modified, str) and last_modified.strip():
+            headers["If-Modified-Since"] = last_modified.strip()
+
+    try:
+        if logger:
+            logger.info("Profiling source URL: %s", source_url)
+        with requests.get(
+            source_url,
+            stream=True,
+            timeout=opts.timeout_s,
+            headers=headers or None,
+        ) as response:
+            if cached is not None and freshness_signal is None:
+                if getattr(response, "status_code", None) == 304:
+                    if logger:
+                        logger.info("Profile cache fresh by HTTP 304: %s", source_url)
+                    return cached
+                if _http_headers_allow_cache(cached, response.headers):
+                    if logger:
+                        logger.info("Profile cache fresh by HTTP headers: %s", source_url)
+                    return cached
+            response.raise_for_status()
+            return _profile_response_body(
+                response,
+                source_url=source_url,
+                filename=name,
+                options=opts,
+                logger=logger,
+            )
+    except AssertionError:
+        raise
     except Exception as exc:
         if logger:
             logger.warning("Profile failed for %s: %s", source_url, exc)
@@ -443,9 +588,6 @@ def profile_source_url(
                 warning("download_timeout", f"Profiling failed: {type(exc).__name__}.")
             ],
         }
-    finally:
-        if tmp_path and not opts.keep_local:
-            tmp_path.unlink(missing_ok=True)
 
 
 def profiled_item(
@@ -458,6 +600,7 @@ def profiled_item(
     release_time: str | None = None,
     logger: Any = None,
     options: ProfileOptions | None = None,
+    freshness_signal: FreshnessSignal | None = None,
     extra: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     name = filename or filename_from_url(source_url)
@@ -475,10 +618,11 @@ def profiled_item(
         item.update(extra)
     item.update(
         profile_source_url(
-            source_url,
+            source_url=source_url,
             filename=name,
             logger=logger,
             options=options,
+            freshness_signal=freshness_signal,
         )
     )
     return item

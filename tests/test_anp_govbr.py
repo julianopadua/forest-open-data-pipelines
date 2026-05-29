@@ -8,10 +8,12 @@ from forest_pipelines.datasets.anp.govbr import (
     ResourceLink,
     build_manifest_from_detail_page,
     discover_collections,
+    extract_page_freshness_labels,
     extract_resource_links,
+    parse_govbr_freshness_label,
     resolve_final_url,
 )
-from forest_pipelines.profiling import ProfileOptions
+from forest_pipelines.profiling import ProfileOptions, profile_cache_from_manifest, use_profile_cache
 from forest_pipelines.registry.datasets import RUNNERS
 
 
@@ -40,6 +42,8 @@ DETAIL_HTML = """
   <body>
     <main id="content-core">
       <h1>Produção de petróleo e gás natural por estado e localização</h1>
+      <span class="documentPublished"><span>Publicado em</span><span class="value">26/10/2020 09h56</span></span>
+      <span class="documentModified"><span>Atualizado em</span><span class="value">30/04/2026 15h14</span></span>
       <h3>Produção de petróleo</h3>
       <ul>
         <li><a href="/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/ppgn-el/metadados-producao-petroleo.pdf">Metadados - Produção de petróleo</a> (atualizado em 10/3/2026)</li>
@@ -52,6 +56,26 @@ DETAIL_HTML = """
   </body>
 </html>
 """
+
+
+class ProfileResponse:
+    status_code = 200
+    headers = {"Content-Type": "text/csv"}
+
+    def __init__(self, body: bytes) -> None:
+        self.body = body
+
+    def __enter__(self) -> "ProfileResponse":
+        return self
+
+    def __exit__(self, *exc_info: object) -> None:
+        return None
+
+    def raise_for_status(self) -> None:
+        return None
+
+    def iter_content(self, chunk_size: int):
+        yield self.body
 
 
 def test_discover_collections_ignores_navigation_and_files() -> None:
@@ -87,6 +111,131 @@ def test_extract_resource_links_keeps_files_and_indirect_official_pages() -> Non
     assert resources[1].kind == "data"
     assert resources[1].period == "1997"
     assert resources[2].direct_download is False
+
+
+def test_extract_page_freshness_labels_reads_govbr_spans() -> None:
+    labels = extract_page_freshness_labels(DETAIL_HTML)
+
+    assert labels == {
+        "published_label": "26/10/2020 09h56",
+        "modified_label": "30/04/2026 15h14",
+    }
+
+
+def test_parse_govbr_freshness_label_handles_date_and_time() -> None:
+    signal = parse_govbr_freshness_label(
+        "30/04/2026 15h14",
+        method="test",
+    )
+
+    assert signal is not None
+    assert signal.precision == "datetime"
+    assert signal.raw_label == "30/04/2026 15h14"
+
+
+def test_extract_resource_links_keeps_item_updated_label_with_time() -> None:
+    html = DETAIL_HTML.replace("atualizado em 30/4/2026", "atualizado em 30/4/2026 08h30")
+
+    resources = extract_resource_links(
+        html,
+        "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/producao-de-petroleo-e-gas-natural-por-estado-e-localizacao",
+    )
+
+    assert resources[1].updated_label == "30/4/2026 08h30"
+
+
+def test_anp_resource_freshness_prefers_item_label(monkeypatch) -> None:
+    signals = []
+
+    def fake_profile_source_url(source_url: str, **kwargs):
+        return {
+            "profile_status": "ok",
+            "profile_warnings": [],
+        }
+
+    def fake_profiled_item(**kwargs):
+        signals.append(kwargs["freshness_signal"])
+        return {
+            "kind": "data",
+            "period": kwargs["period"],
+            "filename": kwargs["filename"],
+            "source_url": kwargs["source_url"],
+            "title": kwargs["title"],
+            "profile_status": "ok",
+            "profile_warnings": [],
+        }
+
+    monkeypatch.setattr("forest_pipelines.datasets.anp.govbr.profile_source_url", fake_profile_source_url)
+    monkeypatch.setattr("forest_pipelines.datasets.anp.govbr.profiled_item", fake_profiled_item)
+
+    build_manifest_from_detail_page(
+        cfg=CatalogDatasetCfg(
+            id="anp_teste",
+            slug="teste",
+            title="Teste",
+            source_url="https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/teste",
+            bucket_prefix="anp/teste",
+        ),
+        html=DETAIL_HTML,
+        resources=[
+            ResourceLink(
+                source_url="https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/data.csv",
+                filename="data.csv",
+                title="Dados",
+                section="Secao",
+                period="2026",
+                kind="data",
+                direct_download=True,
+                updated_label="29/04/2026",
+            )
+        ],
+        logger=None,
+        options=AnpRunnerOptions(http=AnpHttpOptions(), profile=ProfileOptions()),
+    )
+
+    assert signals[0].method == "anp_resource_updated_label"
+    assert signals[0].raw_label == "29/04/2026"
+
+
+def test_anp_resource_freshness_falls_back_to_page_label(monkeypatch) -> None:
+    signals = []
+
+    monkeypatch.setattr("forest_pipelines.datasets.anp.govbr.profiled_item", lambda **kwargs: signals.append(kwargs["freshness_signal"]) or {
+        "kind": "data",
+        "period": kwargs["period"],
+        "filename": kwargs["filename"],
+        "source_url": kwargs["source_url"],
+        "title": kwargs["title"],
+        "profile_status": "ok",
+        "profile_warnings": [],
+    })
+
+    build_manifest_from_detail_page(
+        cfg=CatalogDatasetCfg(
+            id="anp_teste",
+            slug="teste",
+            title="Teste",
+            source_url="https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/teste",
+            bucket_prefix="anp/teste",
+        ),
+        html=DETAIL_HTML,
+        resources=[
+            ResourceLink(
+                source_url="https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/data.csv",
+                filename="data.csv",
+                title="Dados",
+                section="Secao",
+                period="2026",
+                kind="data",
+                direct_download=True,
+            )
+        ],
+        logger=None,
+        options=AnpRunnerOptions(http=AnpHttpOptions(), profile=ProfileOptions()),
+    )
+
+    assert signals[0].method == "anp_page_modified_label"
+    assert signals[0].raw_label == "30/04/2026 15h14"
 
 
 def test_build_manifest_places_metadata_and_documentation(monkeypatch) -> None:
@@ -160,6 +309,102 @@ def test_build_manifest_places_metadata_and_documentation(monkeypatch) -> None:
     assert manifest["meta"]["metadata_file"]["filename"] == "meta.pdf"
     assert manifest["meta"]["custom_tags"]["documentation_files"][0]["filename"] == "manual.pdf"
     assert manifest["items"][0]["source_url"].endswith("data.csv")
+
+
+def test_anp_fresh_resource_reuses_cached_profile(monkeypatch) -> None:
+    def fail_get(*args, **kwargs):
+        raise AssertionError("network should not be used")
+
+    monkeypatch.setattr("forest_pipelines.profiling.requests.get", fail_get)
+    source_url = "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/data.csv"
+    manifest_cache = {
+        "items": [
+            {
+                "source_url": source_url,
+                "filename": "data.csv",
+                "row_count": 7,
+                "profiled_at": "2026-05-29T00:00:00Z",
+                "profile_status": "ok",
+                "profile_warnings": [],
+            }
+        ]
+    }
+
+    with use_profile_cache(profile_cache_from_manifest(manifest_cache)):
+        manifest = build_manifest_from_detail_page(
+            cfg=CatalogDatasetCfg(
+                id="anp_teste",
+                slug="teste",
+                title="Teste",
+                source_url="https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/teste",
+                bucket_prefix="anp/teste",
+            ),
+            html=DETAIL_HTML,
+            resources=[
+                ResourceLink(
+                    source_url=source_url,
+                    filename="data.csv",
+                    title="Dados",
+                    section="Secao",
+                    period="2026",
+                    kind="data",
+                    direct_download=True,
+                    updated_label="28/05/2026",
+                )
+            ],
+            logger=None,
+            options=AnpRunnerOptions(http=AnpHttpOptions(), profile=ProfileOptions()),
+        )
+
+    assert manifest["items"][0]["row_count"] == 7
+
+
+def test_anp_stale_resource_reprofiles(monkeypatch) -> None:
+    monkeypatch.setattr(
+        "forest_pipelines.profiling.requests.get",
+        lambda *args, **kwargs: ProfileResponse(b"a,b\n1,2\n3,4\n"),
+    )
+    source_url = "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/data.csv"
+    manifest_cache = {
+        "items": [
+            {
+                "source_url": source_url,
+                "filename": "data.csv",
+                "row_count": 7,
+                "profiled_at": "2026-05-28T00:00:00Z",
+                "profile_status": "ok",
+                "profile_warnings": [],
+            }
+        ]
+    }
+
+    with use_profile_cache(profile_cache_from_manifest(manifest_cache)):
+        manifest = build_manifest_from_detail_page(
+            cfg=CatalogDatasetCfg(
+                id="anp_teste",
+                slug="teste",
+                title="Teste",
+                source_url="https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/teste",
+                bucket_prefix="anp/teste",
+            ),
+            html=DETAIL_HTML,
+            resources=[
+                ResourceLink(
+                    source_url=source_url,
+                    filename="data.csv",
+                    title="Dados",
+                    section="Secao",
+                    period="2026",
+                    kind="data",
+                    direct_download=True,
+                    updated_label="29/05/2026",
+                )
+            ],
+            logger=None,
+            options=AnpRunnerOptions(http=AnpHttpOptions(), profile=ProfileOptions()),
+        )
+
+    assert manifest["items"][0]["row_count"] == 2
 
 
 def test_resolve_final_url_uses_meta_refresh(monkeypatch) -> None:

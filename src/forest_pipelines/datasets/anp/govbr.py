@@ -4,16 +4,24 @@ import re
 import time
 import unicodedata
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable, Iterable
 from urllib.parse import unquote, urljoin, urlparse
+from zoneinfo import ZoneInfo
 
 import requests
 import yaml
 from bs4 import BeautifulSoup, Tag
 
 from forest_pipelines.manifests.build_manifest import build_manifest
-from forest_pipelines.profiling import ProfileOptions, profiled_item, profile_source_url, warning
+from forest_pipelines.profiling import (
+    FreshnessSignal,
+    ProfileOptions,
+    profiled_item,
+    profile_source_url,
+    warning,
+)
 
 ANP_HUB_URL = "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos"
 USER_AGENT = "ForestOpenDataDiscovery/1.0 (+https://institutoforest.org)"
@@ -38,9 +46,21 @@ DOWNLOAD_SUFFIXES = {
 }
 DATA_SUFFIXES = DOWNLOAD_SUFFIXES - {".pdf"}
 METADATA_RE = re.compile(r"(meta|metadado|metadados|dicionario|dicionário|layout|readme)", re.I)
-UPDATED_RE = re.compile(r"atualizado em\s+([0-9]{1,2}/[0-9]{1,2}/[0-9]{4})", re.I)
+GOVBR_DATE_LABEL_RE = re.compile(
+    r"([0-9]{1,2})/([0-9]{1,2})/([0-9]{4})(?:\s+([0-9]{1,2})h([0-9]{2}))?",
+    re.I,
+)
+UPDATED_RE = re.compile(
+    r"atualizado em\s+([0-9]{1,2}/[0-9]{1,2}/[0-9]{4}(?:\s+[0-9]{1,2}h[0-9]{2})?)",
+    re.I,
+)
+PUBLISHED_RE = re.compile(
+    r"publicado em\s+([0-9]{1,2}/[0-9]{1,2}/[0-9]{4}(?:\s+[0-9]{1,2}h[0-9]{2})?)",
+    re.I,
+)
 PERIOD_RE = re.compile(r"(?<!\d)((?:19|20)\d{2})(?:[-_]?([01]\d))?(?!\d)")
 ANP_DATASET_PREFIX = "/anp/pt-br/centrais-de-conteudo/dados-abertos"
+GOVBR_TZ = ZoneInfo("America/Sao_Paulo")
 
 
 @dataclass(frozen=True)
@@ -135,6 +155,66 @@ ANP_DATASET_IDS: tuple[str, ...] = (
 
 def _clean_text(value: Any) -> str:
     return re.sub(r"\s+", " ", str(value or "")).strip()
+
+
+def parse_govbr_freshness_label(
+    raw_label: str | None,
+    *,
+    method: str,
+) -> FreshnessSignal | None:
+    text = _clean_text(raw_label)
+    match = GOVBR_DATE_LABEL_RE.search(text)
+    if not match:
+        return None
+    day, month, year, hour, minute = match.groups()
+    precision = "datetime" if hour is not None and minute is not None else "date"
+    source_modified_at = datetime(
+        int(year),
+        int(month),
+        int(day),
+        int(hour or 0),
+        int(minute or 0),
+        tzinfo=GOVBR_TZ,
+    )
+    return FreshnessSignal(
+        source_modified_at=source_modified_at,
+        precision=precision,
+        method=method,
+        raw_label=match.group(0),
+    )
+
+
+def _label_from_span(soup: BeautifulSoup, class_name: str) -> str | None:
+    span = soup.find("span", class_=class_name)
+    if not isinstance(span, Tag):
+        return None
+    value = span.find("span", class_="value")
+    if isinstance(value, Tag):
+        text = _clean_text(value.get_text(" "))
+        if text:
+            return text
+    text = _clean_text(span.get_text(" "))
+    match = GOVBR_DATE_LABEL_RE.search(text)
+    return match.group(0) if match else None
+
+
+def extract_page_freshness_labels(html: str) -> dict[str, str]:
+    soup = BeautifulSoup(html, "html.parser")
+    labels: dict[str, str] = {}
+    published = _label_from_span(soup, "documentPublished")
+    modified = _label_from_span(soup, "documentModified")
+    text = _clean_text(_article_root(soup).get_text(" "))
+    if not published:
+        match = PUBLISHED_RE.search(text)
+        published = match.group(1) if match else None
+    if not modified:
+        match = UPDATED_RE.search(text)
+        modified = match.group(1) if match else None
+    if published:
+        labels["published_label"] = published
+    if modified:
+        labels["modified_label"] = modified
+    return labels
 
 
 def _ascii_slug(value: str) -> str:
@@ -463,16 +543,43 @@ def resolve_final_url(url: str, options: AnpHttpOptions, logger: Any = None) -> 
         return url
 
 
-def _resource_to_document_file(resource: ResourceLink, logger: Any, options: ProfileOptions) -> dict[str, Any]:
+def _resource_freshness_signal(
+    resource: ResourceLink,
+    page_modified_signal: FreshnessSignal | None,
+) -> FreshnessSignal | None:
+    resource_signal = parse_govbr_freshness_label(
+        resource.updated_label,
+        method="anp_resource_updated_label",
+    )
+    return resource_signal or page_modified_signal
+
+
+def _resource_to_document_file(
+    resource: ResourceLink,
+    logger: Any,
+    options: ProfileOptions,
+    page_modified_signal: FreshnessSignal | None,
+) -> dict[str, Any]:
     return {
         "filename": resource.filename,
         "source_url": resource.source_url,
         "title": resource.title,
-        **profile_source_url(resource.source_url, filename=resource.filename, logger=logger, options=options),
+        **profile_source_url(
+            resource.source_url,
+            filename=resource.filename,
+            logger=logger,
+            options=options,
+            freshness_signal=_resource_freshness_signal(resource, page_modified_signal),
+        ),
     }
 
 
-def _resource_to_item(resource: ResourceLink, logger: Any, options: ProfileOptions) -> dict[str, Any]:
+def _resource_to_item(
+    resource: ResourceLink,
+    logger: Any,
+    options: ProfileOptions,
+    page_modified_signal: FreshnessSignal | None,
+) -> dict[str, Any]:
     if not resource.direct_download:
         return {
             "kind": "data",
@@ -494,6 +601,7 @@ def _resource_to_item(resource: ResourceLink, logger: Any, options: ProfileOptio
         kind="data",
         logger=logger,
         options=options,
+        freshness_signal=_resource_freshness_signal(resource, page_modified_signal),
     )
 
 
@@ -507,14 +615,24 @@ def build_manifest_from_detail_page(
 ) -> dict[str, Any]:
     title = extract_page_title(html) or cfg.title
     discovered = resources if resources is not None else extract_resource_links(html, cfg.source_url)
+    page_freshness_labels = extract_page_freshness_labels(html)
+    page_modified_signal = parse_govbr_freshness_label(
+        page_freshness_labels.get("modified_label"),
+        method="anp_page_modified_label",
+    )
     metadata_resource, data_resources, documentation_resources = split_manifest_resources(discovered)
     metadata_file = (
-        _resource_to_document_file(metadata_resource, logger, options.profile)
+        _resource_to_document_file(
+            metadata_resource,
+            logger,
+            options.profile,
+            page_modified_signal,
+        )
         if metadata_resource
         else None
     )
     items = [
-        _resource_to_item(resource, logger, options.profile)
+        _resource_to_item(resource, logger, options.profile, page_modified_signal)
         for resource in sorted(data_resources, key=lambda r: (r.period, r.filename), reverse=True)
     ]
     documentation_files = [
@@ -544,6 +662,7 @@ def build_manifest_from_detail_page(
             "govbr_slug": cfg.slug,
             "discovered_resource_count": len(discovered),
             "documentation_files": documentation_files,
+            "page_freshness_labels": page_freshness_labels,
             "resource_updated_labels": resource_updated_labels,
         },
     }
