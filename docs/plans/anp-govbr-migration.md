@@ -56,3 +56,11 @@ gov.br ANP hub
 - The URL-only catalog validator must pass.
 - Portal typecheck and lint must pass after compact fallback removal.
 - API tests no longer skip ANP entries.
+
+## Post-migration cleanup
+
+Completed after the gov.br runner landed:
+
+- Removed dead module `src/forest_pipelines/catalog/anp_placement.py` (compact-era placement heuristics; taxonomy now lives in `configs/catalog/open_data.yml`).
+- Consolidated `ANP_DATASET_IDS` to a single source in `src/forest_pipelines/datasets/anp/govbr.py`; `registry/datasets.py` imports it.
+- Updated public API docs, portal `AGENTS.md`, wiki notes, and study topics to stop referencing `anp_catalog_compact.json` or compact-catalog API behavior.

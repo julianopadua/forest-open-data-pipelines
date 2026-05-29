@@ -7,6 +7,10 @@
     "pageNumberPx": 24,
     "logoHeightPx": 54
   },
+  "globalSlots": {
+    "topic_tag": "ANP - ENERGIA",
+    "published_at": "Mar 2026"
+  },
   "slides": [
     {
       "type": "cover",
@@ -14,6 +18,11 @@
         "series_label": "Séries mensais",
         "title": "Produção de petróleo e gás natural no Brasil",
         "summary": "Dados oficiais ANP por estado e localização. Último mês comum positivo: Mar 2026."
+      },
+      "slotStyles": {
+        "title": {
+          "fontSize": "110"
+        }
       }
     },
     {
@@ -21,11 +30,11 @@
       "slots": {
         "caption": "Brasil: petróleo (m3) e gás natural (mil m3) · ANP",
         "image_url": "/generated/anp-producao-national.png",
-        "body_text": "A produção de petróleo aumentou 15,79 % em relação ao mês anterior e 17,3 % em relação ao mesmo período do ano passado, totalizando 20933489,71 m3. O gás natural cresceu 14,35 % em relação ao mês anterior e 23,31 % em relação ao mesmo período do ano passado, totalizando 6327449,81 mil m3."
+        "body_text": "A produção nacional de petróleo aumentou 15.79 por cento em relação ao mês anterior e 17.3 por cento em relação ao mesmo período do ano anterior, totalizando 20 933 489.71 metros cúbicos. A produção de gás natural também apresentou crescimento, com aumentos de 14.35 por cento e 23."
       },
       "generation": {
         "ok": true,
-        "model": "openai/gpt-oss-20b",
+        "model": "llama-3.3-70b-versatile",
         "error": null
       }
     },
@@ -51,7 +60,7 @@
       },
       "generation": {
         "ok": true,
-        "model": "openai/gpt-oss-20b:validated-fallback",
+        "model": "llama-3.3-70b-versatile:validated-fallback",
         "error": null
       }
     },
@@ -77,9 +86,5 @@
     "gas_mom_pct": 14.35,
     "gas_yoy_pct": 23.31
   },
-  "generated_at": "2026-05-27T01:01:12.656898+00:00",
-  "globalSlots": {
-    "topic_tag": "ANP Energia",
-    "published_at": "Mar 2026"
-  }
+  "generated_at": "2026-05-29T21:35:46.168758+00:00"
 }

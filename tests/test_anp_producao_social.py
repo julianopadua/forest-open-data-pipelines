@@ -142,9 +142,10 @@ def test_state_share_rows_and_manifest_are_compact(tmp_path: Path) -> None:
     encoded = json.dumps(manifest, ensure_ascii=False)
     assert manifest["theme"] == "navy"
     assert manifest["globalSlots"] == {
-        "topic_tag": "ANP Energia",
+        "topic_tag": "ANP - ENERGIA",
         "published_at": "Mar 2026",
     }
+    assert manifest["slides"][0]["slotStyles"]["title"]["fontSize"] == "110"
     assert len(manifest["slides"]) == 5
     assert "topic_tag" not in manifest["slides"][0]["slots"]
     assert "published_at" not in manifest["slides"][0]["slots"]

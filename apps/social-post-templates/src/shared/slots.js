@@ -41,7 +41,6 @@ const PX_PROPS = new Set([
   "marginBottom",
   "marginLeft",
   "letterSpacing",
-  "lineHeight",
   "maxHeight",
   "maxWidth",
   "width",
@@ -56,6 +55,8 @@ function normalizeStyleValue(prop, value) {
   if (value == null) return null;
   const str = String(value).trim();
   if (!str) return null;
+  //lineHeight unitless (ex.: 1, 1.25) nao recebe sufixo px
+  if (prop === "lineHeight" && /^-?\d+(\.\d+)?$/.test(str)) return str;
   if (PX_PROPS.has(prop) && /^-?\d+(\.\d+)?$/.test(str)) return str + "px";
   return str;
 }

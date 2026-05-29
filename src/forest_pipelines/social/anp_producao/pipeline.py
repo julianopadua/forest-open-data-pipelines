@@ -660,11 +660,13 @@ def build_manifest(
     def img(key: str) -> str:
         return f"/generated/{chart_paths[key].name}"
 
+    topic_tag = "ANP - ENERGIA"
+    cover_slot_styles = {"title": {"fontSize": "110"}}
     slides = [
         {
             "type": "cover",
             "slots": {
-                "topic_tag": "ANP Energia",
+                "topic_tag": topic_tag,
                 "published_at": published_at,
                 "series_label": "Séries mensais",
                 "title": "Produção de petróleo e gás natural no Brasil",
@@ -673,11 +675,12 @@ def build_manifest(
                     f"{published_at}."
                 ),
             },
+            "slotStyles": cover_slot_styles,
         },
         {
             "type": "body_chart",
             "slots": {
-                "topic_tag": "ANP Energia",
+                "topic_tag": topic_tag,
                 "published_at": published_at,
                 "caption": "Brasil: petróleo (m3) e gás natural (mil m3) · ANP",
                 "image_url": img("national"),
@@ -688,7 +691,7 @@ def build_manifest(
         {
             "type": "body_chart",
             "slots": {
-                "topic_tag": "ANP Energia",
+                "topic_tag": topic_tag,
                 "published_at": published_at,
                 "caption": "Petróleo por estado · ANP",
                 "image_url": img("petroleo_uf"),
@@ -699,7 +702,7 @@ def build_manifest(
         {
             "type": "body_chart",
             "slots": {
-                "topic_tag": "ANP Energia",
+                "topic_tag": topic_tag,
                 "published_at": published_at,
                 "caption": "Gás natural por estado · ANP",
                 "image_url": img("gas_uf"),
@@ -710,7 +713,7 @@ def build_manifest(
         {
             "type": "cta",
             "slots": {
-                "topic_tag": "ANP Energia",
+                "topic_tag": topic_tag,
                 "published_at": published_at,
                 "cta_kicker": "Quer continuar acompanhando?",
                 "cta_headline": "Mais dados abertos de energia",
@@ -720,7 +723,7 @@ def build_manifest(
         },
     ]
     global_slots = {
-        "topic_tag": "ANP Energia",
+        "topic_tag": topic_tag,
         "published_at": published_at,
     }
     for slide in slides:
