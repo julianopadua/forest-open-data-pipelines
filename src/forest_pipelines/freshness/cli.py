@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 from datetime import timezone
 from pathlib import Path
-from typing import Any
 
 import typer
 
@@ -95,7 +94,3 @@ def report_cmd(
             out=str(out),
         )
     )
-
-
-def rows_as_jsonable(rows: list[Any]) -> list[dict[str, str]]:
-    return [row.as_row() for row in rows]
