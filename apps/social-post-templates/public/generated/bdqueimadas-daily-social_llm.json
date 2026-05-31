@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "topic": "bdqueimadas_daily",
+  "reference_satellite": "AQUA_M-T",
+  "payload": {
+    "schema": "bdqueimadas_daily_v1",
+    "reference_satellite": "AQUA_M-T",
+    "window": {
+      "start_date": "2026-05-25",
+      "end_date": "2026-05-31",
+      "days": 7
+    },
+    "source_urls": [
+      {
+        "date": "2026-05-25",
+        "url": "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/diario/Brasil/focos_diario_br_20260525.csv"
+      },
+      {
+        "date": "2026-05-26",
+        "url": "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/diario/Brasil/focos_diario_br_20260526.csv"
+      },
+      {
+        "date": "2026-05-27",
+        "url": "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/diario/Brasil/focos_diario_br_20260527.csv"
+      },
+      {
+        "date": "2026-05-28",
+        "url": "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/diario/Brasil/focos_diario_br_20260528.csv"
+      },
+      {
+        "date": "2026-05-29",
+        "url": "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/diario/Brasil/focos_diario_br_20260529.csv"
+      },
+      {
+        "date": "2026-05-30",
+        "url": "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/diario/Brasil/focos_diario_br_20260530.csv"
+      },
+      {
+        "date": "2026-05-31",
+        "url": "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/diario/Brasil/focos_diario_br_20260531.csv"
+      }
+    ],
+    "metrics": {
+      "total_focos_reference_satellite": 1089,
+      "total_rows_all_satellites": 24537,
+      "daily_counts": [
+        {
+          "date": "2026-05-25",
+          "value": 149
+        },
+        {
+          "date": "2026-05-26",
+          "value": 268
+        },
+        {
+          "date": "2026-05-27",
+          "value": 298
+        },
+        {
+          "date": "2026-05-28",
+          "value": 113
+        },
+        {
+          "date": "2026-05-29",
+          "value": 175
+        },
+        {
+          "date": "2026-05-30",
+          "value": 86
+        },
+        {
+          "date": "2026-05-31",
+          "value": 0
+        }
+      ],
+      "top_states": [
+        {
+          "label": "TOCANTINS",
+          "value": 331
+        },
+        {
+          "label": "MATO GROSSO",
+          "value": 284
+        },
+        {
+          "label": "MARANHÃO",
+          "value": 109
+        },
+        {
+          "label": "PARÁ",
+          "value": 87
+        },
+        {
+          "label": "Outros",
+          "value": 278
+        }
+      ],
+      "top_biomes": [
+        {
+          "label": "Cerrado",
+          "value": 645
+        },
+        {
+          "label": "Amazônia",
+          "value": 327
+        },
+        {
+          "label": "Caatinga",
+          "value": 79
+        },
+        {
+          "label": "Mata Atlântica",
+          "value": 30
+        },
+        {
+          "label": "Outros",
+          "value": 8
+        }
+      ]
+    },
+    "map_status": {
+      "geojson_ok": true,
+      "geojson_error": null,
+      "polygon_count": 7
+    },
+    "warnings": []
+  },
+  "texts": {
+    "instagram_caption": "Entre 2026-05-25 e 2026-05-31. o satelite AQUA_M-T registrou 1.089 focos de calor no Brasil.",
+    "slides": {
+      "daily": "A janela de sete dias mostra a distribuicao recente dos focos no Brasil.",
+      "states": "O ranking estadual concentra os quatro maiores totais e agrupa os demais em Outros.",
+      "biomes": "O ranking por bioma segue o mesmo criterio, com foco na comparacao direta dos totais.",
+      "map": "O mapa mostra a densidade espacial dos focos filtrados pelo satelite de referencia."
+    },
+    "comments": [
+      "Texto deterministico gerado sem LLM ou usado como fallback."
+    ]
+  },
+  "llm_model": null,
+  "llm_error": null,
+  "charts": {
+    "daily": "/Users/julianopadua/Projects/forest-project/forest-open-data-pipelines/apps/social-post-templates/public/generated/bdqueimadas-daily-7d.png",
+    "states": "/Users/julianopadua/Projects/forest-project/forest-open-data-pipelines/apps/social-post-templates/public/generated/bdqueimadas-daily-states.png",
+    "biomes": "/Users/julianopadua/Projects/forest-project/forest-open-data-pipelines/apps/social-post-templates/public/generated/bdqueimadas-daily-biomes.png",
+    "map": "/Users/julianopadua/Projects/forest-project/forest-open-data-pipelines/apps/social-post-templates/public/generated/bdqueimadas-daily-map.png"
+  }
+}

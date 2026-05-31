@@ -1,0 +1,43 @@
+{
+  "theme": "red",
+  "runId": "bdqueimadas-daily-social",
+  "globalSlots": {
+    "topic_tag": "Queimadas & Focos",
+    "published_at": "2026-05-25 a 2026-05-31"
+  },
+  "instagram_caption_draft": "Entre 2026-05-25 e 2026-05-31. o satelite AQUA_M-T registrou 1.089 focos de calor no Brasil.",
+  "slides": [
+    {
+      "type": "body_chart",
+      "slots": {
+        "caption": "Focos por dia",
+        "image_url": "/generated/bdqueimadas-daily-7d.png",
+        "body_text": "A janela de sete dias mostra a distribuicao recente dos focos no Brasil."
+      }
+    },
+    {
+      "type": "body_chart",
+      "slots": {
+        "caption": "Estados com mais focos",
+        "image_url": "/generated/bdqueimadas-daily-states.png",
+        "body_text": "O ranking estadual concentra os quatro maiores totais e agrupa os demais em Outros."
+      }
+    },
+    {
+      "type": "body_chart",
+      "slots": {
+        "caption": "Biomas com mais focos",
+        "image_url": "/generated/bdqueimadas-daily-biomes.png",
+        "body_text": "O ranking por bioma segue o mesmo criterio, com foco na comparacao direta dos totais."
+      }
+    },
+    {
+      "type": "body_chart",
+      "slots": {
+        "caption": "Mapa de densidade",
+        "image_url": "/generated/bdqueimadas-daily-map.png",
+        "body_text": "O mapa mostra a densidade espacial dos focos filtrados pelo satelite de referencia."
+      }
+    }
+  ]
+}
