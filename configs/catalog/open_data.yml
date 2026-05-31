@@ -660,6 +660,116 @@ datasets:
     manifest_path: inpe/bdqueimadas/focos_br_ref/manifest.json
     source_url: "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/anual/Brasil_sat_ref/"
 
+  - id: inpe_bdqueimadas_focos_anual_ams_sat_ref
+    category_title: "Meio ambiente"
+    subcategory_title: "Queimadas"
+    source_id: inpe
+    source_title: INPE
+    slug: inpe-bdqueimadas-focos-anual-ams-sat-ref
+    title: "Focos de Queimadas (America do Sul - Satelite de Referencia)"
+    description: "Dados anuais de focos de calor detectados pelo satelite de referencia na America do Sul, via BDQueimadas."
+    manifest_path: inpe/bdqueimadas/focos/anual/ams_sat_ref/manifest.json
+    source_url: "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/anual/AMS_sat_ref/"
+
+  - id: inpe_bdqueimadas_focos_anual_brasil_todos_sats
+    category_title: "Meio ambiente"
+    subcategory_title: "Queimadas"
+    source_id: inpe
+    source_title: INPE
+    slug: inpe-bdqueimadas-focos-anual-brasil-todos-sats
+    title: "Focos de Queimadas (Brasil - Todos os Satelites)"
+    description: "Dados anuais de focos de calor do Brasil com todos os satelites publicados pelo BDQueimadas."
+    manifest_path: inpe/bdqueimadas/focos/anual/brasil_todos_sats/manifest.json
+    source_url: "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/anual/Brasil_todos_sats/"
+
+  - id: inpe_bdqueimadas_focos_anual_estados_sat_ref
+    category_title: "Meio ambiente"
+    subcategory_title: "Queimadas"
+    source_id: inpe
+    source_title: INPE
+    slug: inpe-bdqueimadas-focos-anual-estados-sat-ref
+    title: "Focos de Queimadas (Estados - Satelite de Referencia)"
+    description: "Dados anuais de focos de calor por unidade da federacao brasileira no satelite de referencia."
+    manifest_path: inpe/bdqueimadas/focos/anual/estados_sat_ref/manifest.json
+    source_url: "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/anual/EstadosBr_sat_ref/"
+
+  - id: inpe_bdqueimadas_focos_mensal_brasil
+    category_title: "Meio ambiente"
+    subcategory_title: "Queimadas"
+    source_id: inpe
+    source_title: INPE
+    slug: inpe-bdqueimadas-focos-mensal-brasil
+    title: "Focos de Queimadas (Mensal - Brasil)"
+    description: "Arquivos mensais de focos de calor do Brasil publicados pelo BDQueimadas."
+    manifest_path: inpe/bdqueimadas/focos/mensal/brasil/manifest.json
+    source_url: "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/mensal/Brasil/"
+
+  - id: inpe_bdqueimadas_focos_mensal_america_sul
+    category_title: "Meio ambiente"
+    subcategory_title: "Queimadas"
+    source_id: inpe
+    source_title: INPE
+    slug: inpe-bdqueimadas-focos-mensal-america-sul
+    title: "Focos de Queimadas (Mensal - America do Sul)"
+    description: "Arquivos mensais de focos de calor da America do Sul publicados pelo BDQueimadas."
+    manifest_path: inpe/bdqueimadas/focos/mensal/america_sul/manifest.json
+    source_url: "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/mensal/America_Sul/"
+
+  - id: inpe_bdqueimadas_focos_diario_brasil
+    category_title: "Meio ambiente"
+    subcategory_title: "Queimadas"
+    source_id: inpe
+    source_title: INPE
+    slug: inpe-bdqueimadas-focos-diario-brasil
+    title: "Focos de Queimadas (Diario - Brasil)"
+    description: "Arquivos diarios de focos de calor do Brasil publicados pelo BDQueimadas."
+    manifest_path: inpe/bdqueimadas/focos/diario/brasil/manifest.json
+    source_url: "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/diario/Brasil/"
+
+  - id: inpe_bdqueimadas_focos_diario_america_sul
+    category_title: "Meio ambiente"
+    subcategory_title: "Queimadas"
+    source_id: inpe
+    source_title: INPE
+    slug: inpe-bdqueimadas-focos-diario-america-sul
+    title: "Focos de Queimadas (Diario - America do Sul)"
+    description: "Arquivos diarios de focos de calor da America do Sul publicados pelo BDQueimadas."
+    manifest_path: inpe/bdqueimadas/focos/diario/america_sul/manifest.json
+    source_url: "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/diario/America_Sul/"
+
+  - id: inpe_bdqueimadas_focos_10min
+    category_title: "Meio ambiente"
+    subcategory_title: "Queimadas"
+    source_id: inpe
+    source_title: INPE
+    slug: inpe-bdqueimadas-focos-10min
+    title: "Focos de Queimadas (10 Minutos)"
+    description: "Arquivos operacionais de focos de calor publicados a cada 10 minutos pelo BDQueimadas."
+    manifest_path: inpe/bdqueimadas/focos/10min/manifest.json
+    source_url: "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/10min/"
+
+  - id: inpe_bdqueimadas_focos_documentos
+    category_title: "Meio ambiente"
+    subcategory_title: "Queimadas"
+    source_id: inpe
+    source_title: INPE
+    slug: inpe-bdqueimadas-focos-documentos
+    title: "Focos de Queimadas (Documentos)"
+    description: "Documentos oficiais de curadoria, governanca e processo operacional dos dados de focos de fogo ativo."
+    manifest_path: inpe/bdqueimadas/focos/documentos/manifest.json
+    source_url: "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/documentos/"
+
+  - id: inpe_bdqueimadas_focos_kml
+    category_title: "Meio ambiente"
+    subcategory_title: "Queimadas"
+    source_id: inpe
+    source_title: INPE
+    slug: inpe-bdqueimadas-focos-kml
+    title: "Focos de Queimadas (KML)"
+    description: "Arquivos KML e TXT auxiliares de focos de calor publicados sob a raiz KML do BDQueimadas."
+    manifest_path: inpe/bdqueimadas/focos/kml/manifest.json
+    source_url: "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/kml/"
+
   - id: inpe_bdqueimadas_boletins_integrados
     category_title: "Meio ambiente"
     subcategory_title: "Queimadas"

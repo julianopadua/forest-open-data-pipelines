@@ -1,0 +1,6 @@
+id: inpe_bdqueimadas_focos_anual_brasil_todos_sats
+title: "INPE - BDQueimadas - Focos Brasil (Todos os Satelites)"
+source_url: "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/anual/Brasil_todos_sats/"
+bucket_prefix: inpe/bdqueimadas/focos/anual/brasil_todos_sats
+period_strategy: annual
+notes: "Arquivos anuais de focos de calor do Brasil com todos os satelites publicados no COIDS."

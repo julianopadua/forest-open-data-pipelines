@@ -1,0 +1,8 @@
+id: inpe_bdqueimadas_focos_kml
+title: "INPE - BDQueimadas - Focos KML"
+source_url: "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/kml/"
+bucket_prefix: inpe/bdqueimadas/focos/kml
+period_strategy: modified_or_name
+recursive: true
+max_depth: 3
+notes: "Arquivos KML e TXT auxiliares de focos de calor publicados sob a raiz KML do Dataserver COIDS."

@@ -1,0 +1,6 @@
+id: inpe_bdqueimadas_focos_diario_america_sul
+title: "INPE - BDQueimadas - Focos Diarios America do Sul"
+source_url: "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/diario/America_Sul/"
+bucket_prefix: inpe/bdqueimadas/focos/diario/america_sul
+period_strategy: daily
+notes: "Arquivos diarios de focos de calor da America do Sul publicados no Dataserver COIDS."

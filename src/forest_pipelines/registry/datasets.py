@@ -10,6 +10,7 @@ from forest_pipelines.datasets.inpe import (
     area_queimada_focos1km,
     bdqueimadas_boletins_integrados,
     bdqueimadas_focos,
+    bdqueimadas_focos_coids,
     bdqueimadas_painel_fogo,
 )
 from forest_pipelines.datasets.inmet import dados_historicos
@@ -86,6 +87,16 @@ RUNNERS: dict[str, DatasetRunner] = {
 
     #inpe datasets
     "inpe_bdqueimadas_focos": bdqueimadas_focos.sync,
+    "inpe_bdqueimadas_focos_anual_ams_sat_ref": bdqueimadas_focos_coids.make_sync("bdqueimadas_focos_anual_ams_sat_ref"),
+    "inpe_bdqueimadas_focos_anual_brasil_todos_sats": bdqueimadas_focos_coids.make_sync("bdqueimadas_focos_anual_brasil_todos_sats"),
+    "inpe_bdqueimadas_focos_anual_estados_sat_ref": bdqueimadas_focos_coids.make_sync("bdqueimadas_focos_anual_estados_sat_ref"),
+    "inpe_bdqueimadas_focos_mensal_brasil": bdqueimadas_focos_coids.make_sync("bdqueimadas_focos_mensal_brasil"),
+    "inpe_bdqueimadas_focos_mensal_america_sul": bdqueimadas_focos_coids.make_sync("bdqueimadas_focos_mensal_america_sul"),
+    "inpe_bdqueimadas_focos_diario_brasil": bdqueimadas_focos_coids.make_sync("bdqueimadas_focos_diario_brasil"),
+    "inpe_bdqueimadas_focos_diario_america_sul": bdqueimadas_focos_coids.make_sync("bdqueimadas_focos_diario_america_sul"),
+    "inpe_bdqueimadas_focos_10min": bdqueimadas_focos_coids.make_sync("bdqueimadas_focos_10min"),
+    "inpe_bdqueimadas_focos_documentos": bdqueimadas_focos_coids.make_sync("bdqueimadas_focos_documentos"),
+    "inpe_bdqueimadas_focos_kml": bdqueimadas_focos_coids.make_sync("bdqueimadas_focos_kml"),
     "inpe_bdqueimadas_boletins_integrados": bdqueimadas_boletins_integrados.sync,
     "inpe_bdqueimadas_painel_fogo": bdqueimadas_painel_fogo.sync,
     "inpe_area_queimada_focos1km": area_queimada_focos1km.sync,

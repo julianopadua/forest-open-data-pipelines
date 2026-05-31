@@ -1,0 +1,6 @@
+id: inpe_bdqueimadas_focos_10min
+title: "INPE - BDQueimadas - Focos a Cada 10 Minutos"
+source_url: "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/10min/"
+bucket_prefix: inpe/bdqueimadas/focos/10min
+period_strategy: ten_min
+notes: "Arquivos operacionais de focos de calor publicados a cada 10 minutos no Dataserver COIDS."

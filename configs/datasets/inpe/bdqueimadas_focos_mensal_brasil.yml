@@ -1,0 +1,6 @@
+id: inpe_bdqueimadas_focos_mensal_brasil
+title: "INPE - BDQueimadas - Focos Mensais Brasil"
+source_url: "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/mensal/Brasil/"
+bucket_prefix: inpe/bdqueimadas/focos/mensal/brasil
+period_strategy: monthly
+notes: "Arquivos mensais de focos de calor do Brasil publicados no Dataserver COIDS."

@@ -1,0 +1,8 @@
+id: inpe_bdqueimadas_focos_anual_estados_sat_ref
+title: "INPE - BDQueimadas - Focos Estados Brasil (Satelite de Referencia)"
+source_url: "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/anual/EstadosBr_sat_ref/"
+bucket_prefix: inpe/bdqueimadas/focos/anual/estados_sat_ref
+period_strategy: annual_state
+recursive: true
+max_depth: 2
+notes: "Arquivos anuais por unidade da federacao brasileira no satelite de referencia."

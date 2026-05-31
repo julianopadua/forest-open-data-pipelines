@@ -1,0 +1,6 @@
+id: inpe_bdqueimadas_focos_mensal_america_sul
+title: "INPE - BDQueimadas - Focos Mensais America do Sul"
+source_url: "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/mensal/America_Sul/"
+bucket_prefix: inpe/bdqueimadas/focos/mensal/america_sul
+period_strategy: monthly
+notes: "Arquivos mensais de focos de calor da America do Sul publicados no Dataserver COIDS."

@@ -1,0 +1,6 @@
+id: inpe_bdqueimadas_focos_anual_ams_sat_ref
+title: "INPE - BDQueimadas - Focos America do Sul (Satelite de Referencia)"
+source_url: "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/anual/AMS_sat_ref/"
+bucket_prefix: inpe/bdqueimadas/focos/anual/ams_sat_ref
+period_strategy: annual
+notes: "Arquivos anuais de focos de calor para America do Sul no satelite de referencia."

@@ -1,0 +1,7 @@
+id: inpe_bdqueimadas_focos_documentos
+title: "INPE - BDQueimadas - Documentos de Focos de Fogo Ativo"
+source_url: "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/documentos/"
+bucket_prefix: inpe/bdqueimadas/focos/documentos
+period_strategy: modified_or_name
+kind: metadata
+notes: "Documentos oficiais de curadoria, governanca e processo operacional dos dados de focos de fogo ativo."

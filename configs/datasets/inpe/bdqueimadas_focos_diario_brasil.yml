@@ -1,0 +1,6 @@
+id: inpe_bdqueimadas_focos_diario_brasil
+title: "INPE - BDQueimadas - Focos Diarios Brasil"
+source_url: "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/diario/Brasil/"
+bucket_prefix: inpe/bdqueimadas/focos/diario/brasil
+period_strategy: daily
+notes: "Arquivos diarios de focos de calor do Brasil publicados no Dataserver COIDS."
