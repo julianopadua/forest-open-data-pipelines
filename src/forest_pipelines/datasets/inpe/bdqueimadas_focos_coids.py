@@ -20,6 +20,19 @@ RE_10MIN = re.compile(
 )
 RE_STATE_SEGMENT = re.compile(r"/EstadosBr_sat_ref/(?P<uf>[A-Z]{2})/", re.IGNORECASE)
 
+COIDS_DATASET_IDS: tuple[str, ...] = (
+    "inpe_bdqueimadas_focos_anual_ams_sat_ref",
+    "inpe_bdqueimadas_focos_anual_brasil_todos_sats",
+    "inpe_bdqueimadas_focos_anual_estados_sat_ref",
+    "inpe_bdqueimadas_focos_mensal_brasil",
+    "inpe_bdqueimadas_focos_mensal_america_sul",
+    "inpe_bdqueimadas_focos_diario_brasil",
+    "inpe_bdqueimadas_focos_diario_america_sul",
+    "inpe_bdqueimadas_focos_10min",
+    "inpe_bdqueimadas_focos_documentos",
+    "inpe_bdqueimadas_focos_kml",
+)
+
 
 @dataclass(frozen=True)
 class DatasetCfg:
