@@ -224,6 +224,52 @@
       };
     }
 
+    const PRESET_MANIFESTS = {
+      bdqueimadas: "/examples/bdqueimadas-social.manifest.json",
+      "bdqueimadas-diario": "/examples/bdqueimadas-daily-social.manifest.json",
+      "bdqueimadas-daily": "/examples/bdqueimadas-daily-social.manifest.json",
+    };
+
+    function bdqueimadasDailyDeck(data) {
+      const copy = JSON.parse(JSON.stringify(data));
+      const slides = Array.isArray(copy.slides) ? copy.slides : [];
+      const hasCover = slides.some((slide) => slide.type === "cover");
+      const hasCta = slides.some((slide) => slide.type === "cta");
+      const cover = {
+        type: "cover",
+        slots: {
+          series_label: "Monitor Diario",
+          title: "Focos de calor no Brasil",
+          summary: "Ultimos 7 dias com dados diarios do INPE BDQueimadas, filtrados pelo satelite AQUA_M-T.",
+        },
+        slotStyles: {
+          title: { fontSize: 118, lineHeight: 0.98 },
+        },
+      };
+      const cta = {
+        type: "cta",
+        slots: {
+          cta_kicker: "Fonte aberta",
+          cta_headline: "INPE BDQueimadas",
+          cta_subline: "Acompanhe dados abertos, graficos e analises reprodutiveis no Instituto Forest.",
+          cta_url: "institutoforest.org",
+        },
+      };
+      copy.slides = [
+        ...(hasCover ? [] : [cover]),
+        ...slides,
+        ...(hasCta ? [] : [cta]),
+      ];
+      return copy;
+    }
+
+    function applyPresetDeck(preset, data) {
+      if (preset === "bdqueimadas-diario" || preset === "bdqueimadas-daily") {
+        return bdqueimadasDailyDeck(data);
+      }
+      return data;
+    }
+
     let previewIndex = 0;
 
     const DEFAULT_EXAMPLE = {
@@ -813,17 +859,18 @@
       let chromeSizes = { ...(DEFAULT_EXAMPLE.sizes || DEFAULT_CHROME) };
       let source = DEFAULT_EXAMPLE;
       const params = new URLSearchParams(window.location.search);
-      if (params.get("preset") === "bdqueimadas") {
+      const preset = params.get("preset");
+      if (PRESET_MANIFESTS[preset]) {
         try {
-          const r = await fetch("/examples/bdqueimadas-social.manifest.json");
+          const r = await fetch(PRESET_MANIFESTS[preset]);
           if (!r.ok) throw new Error(r.statusText);
-          const data = await r.json();
+          const data = applyPresetDeck(preset, await r.json());
           runId = data.runId;
           slides = data.slides;
           chromeSizes = { ...DEFAULT_CHROME, ...(data.sizes || {}) };
           source = data;
         } catch (e) {
-          console.warn("Preset bdqueimadas indisponível, usando exemplo padrão.", e);
+          console.warn("Preset indisponível, usando exemplo padrão.", e);
         }
       }
       const globalSlots = extractGlobalSlotsFromManifest(source);

@@ -88,6 +88,55 @@ const state = {
   selectedElementId: null,
 };
 
+const PRESET_MANIFESTS = {
+  bdqueimadas: "/examples/bdqueimadas-social.manifest.json",
+  "bdqueimadas-diario": "/examples/bdqueimadas-daily-social.manifest.json",
+  "bdqueimadas-daily": "/examples/bdqueimadas-daily-social.manifest.json",
+  "research-trends": "/examples/research-trends.manifest.json",
+  "anp-producao-petroleo-gas": "/examples/anp-producao-petroleo-gas.manifest.json",
+  "boas-vindas": "/examples/forest-boas-vindas.manifest.json",
+};
+
+function bdqueimadasDailyDeck(data) {
+  const copy = JSON.parse(JSON.stringify(data));
+  const slides = Array.isArray(copy.slides) ? copy.slides : [];
+  const hasCover = slides.some((slide) => slide.type === "cover");
+  const hasCta = slides.some((slide) => slide.type === "cta");
+  const cover = {
+    type: "cover",
+    slots: {
+      series_label: "Monitor Diario",
+      title: "Focos de calor no Brasil",
+      summary: "Ultimos 7 dias com dados diarios do INPE BDQueimadas, filtrados pelo satelite AQUA_M-T.",
+    },
+    slotStyles: {
+      title: { fontSize: 118, lineHeight: 0.98 },
+    },
+  };
+  const cta = {
+    type: "cta",
+    slots: {
+      cta_kicker: "Fonte aberta",
+      cta_headline: "INPE BDQueimadas",
+      cta_subline: "Acompanhe dados abertos, graficos e analises reprodutiveis no Instituto Forest.",
+      cta_url: "institutoforest.org",
+    },
+  };
+  copy.slides = [
+    ...(hasCover ? [] : [cover]),
+    ...slides,
+    ...(hasCta ? [] : [cta]),
+  ];
+  return copy;
+}
+
+function applyPresetDeck(preset, data) {
+  if (preset === "bdqueimadas-diario" || preset === "bdqueimadas-daily") {
+    return bdqueimadasDailyDeck(data);
+  }
+  return data;
+}
+
 let moveable = null;
 
 // ---------- Undo / redo history ----------
@@ -1088,6 +1137,30 @@ function normalizeLoadedManifest(data) {
   throw new Error("Formato de manifest não reconhecido.");
 }
 
+function applyLoadedManifest(data) {
+  const loaded = normalizeLoadedManifest(data);
+  state.globalSlots = loaded.globalSlots;
+  state.sizes = loaded.sizes;
+  state.slides = loaded.slides;
+  state.selectedSlideIdx = 0;
+  state.selectedElementId = null;
+  globalTopic.value = state.globalSlots.topic_tag;
+  globalPubAt.value = state.globalSlots.published_at;
+  chromeInputs.forEach(([id, key]) => { document.getElementById(id).value = state.sizes[key]; });
+}
+
+async function loadPresetFromUrl() {
+  const preset = params.get("preset");
+  if (!PRESET_MANIFESTS[preset]) return;
+  const response = await fetch(PRESET_MANIFESTS[preset]);
+  if (!response.ok) throw new Error(response.statusText);
+  const data = applyPresetDeck(preset, await response.json());
+  if (data.theme && data.theme !== state.theme) {
+    throw new Error(`Manifest é do tema "${data.theme}", abra o studio nesse tema (?theme=${data.theme}).`);
+  }
+  applyLoadedManifest(data);
+}
+
 // ---------- Save / Load manifest ----------
 document.getElementById("btnSave").onclick = () => {
   const data = JSON.stringify({
@@ -1117,15 +1190,7 @@ loadFile.addEventListener("change", (e) => {
         return;
       }
       pushHistory({ force: true });
-      const loaded = normalizeLoadedManifest(data);
-      state.globalSlots = loaded.globalSlots;
-      state.sizes = loaded.sizes;
-      state.slides = loaded.slides;
-      state.selectedSlideIdx = 0;
-      state.selectedElementId = null;
-      globalTopic.value = state.globalSlots.topic_tag;
-      globalPubAt.value = state.globalSlots.published_at;
-      chromeInputs.forEach(([id, key]) => { document.getElementById(id).value = state.sizes[key]; });
+      applyLoadedManifest(data);
       renderAll();
     } catch (err) {
       alert("Manifest inválido: " + err.message);
@@ -1204,4 +1269,8 @@ function renderAll() {
   renderActiveSlide();
   renderPropsPanel();
 }
-renderAll();
+loadPresetFromUrl()
+  .catch((err) => {
+    console.warn("Preset indisponível, usando slide vazio.", err);
+  })
+  .finally(() => renderAll());
