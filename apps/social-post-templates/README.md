@@ -27,6 +27,35 @@ openAbrir no browser:
 | `http://localhost:5173/navy/composer.html?preset=anp-producao-petroleo-gas` | Compositor com deck ANP produção pré-carregado                |
 
 
+## Comandos Make rodáveis
+
+Rode estes alvos a partir da raiz de `forest-open-data-pipelines`, com a venv criada por `make dev` ou `pip install -e .`.
+
+| Alvo | O que gera | LLM |
+| ---- | ---------- | --- |
+| `make bdqueimadas-social-assets` | Carrossel mensal BDQueimadas, charts, specs e manifest vermelho | Não |
+| `make bdqueimadas-social-full` | Carrossel mensal BDQueimadas com legenda e textos por slide | Sim, requer `GROQ_API_KEY` |
+| `make bdqueimadas-daily-social-assets` | Carrossel diário BDQueimadas, últimos dias disponíveis, charts e manifest vermelho | Não |
+| `make bdqueimadas-daily-social-full` | Carrossel diário BDQueimadas com textos Groq por slide | Sim, requer `GROQ_API_KEY` |
+| `make anp-producao-social-assets` | Carrossel ANP produção, charts e manifest azul marinho | Não |
+| `make anp-producao-social-full` | Carrossel ANP produção com textos Groq por slide | Sim, requer `GROQ_API_KEY` |
+| `make research-social-assets` | Carrossel Research Trends histórico, tema branco | Não |
+| `make research-social-recent` | Carrossel Research Trends recente, janela de 30 dias | Não |
+| `make research-social-weekly` | Carrossel Research Trends recente, janela de 7 dias | Não |
+| `make research-social-refresh` | Research Trends histórico com cache do tópico atual limpo | Não |
+
+Comandos auxiliares úteis:
+
+| Alvo | Uso |
+| ---- | --- |
+| `make check-env` | Valida variáveis de ambiente de Storage e mostra se `GROQ_API_KEY` está presente |
+| `make freshness-watch` | Observa sinais de atualização de fontes usadas na cadência social |
+| `make freshness-report` | Gera relatório Markdown de cadência social |
+| `make freshness-classify` | Classifica presets sociais a partir do histórico de freshness |
+
+Preview depois de gerar manifests: `cd apps/social-post-templates && npm run dev`.
+
+
 ### Temas
 
 
@@ -338,6 +367,44 @@ Isso gera:
 Depois: `npm run dev` neste app; export Playwright opcional: `npm run export:manifest -- examples/bdqueimadas-social.manifest.json`.
 
 A legenda para colar no Instagram está em `social_llm.json` → `post_description` quando você roda o pipeline com `--llm` e inclui `post_description` em `--llm-components`.
+
+## Pipeline BDQueimadas diário (carrossel 6 slides, tema vermelho)
+
+Deck automático diário a partir dos CSVs oficiais do INPE BDQueimadas em `https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/diario/Brasil/`. O recorte usa o satélite de referência `AQUA_M-T` e baixa novamente os CSVs da janela selecionada em cada execução para evitar cache local com arquivos ainda parciais.
+
+Sem LLM:
+
+```bash
+make bdqueimadas-daily-social-assets
+```
+
+Com textos Groq por slide:
+
+```bash
+make bdqueimadas-daily-social-full
+```
+
+Equivalente CLI:
+
+```bash
+python -m forest_pipelines.social.bdqueimadas_daily --data-dir data/inpe_bdqueimadas_daily --llm
+```
+
+Opções úteis: `--as-of YYYY-MM-DD` fixa a data final da janela; `--days 7` muda o tamanho da janela; `--out-social-llm` altera o JSON lateral com payload, textos, modelo e erro de LLM.
+
+Saídas principais:
+
+- `public/generated/bdqueimadas-daily-7d.png`
+- `public/generated/bdqueimadas-daily-states.png`
+- `public/generated/bdqueimadas-daily-biomes.png`
+- `public/generated/bdqueimadas-daily-map.png`
+- `public/generated/bdqueimadas-daily-social_llm.json`
+- `examples/bdqueimadas-daily-social.manifest.json`
+- `public/examples/bdqueimadas-daily-social.manifest.json`
+
+O manifest diário agora inclui capa, quatro slides `body_chart` e CTA final. Os textos de slide vêm do JSON LLM quando `--llm` está ativo; sem LLM, entram textos determinísticos de fallback. O payload enviado à LLM contém contagens por dia, dia com mais focos, dia com menos focos, ranking de estados, ranking de biomas e região brasileira com maior concentração de focos por agregação estadual.
+
+Preview: `cd apps/social-post-templates && npm run dev`, depois abrir `http://localhost:5173/red/composer.html?preset=bdqueimadas-diario`.
 
 ## Pipeline Research Trends (carrossel sobre pesquisa, tema branco)
 

@@ -6,19 +6,11 @@
     "schema": "bdqueimadas_daily_v1",
     "reference_satellite": "AQUA_M-T",
     "window": {
-      "start_date": "2026-05-25",
-      "end_date": "2026-05-31",
+      "start_date": "2026-05-27",
+      "end_date": "2026-06-02",
       "days": 7
     },
     "source_urls": [
-      {
-        "date": "2026-05-25",
-        "url": "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/diario/Brasil/focos_diario_br_20260525.csv"
-      },
-      {
-        "date": "2026-05-26",
-        "url": "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/diario/Brasil/focos_diario_br_20260526.csv"
-      },
       {
         "date": "2026-05-27",
         "url": "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/diario/Brasil/focos_diario_br_20260527.csv"
@@ -38,20 +30,20 @@
       {
         "date": "2026-05-31",
         "url": "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/diario/Brasil/focos_diario_br_20260531.csv"
+      },
+      {
+        "date": "2026-06-01",
+        "url": "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/diario/Brasil/focos_diario_br_20260601.csv"
+      },
+      {
+        "date": "2026-06-02",
+        "url": "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/diario/Brasil/focos_diario_br_20260602.csv"
       }
     ],
     "metrics": {
-      "total_focos_reference_satellite": 1089,
-      "total_rows_all_satellites": 24537,
+      "total_focos_reference_satellite": 897,
+      "total_rows_all_satellites": 17473,
       "daily_counts": [
-        {
-          "date": "2026-05-25",
-          "value": 149
-        },
-        {
-          "date": "2026-05-26",
-          "value": 268
-        },
         {
           "date": "2026-05-27",
           "value": 298
@@ -71,46 +63,54 @@
         {
           "date": "2026-05-31",
           "value": 0
+        },
+        {
+          "date": "2026-06-01",
+          "value": 225
+        },
+        {
+          "date": "2026-06-02",
+          "value": 0
         }
       ],
       "top_states": [
         {
           "label": "TOCANTINS",
-          "value": 331
+          "value": 309
         },
         {
           "label": "MATO GROSSO",
-          "value": 284
+          "value": 196
         },
         {
           "label": "MARANHÃO",
-          "value": 109
+          "value": 89
         },
         {
           "label": "PARÁ",
-          "value": 87
+          "value": 81
         },
         {
           "label": "Outros",
-          "value": 278
+          "value": 222
         }
       ],
       "top_biomes": [
         {
           "label": "Cerrado",
-          "value": 645
+          "value": 580
         },
         {
           "label": "Amazônia",
-          "value": 327
+          "value": 240
         },
         {
           "label": "Caatinga",
-          "value": 79
+          "value": 37
         },
         {
           "label": "Mata Atlântica",
-          "value": 30
+          "value": 32
         },
         {
           "label": "Outros",
@@ -126,7 +126,7 @@
     "warnings": []
   },
   "texts": {
-    "instagram_caption": "Entre 2026-05-25 e 2026-05-31. o satelite AQUA_M-T registrou 1.089 focos de calor no Brasil.",
+    "instagram_caption": "📊 Focos de calor no Brasil (27/05 a 02/06/2026) – Dados do satélite AQUA_M‑T. Total de 897 focos detectados. Veja a distribuição por dia, estado e bioma, e o mapa de ocorrência.",
     "slides": {
       "daily": "A janela de sete dias mostra a distribuicao recente dos focos no Brasil.",
       "states": "O ranking estadual concentra os quatro maiores totais e agrupa os demais em Outros.",
@@ -137,7 +137,7 @@
       "Texto deterministico gerado sem LLM ou usado como fallback."
     ]
   },
-  "llm_model": null,
+  "llm_model": "openai/gpt-oss-20b",
   "llm_error": null,
   "charts": {
     "daily": "/Users/julianopadua/Projects/forest-project/forest-open-data-pipelines/apps/social-post-templates/public/generated/bdqueimadas-daily-7d.png",

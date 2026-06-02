@@ -3,9 +3,9 @@
   "runId": "bdqueimadas-daily-social",
   "globalSlots": {
     "topic_tag": "Queimadas & Focos",
-    "published_at": "2026-05-25 a 2026-05-31"
+    "published_at": "2026-05-27 a 2026-06-02"
   },
-  "instagram_caption_draft": "Entre 2026-05-25 e 2026-05-31. o satelite AQUA_M-T registrou 1.089 focos de calor no Brasil.",
+  "instagram_caption_draft": "📊 Focos de calor no Brasil (27/05 a 02/06/2026) – Dados do satélite AQUA_M‑T. Total de 897 focos detectados. Veja a distribuição por dia, estado e bioma, e o mapa de ocorrência.",
   "slides": [
     {
       "type": "body_chart",

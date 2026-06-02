@@ -5,6 +5,7 @@ import json
 from dataclasses import dataclass
 from datetime import date, datetime
 from pathlib import Path
+from time import perf_counter
 from typing import Any
 
 import pandas as pd
@@ -29,6 +30,65 @@ IBGE_BRAZIL_GEOJSON_URL = (
     "?formato=application/vnd.geo+json&qualidade=minima"
 )
 REFERENCE_SATELLITE = "AQUA_M-T"
+SOURCE_LABEL = "Fonte: INPE BDQueimadas"
+STATE_REGION_BY_NAME = {
+    "ACRE": "Norte",
+    "ALAGOAS": "Nordeste",
+    "AMAPA": "Norte",
+    "AMAZONAS": "Norte",
+    "BAHIA": "Nordeste",
+    "CEARA": "Nordeste",
+    "DISTRITO FEDERAL": "Centro-Oeste",
+    "ESPIRITO SANTO": "Sudeste",
+    "GOIAS": "Centro-Oeste",
+    "MARANHAO": "Nordeste",
+    "MATO GROSSO": "Centro-Oeste",
+    "MATO GROSSO DO SUL": "Centro-Oeste",
+    "MINAS GERAIS": "Sudeste",
+    "PARA": "Norte",
+    "PARAIBA": "Nordeste",
+    "PARANA": "Sul",
+    "PERNAMBUCO": "Nordeste",
+    "PIAUI": "Nordeste",
+    "RIO DE JANEIRO": "Sudeste",
+    "RIO GRANDE DO NORTE": "Nordeste",
+    "RIO GRANDE DO SUL": "Sul",
+    "RONDONIA": "Norte",
+    "RORAIMA": "Norte",
+    "SANTA CATARINA": "Sul",
+    "SAO PAULO": "Sudeste",
+    "SERGIPE": "Nordeste",
+    "TOCANTINS": "Norte",
+}
+STATE_REGION_BY_UF = {
+    "AC": "Norte",
+    "AL": "Nordeste",
+    "AP": "Norte",
+    "AM": "Norte",
+    "BA": "Nordeste",
+    "CE": "Nordeste",
+    "DF": "Centro-Oeste",
+    "ES": "Sudeste",
+    "GO": "Centro-Oeste",
+    "MA": "Nordeste",
+    "MT": "Centro-Oeste",
+    "MS": "Centro-Oeste",
+    "MG": "Sudeste",
+    "PA": "Norte",
+    "PB": "Nordeste",
+    "PR": "Sul",
+    "PE": "Nordeste",
+    "PI": "Nordeste",
+    "RJ": "Sudeste",
+    "RN": "Nordeste",
+    "RS": "Sul",
+    "RO": "Norte",
+    "RR": "Norte",
+    "SC": "Sul",
+    "SP": "Sudeste",
+    "SE": "Nordeste",
+    "TO": "Norte",
+}
 EXPECTED_COLUMNS = (
     "id",
     "lat",
@@ -68,6 +128,7 @@ def run(
     app_config: Path = DEFAULT_APP_CONFIG,
     out_social_llm: Path = DEFAULT_LLM_JSON,
 ) -> dict[str, Any]:
+    started_at = perf_counter()
     resources = select_daily_window(
         extract_daily_links(source_url),
         as_of=as_of,
@@ -76,7 +137,10 @@ def run(
     if not resources:
         raise RuntimeError("Nenhum CSV diario encontrado para a janela solicitada.")
 
-    cached = [download_daily_resource(resource, data_dir / "raw") for resource in resources]
+    cached = [
+        download_daily_resource(resource, data_dir / "raw", refresh_existing=True)
+        for resource in resources
+    ]
     frames: list[pd.DataFrame] = []
     read_warnings: list[str] = []
     for resource, path in zip(resources, cached, strict=True):
@@ -95,6 +159,7 @@ def run(
     daily_counts = build_daily_counts(filtered, resources)
     state_rank = top_n_with_other(filtered, "estado", top_n=4)
     biome_rank = top_n_with_other(filtered, "bioma", top_n=4)
+    region_rank = build_region_rank(filtered)
 
     charts = {
         "daily": out_dir / "bdqueimadas-daily-7d.png",
@@ -134,6 +199,7 @@ def run(
         daily_counts=daily_counts,
         state_rank=state_rank,
         biome_rank=biome_rank,
+        region_rank=region_rank,
         total_focos=int(len(filtered)),
         total_raw_rows=int(len(raw_df)),
         map_status=map_status,
@@ -150,6 +216,7 @@ def run(
         except Exception as exc:
             llm_error = str(exc)
 
+    generated_in_seconds = max(1, int(round(perf_counter() - started_at)))
     sidecar = {
         "schema_version": 1,
         "topic": "bdqueimadas_daily",
@@ -158,6 +225,7 @@ def run(
         "texts": texts,
         "llm_model": llm_model,
         "llm_error": llm_error,
+        "generated_in_seconds": generated_in_seconds,
         "charts": {key: str(path.resolve()) for key, path in charts.items()},
     }
     out_social_llm.parent.mkdir(parents=True, exist_ok=True)
@@ -168,6 +236,7 @@ def run(
         charts=charts,
         texts=texts,
         payload=payload,
+        generated_in_seconds=generated_in_seconds,
     )
     return sidecar
 
@@ -201,14 +270,24 @@ def select_daily_window(
     return candidates[-days:]
 
 
-def download_daily_resource(resource: DailyResource, cache_dir: Path) -> Path:
+def download_daily_resource(
+    resource: DailyResource,
+    cache_dir: Path,
+    *,
+    refresh_existing: bool = False,
+) -> Path:
     cache_dir.mkdir(parents=True, exist_ok=True)
     target = cache_dir / resource.filename
-    if target.exists():
+    if target.exists() and not refresh_existing:
         return target
-    response = requests.get(resource.url, timeout=180)
-    response.raise_for_status()
-    target.write_bytes(response.content)
+    try:
+        response = requests.get(resource.url, timeout=180)
+        response.raise_for_status()
+        target.write_bytes(response.content)
+    except Exception:
+        if target.exists():
+            return target
+        raise
     return target
 
 
@@ -252,6 +331,80 @@ def top_n_with_other(frame: pd.DataFrame, column: str, *, top_n: int) -> list[di
     return rows
 
 
+def build_region_rank(frame: pd.DataFrame) -> list[dict[str, Any]]:
+    if frame.empty or "estado" not in frame.columns:
+        return [{"label": "Nao identificada", "value": 0}]
+    regions = frame["estado"].fillna("").astype(str).map(region_for_state)
+    counts = regions.value_counts()
+    return [{"label": str(label), "value": int(value)} for label, value in counts.items()]
+
+
+def region_for_state(value: str) -> str:
+    normalized = normalize_state_name(value)
+    if not normalized:
+        return "Nao identificada"
+    return STATE_REGION_BY_UF.get(normalized) or STATE_REGION_BY_NAME.get(normalized, "Nao identificada")
+
+
+def normalize_state_name(value: str) -> str:
+    import unicodedata
+
+    text = unicodedata.normalize("NFKD", str(value))
+    text = "".join(ch for ch in text if not unicodedata.combining(ch))
+    return " ".join(text.upper().strip().split())
+
+
+def value_share(row: dict[str, Any] | None, total: int) -> float | None:
+    if not row or total <= 0:
+        return None
+    return round(100.0 * int(row.get("value", 0)) / total, 2)
+
+
+def build_payload_highlights(
+    *,
+    daily_counts: list[dict[str, Any]],
+    state_rank: list[dict[str, Any]],
+    biome_rank: list[dict[str, Any]],
+    region_rank: list[dict[str, Any]],
+    total_focos: int,
+) -> dict[str, Any]:
+    max_day = max(daily_counts, key=lambda row: int(row["value"])) if daily_counts else None
+    min_day = min(daily_counts, key=lambda row: int(row["value"])) if daily_counts else None
+    top_state = state_rank[0] if state_rank else None
+    top_biome = biome_rank[0] if biome_rank else None
+    top_region = region_rank[0] if region_rank else None
+    return {
+        "cover": {
+            "total_focos_reference_satellite": total_focos,
+            "days_observed": len(daily_counts),
+            "max_day": max_day,
+            "min_day": min_day,
+            "daily_counts": daily_counts,
+        },
+        "daily": {
+            "daily_counts": daily_counts,
+            "max_day": max_day,
+            "min_day": min_day,
+        },
+        "states": {
+            "top_states": state_rank,
+            "top_state": top_state,
+            "top_state_share_pct": value_share(top_state, total_focos),
+        },
+        "biomes": {
+            "top_biomes": biome_rank,
+            "top_biome": top_biome,
+            "top_biome_share_pct": value_share(top_biome, total_focos),
+        },
+        "map": {
+            "region_counts": region_rank,
+            "top_region_by_focus_count": top_region,
+            "top_region_share_pct": value_share(top_region, total_focos),
+            "aggregation_note": "Regiao agregada por estado. Nao e uma densidade por area.",
+        },
+    }
+
+
 def render_bar_chart(
     rows: list[dict[str, Any]],
     out_path: Path,
@@ -286,7 +439,8 @@ def render_bar_chart(
             color="white",
             fontsize=11,
         )
-    fig.tight_layout()
+    fig.text(0.99, 0.01, SOURCE_LABEL, ha="right", va="bottom", color="white", fontsize=10, alpha=0.82)
+    fig.tight_layout(rect=(0, 0.04, 1, 1))
     out_path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(out_path, transparent=True, bbox_inches="tight", pad_inches=0.12)
     plt.close(fig)
@@ -350,7 +504,8 @@ def render_density_map(
         fontsize=13,
         ha="left",
     )
-    fig.tight_layout()
+    fig.text(0.99, 0.01, SOURCE_LABEL, ha="right", va="bottom", color="white", fontsize=10, alpha=0.82)
+    fig.tight_layout(rect=(0, 0.04, 1, 1))
     out_path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(out_path, transparent=True, bbox_inches="tight", pad_inches=0.08)
     plt.close(fig)
@@ -406,6 +561,7 @@ def build_llm_payload(
     daily_counts: list[dict[str, Any]],
     state_rank: list[dict[str, Any]],
     biome_rank: list[dict[str, Any]],
+    region_rank: list[dict[str, Any]],
     total_focos: int,
     total_raw_rows: int,
     map_status: dict[str, Any],
@@ -426,7 +582,15 @@ def build_llm_payload(
             "daily_counts": daily_counts,
             "top_states": state_rank,
             "top_biomes": biome_rank,
+            "top_regions": region_rank,
         },
+        "slide_context": build_payload_highlights(
+            daily_counts=daily_counts,
+            state_rank=state_rank,
+            biome_rank=biome_rank,
+            region_rank=region_rank,
+            total_focos=total_focos,
+        ),
         "map_status": map_status,
         "warnings": warnings,
     }
@@ -442,6 +606,10 @@ def deterministic_texts(payload: dict[str, Any]) -> dict[str, Any]:
             f"{REFERENCE_SATELLITE} registrou {total:,} focos de calor no Brasil."
         ).replace(",", "."),
         "slides": {
+            "cover": (
+                f"No periodo, foram {total:,} focos no satelite {REFERENCE_SATELLITE}. "
+                "Use os proximos slides para ler dias, estados, biomas e concentracao regional."
+            ).replace(",", "."),
             "daily": "A janela de sete dias mostra a distribuicao recente dos focos no Brasil.",
             "states": "O ranking estadual concentra os quatro maiores totais e agrupa os demais em Outros.",
             "biomes": "O ranking por bioma segue o mesmo criterio, com foco na comparacao direta dos totais.",
@@ -459,12 +627,17 @@ def run_llm_texts(payload: dict[str, Any], *, app_config: Path):
     settings = load_settings(str(app_config))
     system_prompt = (
         "Voce e um analista de dados ambientais. Responda somente com JSON valido. "
-        "Use linguagem objetiva, sem afirmar causalidade e sem extrapolar os dados."
+        "Use linguagem objetiva, sem afirmar causalidade e sem extrapolar os dados. "
+        "Escreva textos curtos para caber em slides quadrados."
     )
     user_prompt = (
         "Crie textos para um carrossel diario sobre focos de calor no Brasil. "
         "Retorne as chaves instagram_caption, slides e comments. "
-        "slides deve conter daily, states, biomes e map. Contexto:\n"
+        "slides deve conter cover, daily, states, biomes e map. "
+        "Use slide_context.cover para a capa, slide_context.daily para o grafico diario, "
+        "slide_context.states para estados, slide_context.biomes para biomas e "
+        "slide_context.map para o mapa. Para o mapa, mencione a regiao com maior "
+        "concentracao de focos, sem chamar isso de densidade por area. Contexto:\n"
         + json.dumps(payload, ensure_ascii=False, indent=2)
     )
     return generate_json(
@@ -496,15 +669,28 @@ def write_manifest(
     charts: dict[str, Path],
     texts: dict[str, Any],
     payload: dict[str, Any],
+    generated_in_seconds: int,
 ) -> None:
     window = payload["window"]
     slides_text = texts.get("slides", {})
     slides = [
         {
+            "type": "cover",
+            "slots": {
+                "series_label": "Monitor Diario",
+                "title": "Focos de calor no Brasil",
+                "summary": slides_text.get("cover", ""),
+            },
+            "slotStyles": {
+                "title": {"fontSize": 118, "lineHeight": 0.98},
+            },
+        },
+        {
             "type": "body_chart",
             "slots": {
                 "caption": "Focos por dia",
                 "image_url": f"/generated/{charts['daily'].name}",
+                "source": SOURCE_LABEL,
                 "body_text": slides_text.get("daily", ""),
             },
         },
@@ -513,6 +699,7 @@ def write_manifest(
             "slots": {
                 "caption": "Estados com mais focos",
                 "image_url": f"/generated/{charts['states'].name}",
+                "source": SOURCE_LABEL,
                 "body_text": slides_text.get("states", ""),
             },
         },
@@ -521,6 +708,7 @@ def write_manifest(
             "slots": {
                 "caption": "Biomas com mais focos",
                 "image_url": f"/generated/{charts['biomes'].name}",
+                "source": SOURCE_LABEL,
                 "body_text": slides_text.get("biomes", ""),
             },
         },
@@ -529,7 +717,20 @@ def write_manifest(
             "slots": {
                 "caption": "Mapa de densidade",
                 "image_url": f"/generated/{charts['map'].name}",
+                "source": SOURCE_LABEL,
                 "body_text": slides_text.get("map", ""),
+            },
+        },
+        {
+            "type": "cta",
+            "slots": {
+                "cta_kicker": f"Esse post foi gerado em {generated_in_seconds} segundos",
+                "cta_headline": "Leia como apoio, nao como autoridade",
+                "cta_subline": (
+                    "A analise descritiva foi feita por IA a partir de dados abertos. "
+                    "Veja mais dados e analises em institutoforest.org."
+                ),
+                "cta_url": "institutoforest.org",
             },
         },
     ]

@@ -51,6 +51,23 @@ def test_top_n_with_other_groups_remainder() -> None:
     ]
 
 
+def test_build_region_rank_maps_states_to_regions() -> None:
+    frame = pd.DataFrame(
+        {
+            "estado": ["MATO GROSSO", "GOIAS", "SAO PAULO", "PARA", "XX"],
+        }
+    )
+
+    rows = pipeline.build_region_rank(frame)
+
+    assert rows == [
+        {"label": "Centro-Oeste", "value": 2},
+        {"label": "Sudeste", "value": 1},
+        {"label": "Norte", "value": 1},
+        {"label": "Nao identificada", "value": 1},
+    ]
+
+
 def test_build_llm_payload_contains_sources_and_rankings() -> None:
     resources = [
         pipeline.DailyResource(date(2026, 5, 30), "a.csv", "https://example.test/a.csv"),
@@ -62,6 +79,7 @@ def test_build_llm_payload_contains_sources_and_rankings() -> None:
         daily_counts=[{"date": "2026-05-30", "value": 2}, {"date": "2026-05-31", "value": 3}],
         state_rank=[{"label": "MT", "value": 3}, {"label": "Outros", "value": 2}],
         biome_rank=[{"label": "CERRADO", "value": 4}, {"label": "Outros", "value": 1}],
+        region_rank=[{"label": "Centro-Oeste", "value": 4}, {"label": "Norte", "value": 1}],
         total_focos=5,
         total_raw_rows=8,
         map_status={"geojson_ok": False},
@@ -72,6 +90,35 @@ def test_build_llm_payload_contains_sources_and_rankings() -> None:
     assert payload["window"]["start_date"] == "2026-05-30"
     assert payload["source_urls"][1]["url"] == "https://example.test/b.csv"
     assert payload["metrics"]["total_focos_reference_satellite"] == 5
+    assert payload["slide_context"]["daily"]["max_day"] == {"date": "2026-05-31", "value": 3}
+    assert payload["slide_context"]["daily"]["min_day"] == {"date": "2026-05-30", "value": 2}
+    assert payload["slide_context"]["states"]["top_state_share_pct"] == 60.0
+    assert payload["slide_context"]["biomes"]["top_biome_share_pct"] == 80.0
+    assert payload["slide_context"]["map"]["top_region_by_focus_count"] == {
+        "label": "Centro-Oeste",
+        "value": 4,
+    }
+
+
+def test_deterministic_texts_include_cover_key() -> None:
+    resources = [
+        pipeline.DailyResource(date(2026, 5, 30), "a.csv", "https://example.test/a.csv"),
+    ]
+    payload = pipeline.build_llm_payload(
+        resources=resources,
+        daily_counts=[{"date": "2026-05-30", "value": 2}],
+        state_rank=[{"label": "MT", "value": 2}],
+        biome_rank=[{"label": "CERRADO", "value": 2}],
+        region_rank=[{"label": "Centro-Oeste", "value": 2}],
+        total_focos=2,
+        total_raw_rows=4,
+        map_status={"geojson_ok": True},
+        warnings=[],
+    )
+
+    texts = pipeline.deterministic_texts(payload)
+
+    assert set(texts["slides"]) == {"cover", "daily", "states", "biomes", "map"}
 
 
 def test_iter_geojson_polygons_reads_multipolygon() -> None:
