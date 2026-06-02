@@ -3,40 +3,67 @@
   "runId": "bdqueimadas-daily-social",
   "globalSlots": {
     "topic_tag": "Queimadas & Focos",
-    "published_at": "2026-05-27 a 2026-06-02"
+    "published_at": "2026-05-26 a 2026-06-01"
   },
-  "instagram_caption_draft": "📊 Focos de calor no Brasil (27/05 a 02/06/2026) – Dados do satélite AQUA_M‑T. Total de 897 focos detectados. Veja a distribuição por dia, estado e bioma, e o mapa de ocorrência.",
+  "instagram_caption_draft": "Focos de calor no Brasil (26/05 a 01/06/2026). 1.225 focos detectados. Destaque: Tocantins, Cerrado e Norte.",
   "slides": [
+    {
+      "type": "cover",
+      "slots": {
+        "series_label": "Monitor Diário",
+        "title": "Focos de calor no Brasil",
+        "summary": "1.225 focos em 7 dias. Pico em 27/05 (298). Mínimo em 31/05 (60)."
+      },
+      "slotStyles": {
+        "title": {
+          "fontSize": 118,
+          "lineHeight": 0.98
+        }
+      }
+    },
     {
       "type": "body_chart",
       "slots": {
         "caption": "Focos por dia",
-        "image_url": "/generated/bdqueimadas-daily-7d.png",
-        "body_text": "A janela de sete dias mostra a distribuicao recente dos focos no Brasil."
+        "image_url": "/generated/bdqueimadas-daily-7d.png?v=20260602150939",
+        "source": "Fonte: INPE BDQueimadas",
+        "body_text": "Distribuição diária: 26/05: 268, 27/05: 298, 28/05: 113, 29/05: 175, 30/05: 86, 31/05: 60, 01/06: 225."
       }
     },
     {
       "type": "body_chart",
       "slots": {
         "caption": "Estados com mais focos",
-        "image_url": "/generated/bdqueimadas-daily-states.png",
-        "body_text": "O ranking estadual concentra os quatro maiores totais e agrupa os demais em Outros."
+        "image_url": "/generated/bdqueimadas-daily-states.png?v=20260602150939",
+        "source": "Fonte: INPE BDQueimadas",
+        "body_text": "Top 5 estados: Tocantins (425), Mato Grosso (225), Maranhão (146), Bahia (91), Outros (338). Tocantins representa 34,7% dos focos."
       }
     },
     {
       "type": "body_chart",
       "slots": {
         "caption": "Biomas com mais focos",
-        "image_url": "/generated/bdqueimadas-daily-biomes.png",
-        "body_text": "O ranking por bioma segue o mesmo criterio, com foco na comparacao direta dos totais."
+        "image_url": "/generated/bdqueimadas-daily-biomes.png?v=20260602150939",
+        "source": "Fonte: INPE BDQueimadas",
+        "body_text": "Top 5 biomas: Cerrado (797), Amazônia (287), Caatinga (87), Mata Atlântica (44), Outros (10). Cerrado corresponde a 65,1% dos focos."
       }
     },
     {
       "type": "body_chart",
       "slots": {
         "caption": "Mapa de densidade",
-        "image_url": "/generated/bdqueimadas-daily-map.png",
-        "body_text": "O mapa mostra a densidade espacial dos focos filtrados pelo satelite de referencia."
+        "image_url": "/generated/bdqueimadas-daily-map.png?v=20260602150939",
+        "source": "Fonte: INPE BDQueimadas",
+        "body_text": "Região com maior concentração: Norte (565 focos, 46,1% do total). Regiões agregadas por estado, não densidade por área."
+      }
+    },
+    {
+      "type": "cta",
+      "slots": {
+        "cta_kicker": "Esse post foi gerado em 13 segundos",
+        "cta_headline": "Análise assistida por IA",
+        "cta_subline": "Use como apoio, não como autoridade. A análise descritiva foi feita por IA a partir de dados abertos. Veja mais dados e análises em institutoforest.org.",
+        "cta_url": "institutoforest.org"
       }
     }
   ]

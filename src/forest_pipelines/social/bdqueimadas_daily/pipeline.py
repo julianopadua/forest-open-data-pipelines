@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from dataclasses import dataclass
 from datetime import date, datetime
 from pathlib import Path
@@ -135,7 +136,7 @@ def run(
         days=days,
     )
     if not resources:
-        raise RuntimeError("Nenhum CSV diario encontrado para a janela solicitada.")
+        raise RuntimeError("Nenhum CSV diário encontrado para a janela solicitada.")
 
     cached = [
         download_daily_resource(resource, data_dir / "raw", refresh_existing=True)
@@ -215,8 +216,10 @@ def run(
             llm_model = result.model
         except Exception as exc:
             llm_error = str(exc)
+    texts = normalize_text_bundle(texts)
 
     generated_in_seconds = max(1, int(round(perf_counter() - started_at)))
+    asset_version = datetime.now().strftime("%Y%m%d%H%M%S")
     sidecar = {
         "schema_version": 1,
         "topic": "bdqueimadas_daily",
@@ -226,6 +229,7 @@ def run(
         "llm_model": llm_model,
         "llm_error": llm_error,
         "generated_in_seconds": generated_in_seconds,
+        "asset_version": asset_version,
         "charts": {key: str(path.resolve()) for key, path in charts.items()},
     }
     out_social_llm.parent.mkdir(parents=True, exist_ok=True)
@@ -237,6 +241,7 @@ def run(
         texts=texts,
         payload=payload,
         generated_in_seconds=generated_in_seconds,
+        asset_version=asset_version,
     )
     return sidecar
 
@@ -262,10 +267,16 @@ def select_daily_window(
     *,
     as_of: date | None,
     days: int,
+    today: date | None = None,
 ) -> list[DailyResource]:
     if not resources:
         return []
-    ref = as_of or resources[-1].period
+    if as_of is None:
+        current_day = today or date.today()
+        complete_resources = [resource for resource in resources if resource.period < current_day]
+        ref = complete_resources[-1].period if complete_resources else resources[-1].period
+    else:
+        ref = as_of
     candidates = [resource for resource in resources if resource.period <= ref]
     return candidates[-days:]
 
@@ -321,8 +332,8 @@ def build_daily_counts(
 def top_n_with_other(frame: pd.DataFrame, column: str, *, top_n: int) -> list[dict[str, Any]]:
     if frame.empty or column not in frame.columns:
         return [{"label": "Outros", "value": 0}]
-    series = frame[column].fillna("Sem informacao").astype(str).str.strip()
-    series = series.replace({"": "Sem informacao"})
+    series = frame[column].fillna("Sem informação").astype(str).str.strip()
+    series = series.replace({"": "Sem informação"})
     counts = series.value_counts()
     top = counts.head(top_n)
     rows = [{"label": str(label), "value": int(value)} for label, value in top.items()]
@@ -333,7 +344,7 @@ def top_n_with_other(frame: pd.DataFrame, column: str, *, top_n: int) -> list[di
 
 def build_region_rank(frame: pd.DataFrame) -> list[dict[str, Any]]:
     if frame.empty or "estado" not in frame.columns:
-        return [{"label": "Nao identificada", "value": 0}]
+        return [{"label": "Não identificada", "value": 0}]
     regions = frame["estado"].fillna("").astype(str).map(region_for_state)
     counts = regions.value_counts()
     return [{"label": str(label), "value": int(value)} for label, value in counts.items()]
@@ -342,8 +353,8 @@ def build_region_rank(frame: pd.DataFrame) -> list[dict[str, Any]]:
 def region_for_state(value: str) -> str:
     normalized = normalize_state_name(value)
     if not normalized:
-        return "Nao identificada"
-    return STATE_REGION_BY_UF.get(normalized) or STATE_REGION_BY_NAME.get(normalized, "Nao identificada")
+        return "Não identificada"
+    return STATE_REGION_BY_UF.get(normalized) or STATE_REGION_BY_NAME.get(normalized, "Não identificada")
 
 
 def normalize_state_name(value: str) -> str:
@@ -358,6 +369,69 @@ def value_share(row: dict[str, Any] | None, total: int) -> float | None:
     if not row or total <= 0:
         return None
     return round(100.0 * int(row.get("value", 0)) / total, 2)
+
+
+def format_pt_int(value: int) -> str:
+    return f"{int(value):,}".replace(",", ".")
+
+
+def format_label_pt(value: Any) -> str:
+    text = str(value or "").strip()
+    if not text:
+        return "Não identificado"
+    if text.isupper():
+        return text.title()
+    return text
+
+
+ACCENT_REPLACEMENTS = {
+    "analise": "análise",
+    "analises": "análises",
+    "area": "área",
+    "ate": "até",
+    "bioma nao identificado": "bioma não identificado",
+    "concentracao": "concentração",
+    "diario": "diário",
+    "estado nao identificado": "estado não identificado",
+    "grafico": "gráfico",
+    "graficos": "gráficos",
+    "minimo": "mínimo",
+    "nao": "não",
+    "periodo": "período",
+    "proximos": "próximos",
+    "regiao": "região",
+    "satelite": "satélite",
+}
+
+
+def restore_pt_br_accents(text: str) -> str:
+    out = str(text)
+    for src, dst in sorted(ACCENT_REPLACEMENTS.items(), key=lambda item: len(item[0]), reverse=True):
+        out = re.sub(rf"\b{re.escape(src)}\b", dst, out, flags=re.IGNORECASE)
+    return out
+
+
+def normalize_visible_text(text: str) -> str:
+    out = restore_pt_br_accents(text)
+    out = re.sub(r"\s*[\u2013\u2014]\s*", ": ", out)
+    out = re.sub(r"(\d+)\.(\d+)%", r"\1,\2%", out)
+
+    def repl_count(match: re.Match[str]) -> str:
+        return f"{int(match.group(1)):,}".replace(",", ".")
+
+    return re.sub(r"\b(\d{4,})(?=\s+(?:focos|registros)\b)", repl_count, out)
+
+
+def normalize_text_bundle(texts: dict[str, Any]) -> dict[str, Any]:
+    slides = texts.get("slides") if isinstance(texts.get("slides"), dict) else {}
+    return {
+        **texts,
+        "instagram_caption": normalize_visible_text(str(texts.get("instagram_caption", ""))),
+        "slides": {
+            key: normalize_visible_text(str(value))
+            for key, value in slides.items()
+        },
+    }
 
 
 def build_payload_highlights(
@@ -400,7 +474,7 @@ def build_payload_highlights(
             "region_counts": region_rank,
             "top_region_by_focus_count": top_region,
             "top_region_share_pct": value_share(top_region, total_focos),
-            "aggregation_note": "Regiao agregada por estado. Nao e uma densidade por area.",
+            "aggregation_note": "Região agregada por estado. Não é uma densidade por área.",
         },
     }
 
@@ -439,8 +513,7 @@ def render_bar_chart(
             color="white",
             fontsize=11,
         )
-    fig.text(0.99, 0.01, SOURCE_LABEL, ha="right", va="bottom", color="white", fontsize=10, alpha=0.82)
-    fig.tight_layout(rect=(0, 0.04, 1, 1))
+    fig.tight_layout()
     out_path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(out_path, transparent=True, bbox_inches="tight", pad_inches=0.12)
     plt.close(fig)
@@ -504,8 +577,7 @@ def render_density_map(
         fontsize=13,
         ha="left",
     )
-    fig.text(0.99, 0.01, SOURCE_LABEL, ha="right", va="bottom", color="white", fontsize=10, alpha=0.82)
-    fig.tight_layout(rect=(0, 0.04, 1, 1))
+    fig.tight_layout()
     out_path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(out_path, transparent=True, bbox_inches="tight", pad_inches=0.08)
     plt.close(fig)
@@ -599,24 +671,52 @@ def build_llm_payload(
 def deterministic_texts(payload: dict[str, Any]) -> dict[str, Any]:
     metrics = payload["metrics"]
     window = payload["window"]
+    slide_context = payload.get("slide_context", {})
+    daily = slide_context.get("daily", {})
+    states = slide_context.get("states", {})
+    biomes = slide_context.get("biomes", {})
+    map_context = slide_context.get("map", {})
     total = int(metrics["total_focos_reference_satellite"])
+    max_day = daily.get("max_day") or {}
+    min_day = daily.get("min_day") or {}
+    top_state = states.get("top_state") or {}
+    top_biome = biomes.get("top_biome") or {}
+    top_region = map_context.get("top_region_by_focus_count") or {}
     return {
         "instagram_caption": (
-            f"Entre {window['start_date']} e {window['end_date']}, o satelite "
-            f"{REFERENCE_SATELLITE} registrou {total:,} focos de calor no Brasil."
-        ).replace(",", "."),
+            f"Entre {window['start_date']} e {window['end_date']}, o satélite "
+            f"{REFERENCE_SATELLITE} registrou {format_pt_int(total)} focos de calor no Brasil."
+        ),
         "slides": {
             "cover": (
-                f"No periodo, foram {total:,} focos no satelite {REFERENCE_SATELLITE}. "
-                "Use os proximos slides para ler dias, estados, biomas e concentracao regional."
-            ).replace(",", "."),
-            "daily": "A janela de sete dias mostra a distribuicao recente dos focos no Brasil.",
-            "states": "O ranking estadual concentra os quatro maiores totais e agrupa os demais em Outros.",
-            "biomes": "O ranking por bioma segue o mesmo criterio, com foco na comparacao direta dos totais.",
-            "map": "O mapa mostra a densidade espacial dos focos filtrados pelo satelite de referencia.",
+                f"Foram {format_pt_int(total)} focos em {window['days']} dias. "
+                f"O pico ocorreu em {max_day.get('date', 'data não informada')} "
+                f"com {format_pt_int(int(max_day.get('value', 0)))} registros."
+            ),
+            "daily": (
+                f"O maior dia foi {max_day.get('date', 'data não informada')}, "
+                f"com {format_pt_int(int(max_day.get('value', 0)))} focos. "
+                f"O menor foi {min_day.get('date', 'data não informada')}, "
+                f"com {format_pt_int(int(min_day.get('value', 0)))}."
+            ),
+            "states": (
+                f"{format_label_pt(top_state.get('label', 'Estado não identificado'))} liderou o ranking, "
+                f"com {format_pt_int(int(top_state.get('value', 0)))} focos "
+                f"({states.get('top_state_share_pct', 0)}% do recorte)."
+            ),
+            "biomes": (
+                f"{format_label_pt(top_biome.get('label', 'Bioma não identificado'))} concentrou "
+                f"{format_pt_int(int(top_biome.get('value', 0)))} focos "
+                f"({biomes.get('top_biome_share_pct', 0)}% do recorte)."
+            ),
+            "map": (
+                f"Na agregação por estado, a região {format_label_pt(top_region.get('label', 'não identificada'))} "
+                f"somou {format_pt_int(int(top_region.get('value', 0)))} focos "
+                f"({map_context.get('top_region_share_pct', 0)}% do recorte)."
+            ),
         },
         "comments": [
-            "Texto deterministico gerado sem LLM ou usado como fallback.",
+            "Texto determinístico gerado sem LLM ou usado como fallback.",
         ],
     }
 
@@ -626,18 +726,19 @@ def run_llm_texts(payload: dict[str, Any], *, app_config: Path):
 
     settings = load_settings(str(app_config))
     system_prompt = (
-        "Voce e um analista de dados ambientais. Responda somente com JSON valido. "
+        "Você é um analista de dados ambientais. Responda somente com JSON válido. "
         "Use linguagem objetiva, sem afirmar causalidade e sem extrapolar os dados. "
-        "Escreva textos curtos para caber em slides quadrados."
+        "Escreva textos curtos para caber em slides quadrados. "
+        "Use português brasileiro com acentuação ortográfica correta."
     )
     user_prompt = (
-        "Crie textos para um carrossel diario sobre focos de calor no Brasil. "
+        "Crie textos para um carrossel diário sobre focos de calor no Brasil. "
         "Retorne as chaves instagram_caption, slides e comments. "
         "slides deve conter cover, daily, states, biomes e map. "
-        "Use slide_context.cover para a capa, slide_context.daily para o grafico diario, "
+        "Use slide_context.cover para a capa, slide_context.daily para o gráfico diário, "
         "slide_context.states para estados, slide_context.biomes para biomas e "
-        "slide_context.map para o mapa. Para o mapa, mencione a regiao com maior "
-        "concentracao de focos, sem chamar isso de densidade por area. Contexto:\n"
+        "slide_context.map para o mapa. Para o mapa, mencione a região com maior "
+        "concentração de focos, sem chamar isso de densidade por área. Contexto:\n"
         + json.dumps(payload, ensure_ascii=False, indent=2)
     )
     return generate_json(
@@ -654,10 +755,12 @@ def normalize_llm_texts(data: dict[str, Any], fallback: dict[str, Any]) -> dict[
     for key in clean_slides:
         value = slides.get(key)
         if isinstance(value, str) and value.strip():
-            clean_slides[key] = value.strip()
+            clean_slides[key] = normalize_visible_text(value.strip())
     comments = data.get("comments")
     return {
-        "instagram_caption": str(data.get("instagram_caption") or fallback["instagram_caption"]).strip(),
+        "instagram_caption": normalize_visible_text(
+            str(data.get("instagram_caption") or fallback["instagram_caption"]).strip()
+        ),
         "slides": clean_slides,
         "comments": comments if isinstance(comments, list) else fallback["comments"],
     }
@@ -670,6 +773,7 @@ def write_manifest(
     texts: dict[str, Any],
     payload: dict[str, Any],
     generated_in_seconds: int,
+    asset_version: str,
 ) -> None:
     window = payload["window"]
     slides_text = texts.get("slides", {})
@@ -677,7 +781,7 @@ def write_manifest(
         {
             "type": "cover",
             "slots": {
-                "series_label": "Monitor Diario",
+                "series_label": "Monitor Diário",
                 "title": "Focos de calor no Brasil",
                 "summary": slides_text.get("cover", ""),
             },
@@ -689,7 +793,7 @@ def write_manifest(
             "type": "body_chart",
             "slots": {
                 "caption": "Focos por dia",
-                "image_url": f"/generated/{charts['daily'].name}",
+                "image_url": f"/generated/{charts['daily'].name}?v={asset_version}",
                 "source": SOURCE_LABEL,
                 "body_text": slides_text.get("daily", ""),
             },
@@ -698,7 +802,7 @@ def write_manifest(
             "type": "body_chart",
             "slots": {
                 "caption": "Estados com mais focos",
-                "image_url": f"/generated/{charts['states'].name}",
+                "image_url": f"/generated/{charts['states'].name}?v={asset_version}",
                 "source": SOURCE_LABEL,
                 "body_text": slides_text.get("states", ""),
             },
@@ -707,7 +811,7 @@ def write_manifest(
             "type": "body_chart",
             "slots": {
                 "caption": "Biomas com mais focos",
-                "image_url": f"/generated/{charts['biomes'].name}",
+                "image_url": f"/generated/{charts['biomes'].name}?v={asset_version}",
                 "source": SOURCE_LABEL,
                 "body_text": slides_text.get("biomes", ""),
             },
@@ -716,7 +820,7 @@ def write_manifest(
             "type": "body_chart",
             "slots": {
                 "caption": "Mapa de densidade",
-                "image_url": f"/generated/{charts['map'].name}",
+                "image_url": f"/generated/{charts['map'].name}?v={asset_version}",
                 "source": SOURCE_LABEL,
                 "body_text": slides_text.get("map", ""),
             },
@@ -725,10 +829,11 @@ def write_manifest(
             "type": "cta",
             "slots": {
                 "cta_kicker": f"Esse post foi gerado em {generated_in_seconds} segundos",
-                "cta_headline": "Leia como apoio, nao como autoridade",
+                "cta_headline": "Análise assistida por IA",
                 "cta_subline": (
-                    "A analise descritiva foi feita por IA a partir de dados abertos. "
-                    "Veja mais dados e analises em institutoforest.org."
+                    "Use como apoio, não como autoridade. "
+                    "A análise descritiva foi feita por IA a partir de dados abertos. "
+                    "Veja mais dados e análises em institutoforest.org."
                 ),
                 "cta_url": "institutoforest.org",
             },
@@ -753,7 +858,7 @@ def write_manifest(
 
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Gera carrossel diario BDQueimadas.")
+    parser = argparse.ArgumentParser(description="Gera carrossel diário BDQueimadas.")
     parser.add_argument("--source-url", default=DEFAULT_SOURCE_URL)
     parser.add_argument("--data-dir", type=Path, default=DEFAULT_DATA_DIR)
     parser.add_argument("--out-dir", type=Path, default=DEFAULT_OUT_DIR)

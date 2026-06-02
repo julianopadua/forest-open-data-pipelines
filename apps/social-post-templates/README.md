@@ -35,7 +35,7 @@ Rode estes alvos a partir da raiz de `forest-open-data-pipelines`, com a venv cr
 | ---- | ---------- | --- |
 | `make bdqueimadas-social-assets` | Carrossel mensal BDQueimadas, charts, specs e manifest vermelho | Não |
 | `make bdqueimadas-social-full` | Carrossel mensal BDQueimadas com legenda e textos por slide | Sim, requer `GROQ_API_KEY` |
-| `make bdqueimadas-daily-social-assets` | Carrossel diário BDQueimadas, últimos dias disponíveis, charts e manifest vermelho | Não |
+| `make bdqueimadas-daily-social-assets` | Carrossel diário BDQueimadas, últimos dias completos, charts e manifest vermelho | Não |
 | `make bdqueimadas-daily-social-full` | Carrossel diário BDQueimadas com textos Groq por slide | Sim, requer `GROQ_API_KEY` |
 | `make anp-producao-social-assets` | Carrossel ANP produção, charts e manifest azul marinho | Não |
 | `make anp-producao-social-full` | Carrossel ANP produção com textos Groq por slide | Sim, requer `GROQ_API_KEY` |
@@ -370,7 +370,7 @@ A legenda para colar no Instagram está em `social_llm.json` → `post_descripti
 
 ## Pipeline BDQueimadas diário (carrossel 6 slides, tema vermelho)
 
-Deck automático diário a partir dos CSVs oficiais do INPE BDQueimadas em `https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/diario/Brasil/`. O recorte usa o satélite de referência `AQUA_M-T` e baixa novamente os CSVs da janela selecionada em cada execução para evitar cache local com arquivos ainda parciais.
+Deck automático diário a partir dos CSVs oficiais do INPE BDQueimadas em `https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/diario/Brasil/`. O recorte usa o satélite de referência `AQUA_M-T`, pula o dia corrente por padrão para evitar arquivo ainda parcial e baixa novamente os CSVs da janela selecionada em cada execução para evitar cache local obsoleto.
 
 Sem LLM:
 

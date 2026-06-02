@@ -18,6 +18,18 @@ def test_select_daily_window_uses_latest_available_when_as_of_missing() -> None:
     assert [item.period.day for item in selected] == [3, 4, 5, 6, 7, 8, 9]
 
 
+def test_select_daily_window_skips_current_day_by_default() -> None:
+    resources = [
+        pipeline.DailyResource(date(2026, 5, 31), "focos_diario_br_20260531.csv", "https://x/31"),
+        pipeline.DailyResource(date(2026, 6, 1), "focos_diario_br_20260601.csv", "https://x/1"),
+        pipeline.DailyResource(date(2026, 6, 2), "focos_diario_br_20260602.csv", "https://x/2"),
+    ]
+
+    selected = pipeline.select_daily_window(resources, as_of=None, days=2, today=date(2026, 6, 2))
+
+    assert [item.period.isoformat() for item in selected] == ["2026-05-31", "2026-06-01"]
+
+
 def test_filter_reference_satellite_keeps_only_aqua_mt() -> None:
     frame = pd.DataFrame(
         [
@@ -64,7 +76,7 @@ def test_build_region_rank_maps_states_to_regions() -> None:
         {"label": "Centro-Oeste", "value": 2},
         {"label": "Sudeste", "value": 1},
         {"label": "Norte", "value": 1},
-        {"label": "Nao identificada", "value": 1},
+        {"label": "Não identificada", "value": 1},
     ]
 
 
