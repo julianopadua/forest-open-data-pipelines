@@ -36,7 +36,7 @@ Rode estes alvos a partir da raiz de `forest-open-data-pipelines`, com a venv cr
 | `make bdqueimadas-social-assets` | Carrossel mensal BDQueimadas, charts, specs e manifest vermelho | Não |
 | `make bdqueimadas-social-full` | Carrossel mensal BDQueimadas com legenda e textos por slide | Sim, requer `GROQ_API_KEY` |
 | `make bdqueimadas-daily-social-assets` | Carrossel diário BDQueimadas, últimos dias completos, charts e manifest vermelho | Não |
-| `make bdqueimadas-daily-social-full` | Carrossel diário BDQueimadas com textos Groq por slide | Sim, requer `GROQ_API_KEY` |
+| `make bdqueimadas-daily-social-full` | Carrossel diário BDQueimadas com textos Groq nos slides daily, states, biomes e map | Sim, requer `GROQ_API_KEY` |
 | `make anp-producao-social-assets` | Carrossel ANP produção, charts e manifest azul marinho | Não |
 | `make anp-producao-social-full` | Carrossel ANP produção com textos Groq por slide | Sim, requer `GROQ_API_KEY` |
 | `make research-social-assets` | Carrossel Research Trends histórico, tema branco | Não |
@@ -390,19 +390,25 @@ Equivalente CLI:
 python -m forest_pipelines.social.bdqueimadas_daily --data-dir data/inpe_bdqueimadas_daily --llm
 ```
 
-Opções úteis: `--as-of YYYY-MM-DD` fixa a data final da janela; `--days 7` muda o tamanho da janela; `--out-social-llm` altera o JSON lateral com payload, textos, modelo e erro de LLM.
+Opções úteis: `--as-of YYYY-MM-DD` fixa a data final da janela; `--days 7` muda o tamanho da janela; `--out-dir` altera a pasta dos PNGs; `--out-social-llm` altera o JSON lateral com payload, textos, modelos e erros de LLM por slide; `--logs-dir` altera a pasta base de logs.
+
+Com `--llm`, o pipeline faz quatro chamadas Groq separadas, uma para cada slide analítico: `daily`, `states`, `biomes` e `map`. A capa, a legenda do Instagram e o CTA final são determinísticos. Cada execução grava em disco e no stdout logs JSON por etapa e eventos `llm_roundtrip` com prompt e resposta de cada slide:
+
+- Caminho: `logs/social/bdqueimadas-daily/<ano>/<mês>/<YYYY-MM-DD>.log`
+- Eventos: `pipeline_start`, `llm_run_start`, `llm_slide_start`, `llm_roundtrip`, `llm_slide_ok` ou `llm_slide_failed`, `llm_run_done`, `pipeline_done`
+- Sem `--llm`: usa textos determinísticos de fallback; o log registra `llm_skipped`
 
 Saídas principais:
 
-- `public/generated/bdqueimadas-daily-7d.png`
-- `public/generated/bdqueimadas-daily-states.png`
-- `public/generated/bdqueimadas-daily-biomes.png`
-- `public/generated/bdqueimadas-daily-map.png`
-- `public/generated/bdqueimadas-daily-social_llm.json`
+- `public/generated/bdqueimadas/daily/bdqueimadas-daily-7d.png`
+- `public/generated/bdqueimadas/daily/bdqueimadas-daily-states.png`
+- `public/generated/bdqueimadas/daily/bdqueimadas-daily-biomes.png`
+- `public/generated/bdqueimadas/daily/bdqueimadas-daily-map.png`
+- `public/generated/bdqueimadas/daily/bdqueimadas-daily-social_llm.json`
 - `examples/bdqueimadas-daily-social.manifest.json`
 - `public/examples/bdqueimadas-daily-social.manifest.json`
 
-O manifest diário agora inclui capa, quatro slides `body_chart` e CTA final. Os textos de slide vêm do JSON LLM quando `--llm` está ativo; sem LLM, entram textos determinísticos de fallback. O payload enviado à LLM contém contagens por dia, dia com mais focos, dia com menos focos, ranking de estados, ranking de biomas e região brasileira com maior concentração de focos por agregação estadual.
+O manifest diário inclui capa, quatro slides `body_chart` e CTA final. Quando `--llm` está ativo, apenas os slots `body_text` dos slides `daily`, `states`, `biomes` e `map` vêm da LLM; sem LLM, entram textos determinísticos de fallback. O payload enviado a cada chamada contém somente o contexto daquele slide, como contagens por dia, dia com mais focos, dia com menos focos, ranking de estados, ranking de biomas ou região brasileira com maior concentração de focos por agregação estadual.
 
 Preview: `cd apps/social-post-templates && npm run dev`, depois abrir `http://localhost:5173/red/composer.html?preset=bdqueimadas-diario`.
 

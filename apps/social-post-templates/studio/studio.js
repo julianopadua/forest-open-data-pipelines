@@ -105,9 +105,9 @@ function bdqueimadasDailyDeck(data) {
   const cover = {
     type: "cover",
     slots: {
-      series_label: "Monitor Diario",
+      series_label: "Monitor Diário",
       title: "Focos de calor no Brasil",
-      summary: "Ultimos 7 dias com dados diarios do INPE BDQueimadas, filtrados pelo satelite AQUA_M-T.",
+      summary: "Últimos 7 dias com dados diários do INPE BDQueimadas, filtrados pelo satélite AQUA_M-T.",
     },
     slotStyles: {
       title: { fontSize: 118, lineHeight: 0.98 },
@@ -116,9 +116,9 @@ function bdqueimadasDailyDeck(data) {
   const cta = {
     type: "cta",
     slots: {
-      cta_kicker: "Fonte aberta",
-      cta_headline: "INPE BDQueimadas",
-      cta_subline: "Acompanhe dados abertos, graficos e analises reprodutiveis no Instituto Forest.",
+      cta_kicker: "Esse post foi gerado em 15 segundos",
+      cta_headline: "Análise assistida por IA",
+      cta_subline: "Use como apoio, não como autoridade. A análise descritiva foi feita por IA a partir de dados abertos. Veja mais dados e análises em institutoforest.org.",
       cta_url: "institutoforest.org",
     },
   };

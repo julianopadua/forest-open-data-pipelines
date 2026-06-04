@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 import re
+import unicodedata
 from dataclasses import dataclass
 from datetime import date, datetime
 from pathlib import Path
@@ -15,23 +17,32 @@ from dotenv import load_dotenv
 
 from forest_pipelines.datasets.inpe.coids_directory import fetch_directory_entries
 from forest_pipelines.settings import load_settings
+from forest_pipelines.social.logging import (
+    get_social_bdqueimadas_daily_logger,
+    log_llm_json_roundtrip,
+    log_stage,
+)
 
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 APP_ROOT = REPO_ROOT / "apps" / "social-post-templates"
 DEFAULT_SOURCE_URL = "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/diario/Brasil/"
 DEFAULT_DATA_DIR = REPO_ROOT / "data" / "inpe_bdqueimadas_daily"
-DEFAULT_OUT_DIR = APP_ROOT / "public" / "generated"
+DEFAULT_GENERATED_ROOT = APP_ROOT / "public" / "generated"
+DEFAULT_OUT_DIR = DEFAULT_GENERATED_ROOT / "bdqueimadas" / "daily"
 DEFAULT_MANIFEST = APP_ROOT / "examples" / "bdqueimadas-daily-social.manifest.json"
 DEFAULT_PUBLIC_MANIFEST = APP_ROOT / "public" / "examples" / "bdqueimadas-daily-social.manifest.json"
 DEFAULT_LLM_JSON = DEFAULT_OUT_DIR / "bdqueimadas-daily-social_llm.json"
 DEFAULT_APP_CONFIG = REPO_ROOT / "configs" / "app.yml"
+DEFAULT_LOGS_DIR = REPO_ROOT / "logs"
+LLM_TOPIC_ID = "bdqueimadas_daily"
 IBGE_BRAZIL_GEOJSON_URL = (
     "https://servicodados.ibge.gov.br/api/v3/malhas/paises/BR"
     "?formato=application/vnd.geo+json&qualidade=minima"
 )
 REFERENCE_SATELLITE = "AQUA_M-T"
 SOURCE_LABEL = "Fonte: INPE BDQueimadas"
+LLM_SLIDE_KEYS = ("daily", "states", "biomes", "map")
 STATE_REGION_BY_NAME = {
     "ACRE": "Norte",
     "ALAGOAS": "Nordeste",
@@ -128,8 +139,21 @@ def run(
     run_llm: bool = False,
     app_config: Path = DEFAULT_APP_CONFIG,
     out_social_llm: Path = DEFAULT_LLM_JSON,
+    logs_dir: Path | None = DEFAULT_LOGS_DIR,
 ) -> dict[str, Any]:
     started_at = perf_counter()
+    logger = get_social_bdqueimadas_daily_logger(logs_dir)
+    log_stage(
+        logger,
+        "pipeline_start",
+        {
+            "source_url": source_url,
+            "data_dir": str(data_dir),
+            "run_llm": run_llm,
+            "days": days,
+            "as_of": as_of.isoformat() if as_of else None,
+        },
+    )
     resources = select_daily_window(
         extract_daily_links(source_url),
         as_of=as_of,
@@ -209,13 +233,64 @@ def run(
     texts = deterministic_texts(payload)
     llm_error: str | None = None
     llm_model: str | None = None
+    llm_models_by_slide: dict[str, str] = {}
+    llm_errors_by_slide: dict[str, str] = {}
     if run_llm:
-        try:
-            result = run_llm_texts(payload, app_config=app_config)
-            texts = normalize_llm_texts(result.data, texts)
-            llm_model = result.model
-        except Exception as exc:
-            llm_error = str(exc)
+        log_stage(
+            logger,
+            "llm_run_start",
+            {
+                "component": "bdqueimadas_daily_slides",
+                "slide_keys": list(LLM_SLIDE_KEYS),
+                "window": payload.get("window"),
+                "total_focos": payload.get("metrics", {}).get("total_focos_reference_satellite"),
+            },
+        )
+        for slide_key in LLM_SLIDE_KEYS:
+            component = f"bdqueimadas_daily_{slide_key}"
+            log_stage(logger, "llm_slide_start", {"component": component, "slide_key": slide_key})
+            try:
+                result = run_llm_slide_text(payload, slide_key, app_config=app_config, logger=logger)
+                slide_text = extract_llm_text_value(result.data, slide_key)
+                if not slide_text:
+                    raise ValueError("Resposta LLM sem campo text preenchido.")
+                texts["slides"][slide_key] = normalize_visible_text(slide_text)
+                llm_models_by_slide[slide_key] = result.model
+                log_stage(
+                    logger,
+                    "llm_slide_ok",
+                    {
+                        "component": component,
+                        "slide_key": slide_key,
+                        "model": result.model,
+                    },
+                )
+            except Exception as exc:
+                llm_errors_by_slide[slide_key] = str(exc)
+                log_stage(
+                    logger,
+                    "llm_slide_failed",
+                    {
+                        "component": component,
+                        "slide_key": slide_key,
+                        "error": str(exc),
+                    },
+                )
+        unique_models = sorted(set(llm_models_by_slide.values()))
+        llm_model = ", ".join(unique_models) if unique_models else None
+        llm_error = json.dumps(llm_errors_by_slide, ensure_ascii=False) if llm_errors_by_slide else None
+        log_stage(
+            logger,
+            "llm_run_done",
+            {
+                "component": "bdqueimadas_daily_slides",
+                "slides_ok": sorted(llm_models_by_slide.keys()),
+                "slides_failed": sorted(llm_errors_by_slide.keys()),
+                "model": llm_model,
+            },
+        )
+    else:
+        log_stage(logger, "llm_skipped", {"reason": "run_llm=false"})
     texts = normalize_text_bundle(texts)
 
     generated_in_seconds = max(1, int(round(perf_counter() - started_at)))
@@ -228,6 +303,8 @@ def run(
         "texts": texts,
         "llm_model": llm_model,
         "llm_error": llm_error,
+        "llm_models_by_slide": llm_models_by_slide,
+        "llm_errors_by_slide": llm_errors_by_slide,
         "generated_in_seconds": generated_in_seconds,
         "asset_version": asset_version,
         "charts": {key: str(path.resolve()) for key, path in charts.items()},
@@ -242,6 +319,17 @@ def run(
         payload=payload,
         generated_in_seconds=generated_in_seconds,
         asset_version=asset_version,
+    )
+    log_stage(
+        logger,
+        "pipeline_done",
+        {
+            "manifest": str(emit_manifest),
+            "sidecar": str(out_social_llm),
+            "llm_model": llm_model,
+            "llm_error": llm_error,
+            "window": payload.get("window"),
+        },
     )
     return sidecar
 
@@ -411,8 +499,20 @@ def restore_pt_br_accents(text: str) -> str:
     return out
 
 
+def strip_emojis(text: str) -> str:
+    out: list[str] = []
+    for ch in text:
+        if unicodedata.category(ch) in {"So", "Sk", "Cs"}:
+            continue
+        if ord(ch) in range(0x1F300, 0x1FAFF):
+            continue
+        out.append(ch)
+    return re.sub(r"\s{2,}", " ", "".join(out)).strip()
+
+
 def normalize_visible_text(text: str) -> str:
-    out = restore_pt_br_accents(text)
+    out = strip_emojis(text)
+    out = restore_pt_br_accents(out)
     out = re.sub(r"\s*[\u2013\u2014]\s*", ": ", out)
     out = re.sub(r"(\d+)\.(\d+)%", r"\1,\2%", out)
 
@@ -721,49 +821,121 @@ def deterministic_texts(payload: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def run_llm_texts(payload: dict[str, Any], *, app_config: Path):
+def build_slide_llm_prompts(slide_key: str, payload: dict[str, Any]) -> tuple[str, str]:
+    if slide_key not in LLM_SLIDE_KEYS:
+        raise ValueError(f"Slide LLM inválido: {slide_key}")
+    instructions = {
+        "daily": (
+            "Explique a distribuição diária. Mencione o dia com mais focos, "
+            "o dia com menos focos e a sequência de contagens por dia quando couber."
+        ),
+        "states": (
+            "Explique o ranking de estados. Mencione o estado líder, sua participação "
+            "no recorte e os demais estados principais quando couber."
+        ),
+        "biomes": (
+            "Explique o ranking de biomas. Mencione o bioma líder, sua participação "
+            "no recorte e os demais biomas principais quando couber."
+        ),
+        "map": (
+            "Explique a agregação regional do mapa. Mencione a região com mais focos "
+            "e deixe claro que a região foi agregada por estado, sem chamar isso de densidade por área."
+        ),
+    }
+    context = {
+        "reference_satellite": payload.get("reference_satellite"),
+        "window": payload.get("window"),
+        "slide_context": payload.get("slide_context", {}).get(slide_key, {}),
+    }
+    system_prompt = (
+        "Você é um analista de dados ambientais. Responda somente com JSON válido. "
+        "Retorne exatamente a chave text. Use português brasileiro com acentuação ortográfica correta. "
+        "Use linguagem objetiva, sem afirmar causalidade e sem extrapolar os dados. "
+        "Escreva um parágrafo curto para caber em slide quadrado. "
+        "Não gere caption, capa, CTA, comentários ou campos extras. "
+        "Não use emoji, emoticon, pictograma, símbolo decorativo ou travessão."
+    )
+    user_prompt = (
+        f"Gere o texto do slide {slide_key} do carrossel diário de focos de calor no Brasil. "
+        f"{instructions[slide_key]} "
+        "Retorne JSON no formato {\"text\":\"...\"}. Contexto:\n"
+        + json.dumps(context, ensure_ascii=False, indent=2)
+    )
+    return system_prompt, user_prompt
+
+
+def run_llm_slide_text(
+    payload: dict[str, Any],
+    slide_key: str,
+    *,
+    app_config: Path,
+    logger: logging.Logger | None = None,
+):
     from forest_pipelines.llm.router import generate_json
 
     settings = load_settings(str(app_config))
-    system_prompt = (
-        "Você é um analista de dados ambientais. Responda somente com JSON válido. "
-        "Use linguagem objetiva, sem afirmar causalidade e sem extrapolar os dados. "
-        "Escreva textos curtos para caber em slides quadrados. "
-        "Use português brasileiro com acentuação ortográfica correta."
-    )
-    user_prompt = (
-        "Crie textos para um carrossel diário sobre focos de calor no Brasil. "
-        "Retorne as chaves instagram_caption, slides e comments. "
-        "slides deve conter cover, daily, states, biomes e map. "
-        "Use slide_context.cover para a capa, slide_context.daily para o gráfico diário, "
-        "slide_context.states para estados, slide_context.biomes para biomas e "
-        "slide_context.map para o mapa. Para o mapa, mencione a região com maior "
-        "concentração de focos, sem chamar isso de densidade por área. Contexto:\n"
-        + json.dumps(payload, ensure_ascii=False, indent=2)
-    )
-    return generate_json(
+    system_prompt, user_prompt = build_slide_llm_prompts(slide_key, payload)
+    result = generate_json(
         settings.llm,
         system_prompt,
         user_prompt,
-        required_keys=["instagram_caption", "slides", "comments"],
+        required_keys=["text"],
     )
+    if logger is not None:
+        log_llm_json_roundtrip(
+            logger,
+            topic_id=LLM_TOPIC_ID,
+            component=f"bdqueimadas_daily_{slide_key}",
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            result=result,
+            scope=slide_key,
+        )
+    return result
+
+
+def build_llm_prompts(payload: dict[str, Any]) -> tuple[str, str]:
+    return build_slide_llm_prompts("daily", payload)
+
+
+def extract_llm_text_value(value: Any, slide_key: str | None = None) -> str | None:
+    if isinstance(value, str) and value.strip():
+        return value.strip()
+    if isinstance(value, dict):
+        text = value.get("text")
+        if isinstance(text, str) and text.strip():
+            return text.strip()
+        if slide_key:
+            slides = value.get("slides")
+            if isinstance(slides, dict):
+                nested = extract_llm_text_value(slides.get(slide_key))
+                if nested:
+                    return nested
+    return None
 
 
 def normalize_llm_texts(data: dict[str, Any], fallback: dict[str, Any]) -> dict[str, Any]:
     slides = data.get("slides") if isinstance(data.get("slides"), dict) else {}
     clean_slides = dict(fallback["slides"])
     for key in clean_slides:
-        value = slides.get(key)
-        if isinstance(value, str) and value.strip():
-            clean_slides[key] = normalize_visible_text(value.strip())
+        value = extract_llm_text_value(slides.get(key))
+        if value:
+            clean_slides[key] = normalize_visible_text(value)
     comments = data.get("comments")
     return {
-        "instagram_caption": normalize_visible_text(
-            str(data.get("instagram_caption") or fallback["instagram_caption"]).strip()
-        ),
+        "instagram_caption": normalize_visible_text(str(fallback["instagram_caption"]).strip()),
         "slides": clean_slides,
         "comments": comments if isinstance(comments, list) else fallback["comments"],
     }
+
+
+def public_generated_url(path: Path, asset_version: str) -> str:
+    public_root = APP_ROOT / "public"
+    try:
+        rel = path.resolve().relative_to(public_root.resolve()).as_posix()
+    except ValueError:
+        rel = f"generated/{path.name}"
+    return f"/{rel}?v={asset_version}"
 
 
 def write_manifest(
@@ -793,7 +965,7 @@ def write_manifest(
             "type": "body_chart",
             "slots": {
                 "caption": "Focos por dia",
-                "image_url": f"/generated/{charts['daily'].name}?v={asset_version}",
+                "image_url": public_generated_url(charts["daily"], asset_version),
                 "source": SOURCE_LABEL,
                 "body_text": slides_text.get("daily", ""),
             },
@@ -802,7 +974,7 @@ def write_manifest(
             "type": "body_chart",
             "slots": {
                 "caption": "Estados com mais focos",
-                "image_url": f"/generated/{charts['states'].name}?v={asset_version}",
+                "image_url": public_generated_url(charts["states"], asset_version),
                 "source": SOURCE_LABEL,
                 "body_text": slides_text.get("states", ""),
             },
@@ -811,7 +983,7 @@ def write_manifest(
             "type": "body_chart",
             "slots": {
                 "caption": "Biomas com mais focos",
-                "image_url": f"/generated/{charts['biomes'].name}?v={asset_version}",
+                "image_url": public_generated_url(charts["biomes"], asset_version),
                 "source": SOURCE_LABEL,
                 "body_text": slides_text.get("biomes", ""),
             },
@@ -820,7 +992,7 @@ def write_manifest(
             "type": "body_chart",
             "slots": {
                 "caption": "Mapa de densidade",
-                "image_url": f"/generated/{charts['map'].name}?v={asset_version}",
+                "image_url": public_generated_url(charts["map"], asset_version),
                 "source": SOURCE_LABEL,
                 "body_text": slides_text.get("map", ""),
             },
@@ -868,6 +1040,12 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--llm", action="store_true")
     parser.add_argument("--app-config", type=Path, default=DEFAULT_APP_CONFIG)
     parser.add_argument("--out-social-llm", type=Path, default=DEFAULT_LLM_JSON)
+    parser.add_argument(
+        "--logs-dir",
+        type=Path,
+        default=DEFAULT_LOGS_DIR,
+        help="Diretorio base de logs (subcaminho social/bdqueimadas-daily/<ano>/<mes>/).",
+    )
     return parser.parse_args(argv)
 
 
@@ -887,11 +1065,13 @@ def main(argv: list[str] | None = None) -> int:
             run_llm=args.llm,
             app_config=args.app_config,
             out_social_llm=args.out_social_llm,
+            logs_dir=args.logs_dir,
         )
     except Exception as exc:
         print(f"Erro: {exc}")
         return 1
     print(f"OK: {args.emit_manifest}")
     print(f"Textos e payload: {args.out_social_llm.resolve()}")
+    print(f"Log: {args.logs_dir.resolve()}/social/bdqueimadas-daily/")
     print(f"Janela: {sidecar['payload']['window']['start_date']} a {sidecar['payload']['window']['end_date']}")
     return 0

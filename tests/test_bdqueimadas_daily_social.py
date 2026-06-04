@@ -133,6 +133,47 @@ def test_deterministic_texts_include_cover_key() -> None:
     assert set(texts["slides"]) == {"cover", "daily", "states", "biomes", "map"}
 
 
+def test_normalize_llm_texts_accepts_nested_text_field() -> None:
+    fallback = {
+        "instagram_caption": "Legenda padrão.",
+        "slides": {
+            "cover": "Capa padrão.",
+            "daily": "Diário padrão.",
+            "states": "Estados padrão.",
+            "biomes": "Biomas padrão.",
+            "map": "Mapa padrão.",
+        },
+        "comments": ["fallback"],
+    }
+    data = {
+        "instagram_caption": "Legenda da LLM que não deve substituir o padrão.",
+        "slides": {
+            "daily": {"text": "Distribuição diária com acentos."},
+            "states": "Estados com acentos.",
+            "biomes": {"text": "Biomas com acentos."},
+            "map": {"text": "Mapa com acentos."},
+        },
+        "comments": ["ok"],
+    }
+
+    texts = pipeline.normalize_llm_texts(data, fallback)
+
+    assert texts["instagram_caption"] == "Legenda padrão."
+    assert texts["slides"]["cover"] == "Capa padrão."
+    assert texts["slides"]["daily"] == "Distribuição diária com acentos."
+    assert texts["slides"]["states"] == "Estados com acentos."
+    assert texts["slides"]["biomes"] == "Biomas com acentos."
+    assert texts["slides"]["map"] == "Mapa com acentos."
+
+
+def test_public_generated_url_preserves_modular_daily_path() -> None:
+    path = pipeline.APP_ROOT / "public" / "generated" / "bdqueimadas" / "daily" / "chart.png"
+
+    url = pipeline.public_generated_url(path, "20260602152639")
+
+    assert url == "/generated/bdqueimadas/daily/chart.png?v=20260602152639"
+
+
 def test_iter_geojson_polygons_reads_multipolygon() -> None:
     geojson = {
         "type": "FeatureCollection",
@@ -152,3 +193,19 @@ def test_iter_geojson_polygons_reads_multipolygon() -> None:
     polygons = pipeline.iter_geojson_polygons(geojson)
 
     assert polygons == [[(-1.0, -1.0), (1.0, -1.0), (1.0, 1.0), (-1.0, -1.0)]]
+
+
+def test_strip_emojis_removes_pictograms() -> None:
+    assert pipeline.strip_emojis("Focos no Brasil 📊 hoje") == "Focos no Brasil hoje"
+    assert "📊" not in pipeline.normalize_visible_text("1.225 focos 📊")
+
+
+def test_build_slide_llm_prompts_forbids_emoji() -> None:
+    system_prompt, user_prompt = pipeline.build_slide_llm_prompts(
+        "daily",
+        {"window": {"start_date": "2026-05-26"}, "slide_context": {"daily": {}}},
+    )
+
+    assert "emoji" in system_prompt.lower()
+    assert "caption" in system_prompt.lower()
+    assert '"text"' in user_prompt

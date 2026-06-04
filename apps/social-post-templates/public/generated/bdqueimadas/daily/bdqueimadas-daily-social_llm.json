@@ -320,29 +320,30 @@
     "warnings": []
   },
   "texts": {
-    "instagram_caption": "Focos de calor no Brasil (26/05 a 01/06/2026). 1.225 focos detectados. Destaque: Tocantins, Cerrado e Norte.",
+    "instagram_caption": "Entre 2026-05-26 e 2026-06-01, o satélite AQUA_M-T registrou 1.225 focos de calor no Brasil.",
     "slides": {
-      "cover": "1.225 focos em 7 dias. Pico em 27/05 (298). Mínimo em 31/05 (60).",
-      "daily": "Distribuição diária: 26/05: 268, 27/05: 298, 28/05: 113, 29/05: 175, 30/05: 86, 31/05: 60, 01/06: 225.",
-      "states": "Top 5 estados: Tocantins (425), Mato Grosso (225), Maranhão (146), Bahia (91), Outros (338). Tocantins representa 34,7% dos focos.",
-      "biomes": "Top 5 biomas: Cerrado (797), Amazônia (287), Caatinga (87), Mata Atlântica (44), Outros (10). Cerrado corresponde a 65,1% dos focos.",
-      "map": "Região com maior concentração: Norte (565 focos, 46,1% do total). Regiões agregadas por estado, não densidade por área."
+      "cover": "Foram 1.225 focos em 7 dias. O pico ocorreu em 2026-05-27 com 298 registros.",
+      "daily": "Distribuição diária dos focos: 26/05: 268, 27/05: 298, 28/05: 113, 29/05: 175, 30/05: 86, 31/05: 60, 01/06: 225. O pico diário foi em 27/05.",
+      "states": "Principais estados com focos: Tocantins (425), Mato Grosso (225), Maranhão (146), Bahia (91) e Outros (338). Tocantins representa 34,69% dos focos totais.",
+      "biomes": "Maior incidência nos biomas: Cerrado (797), Amazônia (287), Caatinga (87), Mata Atlântica (44) e Outros (10). O Cerrado corresponde a 65,06% dos focos.",
+      "map": "Região com maior número de focos: Norte (565). Esta região concentra 46,12% dos focos totais. Regiões adicionais: Nordeste (304), Centro-Oeste (274), Sudeste (76) e Sul (6)."
     },
     "comments": [
-      "Dados provenientes do satélite AQUA_M-T.",
-      "Total de linhas em todas as fontes: 23.864.",
-      "Nenhum alerta de erro na geometrias.",
-      "Observação: foco diário pode variar por condições atmosféricas."
+      "Os dados refletem a variação diária de focos detectados pelo satélite AQUA_M-T.",
+      "A análise não implica causalidade entre fatores climáticos e ocorrência de focos.",
+      "Os números são baseados em registros de 26/05 a 01/06/2026."
     ]
   },
   "llm_model": "openai/gpt-oss-20b",
   "llm_error": null,
-  "generated_in_seconds": 13,
-  "asset_version": "20260602150939",
+  "llm_models_by_slide": {},
+  "llm_errors_by_slide": {},
+  "generated_in_seconds": 23,
+  "asset_version": "20260602152639",
   "charts": {
-    "daily": "/Users/julianopadua/Projects/forest-project/forest-open-data-pipelines/apps/social-post-templates/public/generated/bdqueimadas-daily-7d.png",
-    "states": "/Users/julianopadua/Projects/forest-project/forest-open-data-pipelines/apps/social-post-templates/public/generated/bdqueimadas-daily-states.png",
-    "biomes": "/Users/julianopadua/Projects/forest-project/forest-open-data-pipelines/apps/social-post-templates/public/generated/bdqueimadas-daily-biomes.png",
-    "map": "/Users/julianopadua/Projects/forest-project/forest-open-data-pipelines/apps/social-post-templates/public/generated/bdqueimadas-daily-map.png"
+    "daily": "/Users/julianopadua/Projects/forest-project/forest-open-data-pipelines/apps/social-post-templates/public/generated/bdqueimadas/daily/bdqueimadas-daily-7d.png",
+    "states": "/Users/julianopadua/Projects/forest-project/forest-open-data-pipelines/apps/social-post-templates/public/generated/bdqueimadas/daily/bdqueimadas-daily-states.png",
+    "biomes": "/Users/julianopadua/Projects/forest-project/forest-open-data-pipelines/apps/social-post-templates/public/generated/bdqueimadas/daily/bdqueimadas-daily-biomes.png",
+    "map": "/Users/julianopadua/Projects/forest-project/forest-open-data-pipelines/apps/social-post-templates/public/generated/bdqueimadas/daily/bdqueimadas-daily-map.png"
   }
 }

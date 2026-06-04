@@ -5,7 +5,7 @@ import json
 import logging
 from pathlib import Path
 
-from forest_pipelines.llm.router import RoutedTextResult
+from forest_pipelines.llm.router import RoutedJSONResult, RoutedTextResult
 from forest_pipelines.logging_ import get_logger
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -15,6 +15,12 @@ def get_social_bdqueimadas_logger(logs_dir: Path | None = None) -> logging.Logge
     """Logger de arquivo + stdout em ``<repo>/logs/social/bdqueimadas/<ano>/<mês>/<dia>.log``."""
     base = logs_dir if logs_dir is not None else _REPO_ROOT / "logs"
     return get_logger(base, "social/bdqueimadas")
+
+
+def get_social_bdqueimadas_daily_logger(logs_dir: Path | None = None) -> logging.Logger:
+    """Logger de arquivo + stdout em ``<repo>/logs/social/bdqueimadas-daily/<ano>/<mês>/<dia>.log``."""
+    base = logs_dir if logs_dir is not None else _REPO_ROOT / "logs"
+    return get_logger(base, "social/bdqueimadas-daily")
 
 
 def log_stage(logger: logging.Logger, stage: str, payload: dict) -> None:
@@ -45,6 +51,37 @@ def log_llm_roundtrip(
         "response": {
             "model": result.model,
             "text": result.text,
+            "raw_text": result.raw_text,
+        },
+    }
+    if scope is not None:
+        payload["scope"] = scope
+    line = json.dumps(payload, ensure_ascii=False)
+    logger.info("%s", line)
+
+
+def log_llm_json_roundtrip(
+    logger: logging.Logger,
+    *,
+    topic_id: str,
+    component: str,
+    system_prompt: str,
+    user_prompt: str,
+    result: RoutedJSONResult,
+    scope: str | None = None,
+) -> None:
+    """Registra prompt completo enviado ao provedor e resposta JSON parseada + bruta."""
+    payload: dict = {
+        "event": "llm_roundtrip",
+        "topic": topic_id,
+        "component": component,
+        "request": {
+            "system": system_prompt,
+            "user": user_prompt,
+        },
+        "response": {
+            "model": result.model,
+            "data": result.data,
             "raw_text": result.raw_text,
         },
     }
