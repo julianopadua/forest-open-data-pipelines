@@ -801,6 +801,17 @@ def build_bdqueimadas_social_assets(
 ) -> dict[str, Any]:
     cy = current_year if current_year is not None else date.today().year
     ref_d = reference_date if reference_date is not None else date.today()
+    last_closed_for_download = last_closed_month_for_calendar_year(ref_d, cy)
+    mensal_target_months = (
+        range(1, last_closed_for_download + 1)
+        if last_closed_for_download > 0
+        else []
+    )
+    mensal_force_months = (
+        [last_closed_for_download]
+        if last_closed_for_download > 0 and not skip_mensal_download
+        else []
+    )
 
     log = logger if logger is not None else get_social_bdqueimadas_logger(logs_dir)
     base_logs = logs_dir if logs_dir is not None else REPO_ROOT / "logs"
@@ -817,6 +828,9 @@ def build_bdqueimadas_social_assets(
             "extract_anual_csvs": extract_anual_csvs,
             "skip_mensal_download": skip_mensal_download,
             "reference_date": ref_d.isoformat(),
+            "last_closed_month_for_download": last_closed_for_download,
+            "mensal_target_months": list(mensal_target_months),
+            "mensal_force_months": list(mensal_force_months),
             "out_png": str(out_png.resolve()),
             "out_json": str(out_json.resolve()),
         },
@@ -876,6 +890,8 @@ def build_bdqueimadas_social_assets(
         year=cy,
         cache_dir=mensal_cache_dir,
         skip_download=skip_mensal_download,
+        months=mensal_target_months,
+        force_download_months=mensal_force_months,
     )
     log_stage(
         log,

@@ -1005,7 +1005,7 @@ def write_manifest(
                 "cta_subline": (
                     "Use como apoio, não como autoridade. "
                     "A análise descritiva foi feita por IA a partir de dados abertos. "
-                    "Veja mais dados e análises em institutoforest.org."
+                    "Veja mais dados e análises em:"
                 ),
                 "cta_url": "institutoforest.org",
             },

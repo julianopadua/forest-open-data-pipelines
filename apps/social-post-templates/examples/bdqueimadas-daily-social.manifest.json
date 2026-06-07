@@ -3,16 +3,16 @@
   "runId": "bdqueimadas-daily-social",
   "globalSlots": {
     "topic_tag": "Queimadas & Focos",
-    "published_at": "2026-05-26 a 2026-06-01"
+    "published_at": "2026-05-31 a 2026-06-06"
   },
-  "instagram_caption_draft": "Entre 2026-05-26 e 2026-06-01, o satélite AQUA_M-T registrou 1.225 focos de calor no Brasil.",
+  "instagram_caption_draft": "Entre 2026-05-31 e 2026-06-06, o satélite AQUA_M-T registrou 1.126 focos de calor no Brasil.",
   "slides": [
     {
       "type": "cover",
       "slots": {
         "series_label": "Monitor Diário",
         "title": "Focos de calor no Brasil",
-        "summary": "Foram 1.225 focos em 7 dias. O pico ocorreu em 2026-05-27 com 298 registros."
+        "summary": "Foram 1.126 focos em 7 dias. O pico ocorreu em 2026-06-04 com 265 registros."
       },
       "slotStyles": {
         "title": {
@@ -25,42 +25,42 @@
       "type": "body_chart",
       "slots": {
         "caption": "Focos por dia",
-        "image_url": "/generated/bdqueimadas/daily/bdqueimadas-daily-7d.png?v=20260602152639",
+        "image_url": "/generated/bdqueimadas/daily/bdqueimadas-daily-7d.png?v=20260607083341",
         "source": "Fonte: INPE BDQueimadas",
-        "body_text": "Distribuição diária dos focos: 26/05: 268, 27/05: 298, 28/05: 113, 29/05: 175, 30/05: 86, 31/05: 60, 01/06: 225. O pico diário foi em 27/05."
+        "body_text": "Durante a janela de 31 de maio a 6 de junho, o número de focos de calor variou de 60 a 265. O pico ocorreu em 4 de junho com 265 focos, enquanto o mínimo foi em 31 de maio com 60. A sequência diária foi 60, 225, 129, 125, 265, 138, 184."
       }
     },
     {
       "type": "body_chart",
       "slots": {
         "caption": "Estados com mais focos",
-        "image_url": "/generated/bdqueimadas/daily/bdqueimadas-daily-states.png?v=20260602152639",
+        "image_url": "/generated/bdqueimadas/daily/bdqueimadas-daily-states.png?v=20260607083341",
         "source": "Fonte: INPE BDQueimadas",
-        "body_text": "Principais estados com focos: Tocantins (425), Mato Grosso (225), Maranhão (146), Bahia (91) e Outros (338). Tocantins representa 34,69% dos focos totais."
+        "body_text": "Mato Grosso lidera o ranking de focos de calor com 362 ocorrências, representando 32,15% do total. Tocantins, Maranhão e Bahia seguem com 241, 100 e 79 casos, respectivamente, enquanto outros estados somam 344."
       }
     },
     {
       "type": "body_chart",
       "slots": {
         "caption": "Biomas com mais focos",
-        "image_url": "/generated/bdqueimadas/daily/bdqueimadas-daily-biomes.png?v=20260602152639",
+        "image_url": "/generated/bdqueimadas/daily/bdqueimadas-daily-biomes.png?v=20260607083341",
         "source": "Fonte: INPE BDQueimadas",
-        "body_text": "Maior incidência nos biomas: Cerrado (797), Amazônia (287), Caatinga (87), Mata Atlântica (44) e Outros (10). O Cerrado corresponde a 65,06% dos focos."
+        "body_text": "Na análise de 7 dias entre 31 de maio e 6 de junho de 2026, o bioma Cerrado lidera o ranking de focos de calor, representando 57,02% do recorte total. Segue o bioma Amazônia com 324 ocorrências, depois Mata Atlântica com 75, Caatinga com 44 e outros biomas com 41. Esses números refletem a distribuição dos focos de calor observados pelo satélite AQUA_M-T."
       }
     },
     {
       "type": "body_chart",
       "slots": {
         "caption": "Mapa de densidade",
-        "image_url": "/generated/bdqueimadas/daily/bdqueimadas-daily-map.png?v=20260602152639",
+        "image_url": "/generated/bdqueimadas/daily/bdqueimadas-daily-map.png?v=20260607083341",
         "source": "Fonte: INPE BDQueimadas",
-        "body_text": "Região com maior número de focos: Norte (565). Esta região concentra 46,12% dos focos totais. Regiões adicionais: Nordeste (304), Centro-Oeste (274), Sudeste (76) e Sul (6)."
+        "body_text": "O mapa mostra a distribuição de focos de calor detectados pelo satélite AQUA_M-T entre 31 de maio e 6 de junho de 2026. Os focos foram agregados por estado, não representando densidade por área. A região Centro‑Oeste registrou 434 focos, representando 38,54 % do total, sendo a região com maior número de ocorrências."
       }
     },
     {
       "type": "cta",
       "slots": {
-        "cta_kicker": "Esse post foi gerado em 23 segundos",
+        "cta_kicker": "Esse post foi gerado em 10 segundos",
         "cta_headline": "Análise assistida por IA",
         "cta_subline": "Use como apoio, não como autoridade. A análise descritiva foi feita por IA a partir de dados abertos. Veja mais dados e análises em institutoforest.org.",
         "cta_url": "institutoforest.org"

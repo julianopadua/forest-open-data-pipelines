@@ -23,7 +23,7 @@
         1867,
         1968,
         2035,
-        null,
+        161,
         null,
         null,
         null,
@@ -53,7 +53,7 @@
     },
     "avg_5y": {
       "key": "avg_5y",
-      "label": "Média 2021–2025 (por mês)",
+      "label": "Média 2021-2025 (por mês)",
       "values": [
         3036.4,
         2507.6,
@@ -75,11 +75,11 @@
     "previous_year": 2025,
     "avg_window_years_from": 2021,
     "avg_window_years_to": 2025,
-    "last_closed_month": 4,
-    "reference_date": "2026-05-19",
+    "last_closed_month": 5,
+    "reference_date": "2026-06-07",
     "unit": "focos",
     "source": "INPE BDQueimadas (mensal COIDS + agregação ZIP anual; satélite AQUA_M-T)",
-    "published_at_label": "Abr 2026",
+    "published_at_label": "Mai 2026",
     "biome_scope": "nacional",
     "biome_label_pt": "Brasil",
     "reference_satellite": "AQUA_M-T"

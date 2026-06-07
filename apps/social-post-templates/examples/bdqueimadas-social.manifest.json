@@ -7,13 +7,17 @@
     "pageNumberPx": 24,
     "logoHeightPx": 54
   },
+  "globalSlots": {
+    "topic_tag": "Queimadas & Focos",
+    "published_at": "Mai 2026"
+  },
   "slides": [
     {
       "type": "cover",
       "slots": {
         "series_label": "Séries Temporais",
         "title": "Focos de incêndio no Brasil",
-        "summary": "Brasil, Amazônia, Cerrado e Pantanal - 2026 vs 2025 e média por mês (2021–2025)."
+        "summary": "Brasil, Amazônia, Cerrado e Pantanal - 2026 vs 2025 e média por mês (2021-2025)."
       }
     },
     {
@@ -21,7 +25,7 @@
       "slots": {
         "caption": "Focos por mês (Brasil) · BDQueimadas, INPE",
         "image_url": "/generated/bdqueimadas-chart-nacional.png",
-        "body_text": "O gráfico resume a série mensal de focos. A faixa mais clara representa a média dos anos anteriores por mês; as linhas comparam o ano corrente com o ano anterior."
+        "body_text": "O gráfico mostra o número de focos de queimadas no Brasil por mês, com os dados encerrados em maio de 2026. Em maio de 2026 foram registrados apenas 161 focos, uma queda de 96,22 % em relação aos 4.263 focos de maio de 2025. Até o fim de maio, o acumulado de 10.602 focos representa 19,79 % a menos que os 13.217 focos registrados no mesmo período de 2025. Comparado com a média móvel de cinco anos, que acumulou 16.207,4 focos, o ano atual está 34,59 % abaixo. Esses números indicam uma redução significativa nas queimadas no país durante o primeiro semestre de 2026."
       },
       "generation": {
         "ok": true,
@@ -33,7 +37,7 @@
       "slots": {
         "caption": "Focos por mês (Amazônia) · BDQueimadas, INPE",
         "image_url": "/generated/bdqueimadas-chart-amazonia.png",
-        "body_text": "O gráfico resume a série mensal de focos. A faixa mais clara representa a média dos anos anteriores por mês; as linhas comparam o ano corrente com o ano anterior."
+        "body_text": "Em maio de 2026, a Amazônia registrou 33 focos de queimadas, uma queda de 96,05 % em relação aos 836 focos de maio de 2025. No acumulado de janeiro a maio, o ano atual atingiu 4.241 focos, 20,52 % a mais que os 3.519 do mesmo período em 2025. Contudo, esse total ainda fica 25,57 % abaixo da média de 5 anos, que era de 5.697,6 focos. Esses números mostram que, apesar de um aumento em relação ao ano anterior, a região continua abaixo da tendência histórica. O gráfico ilustra claramente essa variação mensal e acumulada, destacando a importância de monitorar as queimadas na Amazônia."
       },
       "generation": {
         "ok": true,
@@ -45,7 +49,7 @@
       "slots": {
         "caption": "Focos por mês (Cerrado) · BDQueimadas, INPE",
         "image_url": "/generated/bdqueimadas-chart-cerrado.png",
-        "body_text": "O gráfico resume a série mensal de focos. A faixa mais clara representa a média dos anos anteriores por mês; as linhas comparam o ano corrente com o ano anterior."
+        "body_text": "No Cerrado, o número de focos de queimada em maio de 2026 foi de apenas 109, representando uma queda de 95,69 % em relação aos 2.527 focos registrados em maio de 2025.  \nAté o fim de maio, o acumulado de focos para 2026 chegou a 2.396, o que corresponde a uma redução de 53,68 % em comparação com os 5.173 focos acumulados no mesmo período de 2025.  \nEm relação à média móvel de cinco anos (2021‑2025), que era de 6.210,4 focos, o acumulado de 2026 ficou 61,42 % abaixo desse patamar histórico.  \nEsses números indicam que, até o momento, o Cerrado está apresentando um nível de queimada muito inferior ao observado nos anos anteriores e à média regional.  \nA tendência sugere uma diminuição significativa na ocorrência de focos, embora seja importante acompanhar os meses subsequentes para confirmar se essa queda se mantém."
       },
       "generation": {
         "ok": true,
@@ -57,7 +61,7 @@
       "slots": {
         "caption": "Focos por mês (Pantanal) · BDQueimadas, INPE",
         "image_url": "/generated/bdqueimadas-chart-pantanal.png",
-        "body_text": "O gráfico resume a série mensal de focos. A faixa mais clara representa a média dos anos anteriores por mês; as linhas comparam o ano corrente com o ano anterior."
+        "body_text": "No Pantanal, o gráfico mostra o número de focos de queimadas por mês. Em maio de 2026, foram registrados apenas 4 focos, um declínio de 60 % em relação aos 10 registrados em maio de 2025. No acumulado de janeiro a maio, o ano atual atingiu 126 focos, 80 % a mais que os 70 do mesmo período em 2025, mas ainda 63,7 % abaixo da média de 346,8 focos observada nos últimos cinco anos. Esses números indicam que, embora o ano atual tenha apresentado um aumento no total acumulado, o número mensal de focos em maio permanece significativamente menor que o ano anterior. O gráfico destaca a necessidade de monitoramento contínuo para entender as variações sazonais e a eficácia das medidas de prevenção no bioma."
       },
       "generation": {
         "ok": true,
@@ -74,8 +78,5 @@
       }
     }
   ],
-  "globalSlots": {
-    "topic_tag": "Queimadas & Focos",
-    "published_at": "Abr 2026"
-  }
+  "instagram_caption_draft": "[2026-06-07]\nAcompanhe a evolução dos focos de incêndio no Brasil, com dados nacionais e regionais, destacando as principais áreas afetadas."
 }

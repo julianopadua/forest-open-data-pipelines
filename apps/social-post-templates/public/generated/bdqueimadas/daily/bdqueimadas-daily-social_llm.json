@@ -6,31 +6,11 @@
     "schema": "bdqueimadas_daily_v1",
     "reference_satellite": "AQUA_M-T",
     "window": {
-      "start_date": "2026-05-26",
-      "end_date": "2026-06-01",
+      "start_date": "2026-05-31",
+      "end_date": "2026-06-06",
       "days": 7
     },
     "source_urls": [
-      {
-        "date": "2026-05-26",
-        "url": "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/diario/Brasil/focos_diario_br_20260526.csv"
-      },
-      {
-        "date": "2026-05-27",
-        "url": "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/diario/Brasil/focos_diario_br_20260527.csv"
-      },
-      {
-        "date": "2026-05-28",
-        "url": "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/diario/Brasil/focos_diario_br_20260528.csv"
-      },
-      {
-        "date": "2026-05-29",
-        "url": "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/diario/Brasil/focos_diario_br_20260529.csv"
-      },
-      {
-        "date": "2026-05-30",
-        "url": "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/diario/Brasil/focos_diario_br_20260530.csv"
-      },
       {
         "date": "2026-05-31",
         "url": "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/diario/Brasil/focos_diario_br_20260531.csv"
@@ -38,32 +18,32 @@
       {
         "date": "2026-06-01",
         "url": "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/diario/Brasil/focos_diario_br_20260601.csv"
+      },
+      {
+        "date": "2026-06-02",
+        "url": "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/diario/Brasil/focos_diario_br_20260602.csv"
+      },
+      {
+        "date": "2026-06-03",
+        "url": "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/diario/Brasil/focos_diario_br_20260603.csv"
+      },
+      {
+        "date": "2026-06-04",
+        "url": "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/diario/Brasil/focos_diario_br_20260604.csv"
+      },
+      {
+        "date": "2026-06-05",
+        "url": "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/diario/Brasil/focos_diario_br_20260605.csv"
+      },
+      {
+        "date": "2026-06-06",
+        "url": "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/diario/Brasil/focos_diario_br_20260606.csv"
       }
     ],
     "metrics": {
-      "total_focos_reference_satellite": 1225,
-      "total_rows_all_satellites": 23864,
+      "total_focos_reference_satellite": 1126,
+      "total_rows_all_satellites": 25304,
       "daily_counts": [
-        {
-          "date": "2026-05-26",
-          "value": 268
-        },
-        {
-          "date": "2026-05-27",
-          "value": 298
-        },
-        {
-          "date": "2026-05-28",
-          "value": 113
-        },
-        {
-          "date": "2026-05-29",
-          "value": 175
-        },
-        {
-          "date": "2026-05-30",
-          "value": 86
-        },
         {
           "date": "2026-05-31",
           "value": 60
@@ -71,82 +51,102 @@
         {
           "date": "2026-06-01",
           "value": 225
+        },
+        {
+          "date": "2026-06-02",
+          "value": 129
+        },
+        {
+          "date": "2026-06-03",
+          "value": 125
+        },
+        {
+          "date": "2026-06-04",
+          "value": 265
+        },
+        {
+          "date": "2026-06-05",
+          "value": 138
+        },
+        {
+          "date": "2026-06-06",
+          "value": 184
         }
       ],
       "top_states": [
         {
-          "label": "TOCANTINS",
-          "value": 425
+          "label": "MATO GROSSO",
+          "value": 362
         },
         {
-          "label": "MATO GROSSO",
-          "value": 225
+          "label": "TOCANTINS",
+          "value": 241
         },
         {
           "label": "MARANHÃO",
-          "value": 146
+          "value": 100
         },
         {
           "label": "BAHIA",
-          "value": 91
+          "value": 79
         },
         {
           "label": "Outros",
-          "value": 338
+          "value": 344
         }
       ],
       "top_biomes": [
         {
           "label": "Cerrado",
-          "value": 797
+          "value": 642
         },
         {
           "label": "Amazônia",
-          "value": 287
-        },
-        {
-          "label": "Caatinga",
-          "value": 87
+          "value": 324
         },
         {
           "label": "Mata Atlântica",
+          "value": 75
+        },
+        {
+          "label": "Caatinga",
           "value": 44
         },
         {
           "label": "Outros",
-          "value": 10
+          "value": 41
         }
       ],
       "top_regions": [
         {
+          "label": "Centro-Oeste",
+          "value": 434
+        },
+        {
           "label": "Norte",
-          "value": 565
+          "value": 341
         },
         {
           "label": "Nordeste",
-          "value": 304
-        },
-        {
-          "label": "Centro-Oeste",
-          "value": 274
+          "value": 226
         },
         {
           "label": "Sudeste",
-          "value": 76
+          "value": 100
         },
         {
           "label": "Sul",
-          "value": 6
+          "value": 25
         }
       ]
     },
     "slide_context": {
       "cover": {
-        "total_focos_reference_satellite": 1225,
+        "total_focos_reference_satellite": 1126,
         "days_observed": 7,
         "max_day": {
-          "date": "2026-05-27",
-          "value": 298
+          "date": "2026-06-04",
+          "value": 265
         },
         "min_day": {
           "date": "2026-05-31",
@@ -154,69 +154,69 @@
         },
         "daily_counts": [
           {
-            "date": "2026-05-26",
-            "value": 268
-          },
-          {
-            "date": "2026-05-27",
-            "value": 298
-          },
-          {
-            "date": "2026-05-28",
-            "value": 113
-          },
-          {
-            "date": "2026-05-29",
-            "value": 175
-          },
-          {
-            "date": "2026-05-30",
-            "value": 86
-          },
-          {
             "date": "2026-05-31",
             "value": 60
           },
           {
             "date": "2026-06-01",
             "value": 225
+          },
+          {
+            "date": "2026-06-02",
+            "value": 129
+          },
+          {
+            "date": "2026-06-03",
+            "value": 125
+          },
+          {
+            "date": "2026-06-04",
+            "value": 265
+          },
+          {
+            "date": "2026-06-05",
+            "value": 138
+          },
+          {
+            "date": "2026-06-06",
+            "value": 184
           }
         ]
       },
       "daily": {
         "daily_counts": [
           {
-            "date": "2026-05-26",
-            "value": 268
-          },
-          {
-            "date": "2026-05-27",
-            "value": 298
-          },
-          {
-            "date": "2026-05-28",
-            "value": 113
-          },
-          {
-            "date": "2026-05-29",
-            "value": 175
-          },
-          {
-            "date": "2026-05-30",
-            "value": 86
-          },
-          {
             "date": "2026-05-31",
             "value": 60
           },
           {
             "date": "2026-06-01",
             "value": 225
+          },
+          {
+            "date": "2026-06-02",
+            "value": 129
+          },
+          {
+            "date": "2026-06-03",
+            "value": 125
+          },
+          {
+            "date": "2026-06-04",
+            "value": 265
+          },
+          {
+            "date": "2026-06-05",
+            "value": 138
+          },
+          {
+            "date": "2026-06-06",
+            "value": 184
           }
         ],
         "max_day": {
-          "date": "2026-05-27",
-          "value": 298
+          "date": "2026-06-04",
+          "value": 265
         },
         "min_day": {
           "date": "2026-05-31",
@@ -226,89 +226,89 @@
       "states": {
         "top_states": [
           {
-            "label": "TOCANTINS",
-            "value": 425
+            "label": "MATO GROSSO",
+            "value": 362
           },
           {
-            "label": "MATO GROSSO",
-            "value": 225
+            "label": "TOCANTINS",
+            "value": 241
           },
           {
             "label": "MARANHÃO",
-            "value": 146
+            "value": 100
           },
           {
             "label": "BAHIA",
-            "value": 91
+            "value": 79
           },
           {
             "label": "Outros",
-            "value": 338
+            "value": 344
           }
         ],
         "top_state": {
-          "label": "TOCANTINS",
-          "value": 425
+          "label": "MATO GROSSO",
+          "value": 362
         },
-        "top_state_share_pct": 34.69
+        "top_state_share_pct": 32.15
       },
       "biomes": {
         "top_biomes": [
           {
             "label": "Cerrado",
-            "value": 797
+            "value": 642
           },
           {
             "label": "Amazônia",
-            "value": 287
-          },
-          {
-            "label": "Caatinga",
-            "value": 87
+            "value": 324
           },
           {
             "label": "Mata Atlântica",
+            "value": 75
+          },
+          {
+            "label": "Caatinga",
             "value": 44
           },
           {
             "label": "Outros",
-            "value": 10
+            "value": 41
           }
         ],
         "top_biome": {
           "label": "Cerrado",
-          "value": 797
+          "value": 642
         },
-        "top_biome_share_pct": 65.06
+        "top_biome_share_pct": 57.02
       },
       "map": {
         "region_counts": [
           {
+            "label": "Centro-Oeste",
+            "value": 434
+          },
+          {
             "label": "Norte",
-            "value": 565
+            "value": 341
           },
           {
             "label": "Nordeste",
-            "value": 304
-          },
-          {
-            "label": "Centro-Oeste",
-            "value": 274
+            "value": 226
           },
           {
             "label": "Sudeste",
-            "value": 76
+            "value": 100
           },
           {
             "label": "Sul",
-            "value": 6
+            "value": 25
           }
         ],
         "top_region_by_focus_count": {
-          "label": "Norte",
-          "value": 565
+          "label": "Centro-Oeste",
+          "value": 434
         },
-        "top_region_share_pct": 46.12,
+        "top_region_share_pct": 38.54,
         "aggregation_note": "Região agregada por estado. Não é uma densidade por área."
       }
     },
@@ -320,26 +320,29 @@
     "warnings": []
   },
   "texts": {
-    "instagram_caption": "Entre 2026-05-26 e 2026-06-01, o satélite AQUA_M-T registrou 1.225 focos de calor no Brasil.",
+    "instagram_caption": "Entre 2026-05-31 e 2026-06-06, o satélite AQUA_M-T registrou 1.126 focos de calor no Brasil.",
     "slides": {
-      "cover": "Foram 1.225 focos em 7 dias. O pico ocorreu em 2026-05-27 com 298 registros.",
-      "daily": "Distribuição diária dos focos: 26/05: 268, 27/05: 298, 28/05: 113, 29/05: 175, 30/05: 86, 31/05: 60, 01/06: 225. O pico diário foi em 27/05.",
-      "states": "Principais estados com focos: Tocantins (425), Mato Grosso (225), Maranhão (146), Bahia (91) e Outros (338). Tocantins representa 34,69% dos focos totais.",
-      "biomes": "Maior incidência nos biomas: Cerrado (797), Amazônia (287), Caatinga (87), Mata Atlântica (44) e Outros (10). O Cerrado corresponde a 65,06% dos focos.",
-      "map": "Região com maior número de focos: Norte (565). Esta região concentra 46,12% dos focos totais. Regiões adicionais: Nordeste (304), Centro-Oeste (274), Sudeste (76) e Sul (6)."
+      "cover": "Foram 1.126 focos em 7 dias. O pico ocorreu em 2026-06-04 com 265 registros.",
+      "daily": "Durante a janela de 31 de maio a 6 de junho, o número de focos de calor variou de 60 a 265. O pico ocorreu em 4 de junho com 265 focos, enquanto o mínimo foi em 31 de maio com 60. A sequência diária foi 60, 225, 129, 125, 265, 138, 184.",
+      "states": "Mato Grosso lidera o ranking de focos de calor com 362 ocorrências, representando 32,15% do total. Tocantins, Maranhão e Bahia seguem com 241, 100 e 79 casos, respectivamente, enquanto outros estados somam 344.",
+      "biomes": "Na análise de 7 dias entre 31 de maio e 6 de junho de 2026, o bioma Cerrado lidera o ranking de focos de calor, representando 57,02% do recorte total. Segue o bioma Amazônia com 324 ocorrências, depois Mata Atlântica com 75, Caatinga com 44 e outros biomas com 41. Esses números refletem a distribuição dos focos de calor observados pelo satélite AQUA_M-T.",
+      "map": "O mapa mostra a distribuição de focos de calor detectados pelo satélite AQUA_M-T entre 31 de maio e 6 de junho de 2026. Os focos foram agregados por estado, não representando densidade por área. A região Centro‑Oeste registrou 434 focos, representando 38,54 % do total, sendo a região com maior número de ocorrências."
     },
     "comments": [
-      "Os dados refletem a variação diária de focos detectados pelo satélite AQUA_M-T.",
-      "A análise não implica causalidade entre fatores climáticos e ocorrência de focos.",
-      "Os números são baseados em registros de 26/05 a 01/06/2026."
+      "Texto determinístico gerado sem LLM ou usado como fallback."
     ]
   },
   "llm_model": "openai/gpt-oss-20b",
   "llm_error": null,
-  "llm_models_by_slide": {},
+  "llm_models_by_slide": {
+    "daily": "openai/gpt-oss-20b",
+    "states": "openai/gpt-oss-20b",
+    "biomes": "openai/gpt-oss-20b",
+    "map": "openai/gpt-oss-20b"
+  },
   "llm_errors_by_slide": {},
-  "generated_in_seconds": 23,
-  "asset_version": "20260602152639",
+  "generated_in_seconds": 10,
+  "asset_version": "20260607083341",
   "charts": {
     "daily": "/Users/julianopadua/Projects/forest-project/forest-open-data-pipelines/apps/social-post-templates/public/generated/bdqueimadas/daily/bdqueimadas-daily-7d.png",
     "states": "/Users/julianopadua/Projects/forest-project/forest-open-data-pipelines/apps/social-post-templates/public/generated/bdqueimadas/daily/bdqueimadas-daily-states.png",
