@@ -3,16 +3,16 @@
   "runId": "bdqueimadas-daily-social",
   "globalSlots": {
     "topic_tag": "Queimadas & Focos",
-    "published_at": "2026-05-31 a 2026-06-06"
+    "published_at": "2026-06-01 a 2026-06-07"
   },
-  "instagram_caption_draft": "Entre 2026-05-31 e 2026-06-06, o satélite AQUA_M-T registrou 1.126 focos de calor no Brasil.",
+  "instagram_caption_draft": "Entre 2026-06-01 e 2026-06-07, o satélite AQUA_M-T registrou 1.158 focos de calor no Brasil.",
   "slides": [
     {
       "type": "cover",
       "slots": {
         "series_label": "Monitor Diário",
         "title": "Focos de calor no Brasil",
-        "summary": "Foram 1.126 focos em 7 dias. O pico ocorreu em 2026-06-04 com 265 registros."
+        "summary": "Foram 1.158 focos em 7 dias. O pico ocorreu em 2026-06-04 com 265 registros."
       },
       "slotStyles": {
         "title": {
@@ -25,44 +25,44 @@
       "type": "body_chart",
       "slots": {
         "caption": "Focos por dia",
-        "image_url": "/generated/bdqueimadas/daily/bdqueimadas-daily-7d.png?v=20260607083341",
+        "image_url": "/generated/bdqueimadas/daily/bdqueimadas-daily-7d.png?v=20260608124649",
         "source": "Fonte: INPE BDQueimadas",
-        "body_text": "Durante a janela de 31 de maio a 6 de junho, o número de focos de calor variou de 60 a 265. O pico ocorreu em 4 de junho com 265 focos, enquanto o mínimo foi em 31 de maio com 60. A sequência diária foi 60, 225, 129, 125, 265, 138, 184."
+        "body_text": "Na semana de 1 a 7 de junho de 2026, o número de focos de calor detectados pelo satélite AQUA_M-T variou de 92 a 265. O pico ocorreu em 4 de junho, com 265 focos, enquanto o mínimo foi em 7 de junho, com 92. A sequência diária foi: 225, 129, 125, 265, 138, 184, 92."
       }
     },
     {
       "type": "body_chart",
       "slots": {
         "caption": "Estados com mais focos",
-        "image_url": "/generated/bdqueimadas/daily/bdqueimadas-daily-states.png?v=20260607083341",
+        "image_url": "/generated/bdqueimadas/daily/bdqueimadas-daily-states.png?v=20260608124649",
         "source": "Fonte: INPE BDQueimadas",
-        "body_text": "Mato Grosso lidera o ranking de focos de calor com 362 ocorrências, representando 32,15% do total. Tocantins, Maranhão e Bahia seguem com 241, 100 e 79 casos, respectivamente, enquanto outros estados somam 344."
+        "body_text": "Na semana de 1 a 7 de junho, Mato Grosso liderou o ranking de focos de calor com 402 ocorrências, representando 34,72% do total. Tocantins, Maranhão e Bahia registraram 237, 97 e 80 focos, respectivamente, enquanto o restante do país contabilizou 342 casos."
       }
     },
     {
       "type": "body_chart",
       "slots": {
         "caption": "Biomas com mais focos",
-        "image_url": "/generated/bdqueimadas/daily/bdqueimadas-daily-biomes.png?v=20260607083341",
+        "image_url": "/generated/bdqueimadas/daily/bdqueimadas-daily-biomes.png?v=20260608124649",
         "source": "Fonte: INPE BDQueimadas",
-        "body_text": "Na análise de 7 dias entre 31 de maio e 6 de junho de 2026, o bioma Cerrado lidera o ranking de focos de calor, representando 57,02% do recorte total. Segue o bioma Amazônia com 324 ocorrências, depois Mata Atlântica com 75, Caatinga com 44 e outros biomas com 41. Esses números refletem a distribuição dos focos de calor observados pelo satélite AQUA_M-T."
+        "body_text": "Na semana de 1 a 7 de junho, o bioma Cerrado liderou o recorte de focos de calor, representando 56,39% dos eventos detectados. Segue o ranking: Cerrado (653), Amazônia (344), Mata Atlântica (86), Caatinga (36) e Outros (39)."
       }
     },
     {
       "type": "body_chart",
       "slots": {
         "caption": "Mapa de densidade",
-        "image_url": "/generated/bdqueimadas/daily/bdqueimadas-daily-map.png?v=20260607083341",
+        "image_url": "/generated/bdqueimadas/daily/bdqueimadas-daily-map.png?v=20260608124649",
         "source": "Fonte: INPE BDQueimadas",
-        "body_text": "O mapa mostra a distribuição de focos de calor detectados pelo satélite AQUA_M-T entre 31 de maio e 6 de junho de 2026. Os focos foram agregados por estado, não representando densidade por área. A região Centro‑Oeste registrou 434 focos, representando 38,54 % do total, sendo a região com maior número de ocorrências."
+        "body_text": "Mapa diário de focos de calor no Brasil (1 a 7 de junho de 2026) mostra a agregação por estado. O Centro-Oeste lidera com 489 focos, representando 42,23 % do total. As demais regiões apresentam 329 (Norte), 213 (Nordeste), 88 (Sudeste) e 39 (Sul)."
       }
     },
     {
       "type": "cta",
       "slots": {
-        "cta_kicker": "Esse post foi gerado em 10 segundos",
+        "cta_kicker": "Esse post foi gerado em 7 segundos",
         "cta_headline": "Análise assistida por IA",
-        "cta_subline": "Use como apoio, não como autoridade. A análise descritiva foi feita por IA a partir de dados abertos. Veja mais dados e análises em institutoforest.org.",
+        "cta_subline": "Use como apoio, não como autoridade. A análise descritiva foi feita por IA a partir de dados abertos. Veja mais dados e análises em:",
         "cta_url": "institutoforest.org"
       }
     }

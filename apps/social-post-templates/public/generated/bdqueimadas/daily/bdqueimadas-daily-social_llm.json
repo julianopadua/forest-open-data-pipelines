@@ -6,15 +6,11 @@
     "schema": "bdqueimadas_daily_v1",
     "reference_satellite": "AQUA_M-T",
     "window": {
-      "start_date": "2026-05-31",
-      "end_date": "2026-06-06",
+      "start_date": "2026-06-01",
+      "end_date": "2026-06-07",
       "days": 7
     },
     "source_urls": [
-      {
-        "date": "2026-05-31",
-        "url": "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/diario/Brasil/focos_diario_br_20260531.csv"
-      },
       {
         "date": "2026-06-01",
         "url": "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/diario/Brasil/focos_diario_br_20260601.csv"
@@ -38,16 +34,16 @@
       {
         "date": "2026-06-06",
         "url": "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/diario/Brasil/focos_diario_br_20260606.csv"
+      },
+      {
+        "date": "2026-06-07",
+        "url": "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/diario/Brasil/focos_diario_br_20260607.csv"
       }
     ],
     "metrics": {
-      "total_focos_reference_satellite": 1126,
-      "total_rows_all_satellites": 25304,
+      "total_focos_reference_satellite": 1158,
+      "total_rows_all_satellites": 25834,
       "daily_counts": [
-        {
-          "date": "2026-05-31",
-          "value": 60
-        },
         {
           "date": "2026-06-01",
           "value": 225
@@ -71,92 +67,92 @@
         {
           "date": "2026-06-06",
           "value": 184
+        },
+        {
+          "date": "2026-06-07",
+          "value": 92
         }
       ],
       "top_states": [
         {
           "label": "MATO GROSSO",
-          "value": 362
+          "value": 402
         },
         {
           "label": "TOCANTINS",
-          "value": 241
+          "value": 237
         },
         {
           "label": "MARANHÃO",
-          "value": 100
+          "value": 97
         },
         {
           "label": "BAHIA",
-          "value": 79
+          "value": 80
         },
         {
           "label": "Outros",
-          "value": 344
+          "value": 342
         }
       ],
       "top_biomes": [
         {
           "label": "Cerrado",
-          "value": 642
+          "value": 653
         },
         {
           "label": "Amazônia",
-          "value": 324
+          "value": 344
         },
         {
           "label": "Mata Atlântica",
-          "value": 75
+          "value": 86
         },
         {
           "label": "Caatinga",
-          "value": 44
+          "value": 36
         },
         {
           "label": "Outros",
-          "value": 41
+          "value": 39
         }
       ],
       "top_regions": [
         {
           "label": "Centro-Oeste",
-          "value": 434
+          "value": 489
         },
         {
           "label": "Norte",
-          "value": 341
+          "value": 329
         },
         {
           "label": "Nordeste",
-          "value": 226
+          "value": 213
         },
         {
           "label": "Sudeste",
-          "value": 100
+          "value": 88
         },
         {
           "label": "Sul",
-          "value": 25
+          "value": 39
         }
       ]
     },
     "slide_context": {
       "cover": {
-        "total_focos_reference_satellite": 1126,
+        "total_focos_reference_satellite": 1158,
         "days_observed": 7,
         "max_day": {
           "date": "2026-06-04",
           "value": 265
         },
         "min_day": {
-          "date": "2026-05-31",
-          "value": 60
+          "date": "2026-06-07",
+          "value": 92
         },
         "daily_counts": [
-          {
-            "date": "2026-05-31",
-            "value": 60
-          },
           {
             "date": "2026-06-01",
             "value": 225
@@ -180,16 +176,16 @@
           {
             "date": "2026-06-06",
             "value": 184
+          },
+          {
+            "date": "2026-06-07",
+            "value": 92
           }
         ]
       },
       "daily": {
         "daily_counts": [
           {
-            "date": "2026-05-31",
-            "value": 60
-          },
-          {
             "date": "2026-06-01",
             "value": 225
           },
@@ -212,6 +208,10 @@
           {
             "date": "2026-06-06",
             "value": 184
+          },
+          {
+            "date": "2026-06-07",
+            "value": 92
           }
         ],
         "max_day": {
@@ -219,96 +219,96 @@
           "value": 265
         },
         "min_day": {
-          "date": "2026-05-31",
-          "value": 60
+          "date": "2026-06-07",
+          "value": 92
         }
       },
       "states": {
         "top_states": [
           {
             "label": "MATO GROSSO",
-            "value": 362
+            "value": 402
           },
           {
             "label": "TOCANTINS",
-            "value": 241
+            "value": 237
           },
           {
             "label": "MARANHÃO",
-            "value": 100
+            "value": 97
           },
           {
             "label": "BAHIA",
-            "value": 79
+            "value": 80
           },
           {
             "label": "Outros",
-            "value": 344
+            "value": 342
           }
         ],
         "top_state": {
           "label": "MATO GROSSO",
-          "value": 362
+          "value": 402
         },
-        "top_state_share_pct": 32.15
+        "top_state_share_pct": 34.72
       },
       "biomes": {
         "top_biomes": [
           {
             "label": "Cerrado",
-            "value": 642
+            "value": 653
           },
           {
             "label": "Amazônia",
-            "value": 324
+            "value": 344
           },
           {
             "label": "Mata Atlântica",
-            "value": 75
+            "value": 86
           },
           {
             "label": "Caatinga",
-            "value": 44
+            "value": 36
           },
           {
             "label": "Outros",
-            "value": 41
+            "value": 39
           }
         ],
         "top_biome": {
           "label": "Cerrado",
-          "value": 642
+          "value": 653
         },
-        "top_biome_share_pct": 57.02
+        "top_biome_share_pct": 56.39
       },
       "map": {
         "region_counts": [
           {
             "label": "Centro-Oeste",
-            "value": 434
+            "value": 489
           },
           {
             "label": "Norte",
-            "value": 341
+            "value": 329
           },
           {
             "label": "Nordeste",
-            "value": 226
+            "value": 213
           },
           {
             "label": "Sudeste",
-            "value": 100
+            "value": 88
           },
           {
             "label": "Sul",
-            "value": 25
+            "value": 39
           }
         ],
         "top_region_by_focus_count": {
           "label": "Centro-Oeste",
-          "value": 434
+          "value": 489
         },
-        "top_region_share_pct": 38.54,
+        "top_region_share_pct": 42.23,
         "aggregation_note": "Região agregada por estado. Não é uma densidade por área."
       }
     },
@@ -320,13 +320,13 @@
     "warnings": []
   },
   "texts": {
-    "instagram_caption": "Entre 2026-05-31 e 2026-06-06, o satélite AQUA_M-T registrou 1.126 focos de calor no Brasil.",
+    "instagram_caption": "Entre 2026-06-01 e 2026-06-07, o satélite AQUA_M-T registrou 1.158 focos de calor no Brasil.",
     "slides": {
-      "cover": "Foram 1.126 focos em 7 dias. O pico ocorreu em 2026-06-04 com 265 registros.",
-      "daily": "Durante a janela de 31 de maio a 6 de junho, o número de focos de calor variou de 60 a 265. O pico ocorreu em 4 de junho com 265 focos, enquanto o mínimo foi em 31 de maio com 60. A sequência diária foi 60, 225, 129, 125, 265, 138, 184.",
-      "states": "Mato Grosso lidera o ranking de focos de calor com 362 ocorrências, representando 32,15% do total. Tocantins, Maranhão e Bahia seguem com 241, 100 e 79 casos, respectivamente, enquanto outros estados somam 344.",
-      "biomes": "Na análise de 7 dias entre 31 de maio e 6 de junho de 2026, o bioma Cerrado lidera o ranking de focos de calor, representando 57,02% do recorte total. Segue o bioma Amazônia com 324 ocorrências, depois Mata Atlântica com 75, Caatinga com 44 e outros biomas com 41. Esses números refletem a distribuição dos focos de calor observados pelo satélite AQUA_M-T.",
-      "map": "O mapa mostra a distribuição de focos de calor detectados pelo satélite AQUA_M-T entre 31 de maio e 6 de junho de 2026. Os focos foram agregados por estado, não representando densidade por área. A região Centro‑Oeste registrou 434 focos, representando 38,54 % do total, sendo a região com maior número de ocorrências."
+      "cover": "Foram 1.158 focos em 7 dias. O pico ocorreu em 2026-06-04 com 265 registros.",
+      "daily": "Na semana de 1 a 7 de junho de 2026, o número de focos de calor detectados pelo satélite AQUA_M-T variou de 92 a 265. O pico ocorreu em 4 de junho, com 265 focos, enquanto o mínimo foi em 7 de junho, com 92. A sequência diária foi: 225, 129, 125, 265, 138, 184, 92.",
+      "states": "Na semana de 1 a 7 de junho, Mato Grosso liderou o ranking de focos de calor com 402 ocorrências, representando 34,72% do total. Tocantins, Maranhão e Bahia registraram 237, 97 e 80 focos, respectivamente, enquanto o restante do país contabilizou 342 casos.",
+      "biomes": "Na semana de 1 a 7 de junho, o bioma Cerrado liderou o recorte de focos de calor, representando 56,39% dos eventos detectados. Segue o ranking: Cerrado (653), Amazônia (344), Mata Atlântica (86), Caatinga (36) e Outros (39).",
+      "map": "Mapa diário de focos de calor no Brasil (1 a 7 de junho de 2026) mostra a agregação por estado. O Centro-Oeste lidera com 489 focos, representando 42,23 % do total. As demais regiões apresentam 329 (Norte), 213 (Nordeste), 88 (Sudeste) e 39 (Sul)."
     },
     "comments": [
       "Texto determinístico gerado sem LLM ou usado como fallback."
@@ -341,8 +341,8 @@
     "map": "openai/gpt-oss-20b"
   },
   "llm_errors_by_slide": {},
-  "generated_in_seconds": 10,
-  "asset_version": "20260607083341",
+  "generated_in_seconds": 7,
+  "asset_version": "20260608124649",
   "charts": {
     "daily": "/Users/julianopadua/Projects/forest-project/forest-open-data-pipelines/apps/social-post-templates/public/generated/bdqueimadas/daily/bdqueimadas-daily-7d.png",
     "states": "/Users/julianopadua/Projects/forest-project/forest-open-data-pipelines/apps/social-post-templates/public/generated/bdqueimadas/daily/bdqueimadas-daily-states.png",
