@@ -16,7 +16,7 @@ from forest_pipelines.datasets.inpe import (
 from forest_pipelines.datasets.inmet import dados_historicos
 from forest_pipelines.datasets.mma import cnuc_unidades_conservacao
 from forest_pipelines.datasets.noticias_agricolas.sync import sync as noticias_agricolas_news_sync
-from forest_pipelines.datasets.supranational import SUPRANATIONAL_DATASET_IDS
+from forest_pipelines.datasets.supranational import SUPRANATIONAL_DATASET_IDS as SUPRANATIONAL_DATASET_IDS_FROM_RUNNER
 from forest_pipelines.datasets.supranational import make_sync as make_supranational_sync
 
 DatasetRunner = Callable[..., dict[str, Any]]
@@ -77,6 +77,32 @@ CVM_DATASET_IDS: tuple[str, ...] = (
     "cvm_emissores",
     "cvm_arrecadacao_receita_publica",
 )
+
+SUPRANATIONAL_DATASET_IDS: tuple[str, ...] = (
+    "world_bank_wdi_bulk",
+    "un_wpp_2024_bulk_csv",
+    "jrc_ghsl_smod_r2023a",
+    "jrc_ghsl_pop_r2023a",
+    "jrc_gsw_v2021_aggregated",
+    "nasa_power_ag_daily_reference_points",
+    "oecd_sdd_stes_cli",
+    "energydata_offshore_wind_technical_potential",
+    "energydata_brazil_road_network",
+    "faostat_qcl",
+    "faostat_tcl",
+    "faostat_rl",
+    "faostat_lc",
+    "faostat_fo",
+    "faostat_em",
+    "faostat_ei",
+    "faostat_be",
+    "ilo_ilostat_indicator_bulk_rds",
+    "unesco_uis_bdds_education",
+    "who_gho_air_pollution_pm25",
+)
+
+if SUPRANATIONAL_DATASET_IDS != SUPRANATIONAL_DATASET_IDS_FROM_RUNNER:
+    raise RuntimeError("Supranational dataset ids are out of sync")
 
 RUNNERS: dict[str, DatasetRunner] = {
     **{dataset_id: anp_govbr.make_sync(dataset_id) for dataset_id in ANP_DATASET_IDS},

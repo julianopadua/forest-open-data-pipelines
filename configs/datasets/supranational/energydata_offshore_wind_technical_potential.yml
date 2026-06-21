@@ -16,7 +16,7 @@ source_license_url: "https://creativecommons.org/licenses/by/4.0/"
 geographic_scope: global
 temporal_granularity: vintage
 dataset_version: latest
-profile_mode: headers
+profile_mode: skip
 resource_exclude:
   - "datastore"
   - "preview"
