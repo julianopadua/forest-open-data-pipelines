@@ -14,7 +14,7 @@ temporal_granularity: monthly
 dataset_version: latest
 profile_mode: headers
 resources:
-  - title: "Composite leading indicator, all available dimensions, 2023-2025"
+  - title: "Composite leading indicator, recent slice 2023-2025"
     period: "2023-2025"
     filename: oecd_sdd_stes_cli_all_2023_2025.csv
     source_url: "https://sdmx.oecd.org/public/rest/data/OECD.SDD.STES,DSD_STES@DF_CLI/all?startPeriod=2023-01&endPeriod=2025-12&dimensionAtObservation=AllDimensions&format=csvfilewithlabels"

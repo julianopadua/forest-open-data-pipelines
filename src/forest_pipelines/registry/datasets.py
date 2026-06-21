@@ -16,6 +16,8 @@ from forest_pipelines.datasets.inpe import (
 from forest_pipelines.datasets.inmet import dados_historicos
 from forest_pipelines.datasets.mma import cnuc_unidades_conservacao
 from forest_pipelines.datasets.noticias_agricolas.sync import sync as noticias_agricolas_news_sync
+from forest_pipelines.datasets.supranational import SUPRANATIONAL_DATASET_IDS
+from forest_pipelines.datasets.supranational import make_sync as make_supranational_sync
 
 DatasetRunner = Callable[..., dict[str, Any]]
 
@@ -79,6 +81,7 @@ CVM_DATASET_IDS: tuple[str, ...] = (
 RUNNERS: dict[str, DatasetRunner] = {
     **{dataset_id: anp_govbr.make_sync(dataset_id) for dataset_id in ANP_DATASET_IDS},
     **{dataset_id: ckan_dataset.make_sync(dataset_id) for dataset_id in CVM_DATASET_IDS},
+    **{dataset_id: make_supranational_sync(dataset_id) for dataset_id in SUPRANATIONAL_DATASET_IDS},
 
     #eia datasets
     "eia_petroleum_weekly": petroleum_weekly.sync,

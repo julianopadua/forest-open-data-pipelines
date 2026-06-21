@@ -7,8 +7,7 @@ source_agency: "World Bank Group - EnergyData.info"
 notes: "Recursos oficiais do pacote CKAN EnergyData.info. DataStore e apps interativos sao excluidos."
 allowed_hosts:
   - energydata.info
-  - datacatalogfiles.worldbank.org
-  - gep-source-archive.s3.amazonaws.com
+  - documents.worldbank.org
 ckan_package_id: f9084ff2-996b-474d-8808-1017cf1dc40e
 ckan_api_url: "https://energydata.info/api/3/action/package_show?id=f9084ff2-996b-474d-8808-1017cf1dc40e"
 accepted_license_ids:
@@ -22,3 +21,4 @@ resource_exclude:
   - "datastore"
   - "preview"
   - "app"
+  - "linodeobjects"
