@@ -1,7 +1,7 @@
 id: jrc_ghsl_smod_r2023a
 title: "JRC GHSL - Settlement Model R2023A"
 protocol: static_files
-source_dataset_url: "https://human-settlement.emergency.copernicus.eu/datasets.php"
+source_dataset_url: "https://human-settlement.emergency.copernicus.eu/ghs_smod2023.php"
 bucket_prefix: supranational/jrc/ghsl_smod_r2023a
 source_agency: "European Commission - Joint Research Centre"
 notes: "Produto global GHSL SMOD R2023A em arquivo ZIP oficial. Nenhum recorte derivado e publicado como source_url."
@@ -18,5 +18,5 @@ resources:
     period: "2020"
     filename: GHS_SMOD_E2020_GLOBE_R2023A_54009_1000_V2_0.zip
     source_url: "https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GHSL/GHS_SMOD_GLOBE_R2023A/GHS_SMOD_E2020_GLOBE_R2023A_54009_1000/V2-0/GHS_SMOD_E2020_GLOBE_R2023A_54009_1000_V2_0.zip"
-    source_page_url: "https://human-settlement.emergency.copernicus.eu/datasets.php"
+    source_page_url: "https://human-settlement.emergency.copernicus.eu/ghs_smod2023.php"
     format: zip

@@ -26,9 +26,3 @@ resources:
     source_url: "https://download.uis.unesco.org/bdds/202602/OPRI.zip"
     source_page_url: "https://databrowser.uis.unesco.org/resources/bulk"
     format: zip
-  - title: "Demographic indicators"
-    period: "202602"
-    filename: DEM.zip
-    source_url: "https://download.uis.unesco.org/bdds/202602/DEM.zip"
-    source_page_url: "https://databrowser.uis.unesco.org/resources/bulk"
-    format: zip

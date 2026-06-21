@@ -11,18 +11,18 @@ allowed_hosts:
 source_license_url: "https://global-surface-water.appspot.com/faq"
 geographic_scope: global
 temporal_granularity: vintage
-dataset_version: v2021
+dataset_version: VER5-0
 profile_mode: headers
 resources:
   - title: "Occurrence tile"
-    period: "LATEST"
+    period: "VER5-0"
     filename: occurrence-0000000000-0000000000.tif
-    source_url: "https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GSWE/Aggregated/LATEST/occurrence/tiles/occurrence-0000000000-0000000000.tif"
+    source_url: "https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GSWE/Aggregated/VER5-0/occurrence/tiles/occurrence-0000000000-0000000000.tif"
     source_page_url: "https://global-surface-water.appspot.com/download"
     format: tif
   - title: "Seasonality tile"
-    period: "LATEST"
+    period: "VER5-0"
     filename: seasonality-0000000000-0000000000.tif
-    source_url: "https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GSWE/Aggregated/LATEST/seasonality/tiles/seasonality-0000000000-0000000000.tif"
+    source_url: "https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GSWE/Aggregated/VER5-0/seasonality/tiles/seasonality-0000000000-0000000000.tif"
     source_page_url: "https://global-surface-water.appspot.com/download"
     format: tif

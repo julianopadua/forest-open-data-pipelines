@@ -1352,7 +1352,7 @@ datasets:
     title: "UN WPP 2024 - Bulk CSV"
     description: "Arquivos CSV oficiais do World Population Prospects 2024 para indicadores demográficos e população por idade e sexo."
     manifest_path: supranational/un/wpp_2024_bulk_csv/manifest.json
-    source_url: "https://population.un.org/wpp/"
+    source_url: "https://population.un.org/wpp/downloads/"
 
   - id: jrc_ghsl_smod_r2023a
     category_title: "Território e ambiente"
@@ -1363,7 +1363,7 @@ datasets:
     title: "JRC GHSL - Settlement Model R2023A"
     description: "Produto global GHSL SMOD R2023A para classificação de assentamentos humanos."
     manifest_path: supranational/jrc/ghsl_smod_r2023a/manifest.json
-    source_url: "https://human-settlement.emergency.copernicus.eu/datasets.php"
+    source_url: "https://human-settlement.emergency.copernicus.eu/ghs_smod2023.php"
 
   - id: jrc_ghsl_pop_r2023a
     category_title: "Território e ambiente"
@@ -1372,9 +1372,9 @@ datasets:
     source_title: "European Commission - Joint Research Centre"
     slug: jrc-ghsl-pop-r2023a
     title: "JRC GHSL - Population Grid R2023A"
-    description: "Produto global GHSL POP R2023A com grade populacional em resolução de 1000 m."
+    description: "Produto global GHSL POP R2023A com grade populacional 4326_30ss."
     manifest_path: supranational/jrc/ghsl_pop_r2023a/manifest.json
-    source_url: "https://human-settlement.emergency.copernicus.eu/download.php"
+    source_url: "https://human-settlement.emergency.copernicus.eu/ghs_pop2023.php"
 
   - id: jrc_gsw_v2021_aggregated
     category_title: "Território e ambiente"

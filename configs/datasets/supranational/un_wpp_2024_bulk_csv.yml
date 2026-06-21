@@ -1,7 +1,7 @@
 id: un_wpp_2024_bulk_csv
 title: "UN WPP 2024 - Bulk CSV"
 protocol: static_files
-source_dataset_url: "https://population.un.org/wpp/"
+source_dataset_url: "https://population.un.org/wpp/downloads/"
 bucket_prefix: supranational/un/wpp_2024_bulk_csv
 source_agency: "United Nations - Population Division"
 notes: "Arquivos CSV compactados oficiais do World Population Prospects 2024."
@@ -17,11 +17,11 @@ resources:
     period: "2024"
     filename: WPP2024_Demographic_Indicators_Medium.csv.gz
     source_url: "https://population.un.org/wpp/assets/Excel%20Files/1_Indicator%20(Standard)/CSV_FILES/WPP2024_Demographic_Indicators_Medium.csv.gz"
-    source_page_url: "https://population.un.org/wpp/"
+    source_page_url: "https://population.un.org/wpp/downloads/"
     format: csv.gz
   - title: "Population by age group and sex, medium variant"
     period: "2024"
     filename: WPP2024_Population1JanuaryByAge5GroupSex_Medium.csv.gz
     source_url: "https://population.un.org/wpp/assets/Excel%20Files/1_Indicator%20(Standard)/CSV_FILES/WPP2024_Population1JanuaryByAge5GroupSex_Medium.csv.gz"
-    source_page_url: "https://population.un.org/wpp/"
+    source_page_url: "https://population.un.org/wpp/downloads/"
     format: csv.gz

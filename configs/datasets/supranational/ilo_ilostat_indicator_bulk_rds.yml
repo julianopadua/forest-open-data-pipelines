@@ -22,7 +22,7 @@ resources:
     format: rds
   - title: "Unemployment by sex and age, annual"
     period: "Atual"
-    filename: UNE_TUNE_SEX_AGE_NB_A.rds
-    source_url: "https://rplumber.ilo.org/files/indicator/UNE_TUNE_SEX_AGE_NB_A.rds"
+    filename: EAP_TEAP_SEX_AGE_NB_A.rds
+    source_url: "https://rplumber.ilo.org/files/indicator/EAP_TEAP_SEX_AGE_NB_A.rds"
     source_page_url: "https://ilostat.ilo.org/data/bulk/"
     format: rds
