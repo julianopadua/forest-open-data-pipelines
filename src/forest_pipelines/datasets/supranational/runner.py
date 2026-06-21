@@ -51,6 +51,8 @@ FILE_SUFFIXES = {
     ".xlsx",
     ".zip",
 }
+FILE_FORMATS = {"CSV", "GEOJSON", "JSON", "KML", "RDS", "TIF", "TIFF", "XLS", "XLSX", "ZIP"}
+USER_AGENT = "ForestOpenDataDiscovery/1.0 (+https://institutoforest.org)"
 BLOCKED_URL_MARKERS = (
     "datastore_search",
     "/api/3/action/datastore",
@@ -210,7 +212,12 @@ def _validate_cfg(cfg: DatasetCfg) -> None:
         raise ValueError(f"Invalid config for {cfg.id}: missing allowed_hosts")
     _assert_allowed_url(cfg.source_dataset_url, cfg.allowed_hosts, allow_landing=True)
     for resource in cfg.resources:
-        _assert_allowed_url(resource.source_url, cfg.allowed_hosts, allow_api=cfg.protocol == "get_api")
+        _assert_allowed_url(
+            resource.source_url,
+            cfg.allowed_hosts,
+            allow_api=cfg.protocol == "get_api",
+            allow_download_endpoint=cfg.protocol == "ckan_files",
+        )
         if resource.source_page_url:
             _assert_allowed_url(resource.source_page_url, cfg.allowed_hosts, allow_landing=True)
 
@@ -236,7 +243,12 @@ def _custom_tags(cfg: DatasetCfg) -> dict[str, Any]:
 
 
 def _item_from_resource(cfg: DatasetCfg, resource: ResourceCfg, logger: Any) -> dict[str, Any]:
-    _assert_allowed_url(resource.source_url, cfg.allowed_hosts, allow_api=cfg.protocol == "get_api")
+    _assert_allowed_url(
+        resource.source_url,
+        cfg.allowed_hosts,
+        allow_api=cfg.protocol == "get_api",
+        allow_download_endpoint=cfg.protocol == "ckan_files",
+    )
     mode = resource.profile_mode or cfg.profile_mode
     base = {
         "source_url": resource.source_url,
@@ -283,7 +295,12 @@ def _profile_headers(source_url: str, filename: str, *, mode: str = "headers") -
     if mode == "skip":
         return profile
     try:
-        response = requests.head(source_url, allow_redirects=True, timeout=30)
+        response = requests.head(
+            source_url,
+            allow_redirects=True,
+            timeout=30,
+            headers={"User-Agent": USER_AGENT},
+        )
         response.raise_for_status()
     except Exception as exc:
         return {
@@ -371,9 +388,10 @@ def _ckan_resource_allowed(cfg: DatasetCfg, resource: Any) -> bool:
     if str(resource.get("state") or "active").lower() != "active":
         return False
     url = str(resource.get("url") or "").strip()
-    if not _url_allowed(url, cfg.allowed_hosts):
+    if not _url_allowed(url, cfg.allowed_hosts, allow_download_endpoint=True):
         return False
-    if not _download_suffix_allowed(url):
+    fmt = str(resource.get("format") or "").strip().upper()
+    if not (_download_suffix_allowed(url) or ("/download/" in url.lower() and fmt in FILE_FORMATS)):
         return False
     target = " ".join(
         [
@@ -403,7 +421,7 @@ def _faostat_file_location(xml_text: str, dataset_code: str) -> str:
 
 
 def _fetch_json(url: str) -> dict[str, Any]:
-    response = requests.get(url, timeout=60)
+    response = requests.get(url, timeout=60, headers={"User-Agent": USER_AGENT})
     response.raise_for_status()
     data = response.json()
     if not isinstance(data, dict):
@@ -412,7 +430,7 @@ def _fetch_json(url: str) -> dict[str, Any]:
 
 
 def _fetch_text(url: str) -> str:
-    response = requests.get(url, timeout=60)
+    response = requests.get(url, timeout=60, headers={"User-Agent": USER_AGENT})
     response.raise_for_status()
     return response.text
 
@@ -423,8 +441,15 @@ def _assert_allowed_url(
     *,
     allow_landing: bool = False,
     allow_api: bool = False,
+    allow_download_endpoint: bool = False,
 ) -> None:
-    if not _url_allowed(url, allowed_hosts, allow_landing=allow_landing, allow_api=allow_api):
+    if not _url_allowed(
+        url,
+        allowed_hosts,
+        allow_landing=allow_landing,
+        allow_api=allow_api,
+        allow_download_endpoint=allow_download_endpoint,
+    ):
         raise ValueError(f"URL is not accepted by supranational URL-only policy: {url}")
 
 
@@ -434,6 +459,7 @@ def _url_allowed(
     *,
     allow_landing: bool = False,
     allow_api: bool = False,
+    allow_download_endpoint: bool = False,
 ) -> bool:
     parsed = urlparse(url)
     host = parsed.netloc.lower()
@@ -445,6 +471,8 @@ def _url_allowed(
     if any(marker in lowered for marker in BLOCKED_URL_MARKERS):
         return False
     if allow_api and (parsed.query or "/api/" in parsed.path.lower()):
+        return True
+    if allow_download_endpoint and "/download/" in parsed.path.lower():
         return True
     return allow_landing or _download_suffix_allowed(url)
 
