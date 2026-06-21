@@ -210,7 +210,7 @@ def _validate_cfg(cfg: DatasetCfg) -> None:
         raise ValueError(f"Invalid config for {cfg.id}: missing allowed_hosts")
     _assert_allowed_url(cfg.source_dataset_url, cfg.allowed_hosts, allow_landing=True)
     for resource in cfg.resources:
-        _assert_allowed_url(resource.source_url, cfg.allowed_hosts)
+        _assert_allowed_url(resource.source_url, cfg.allowed_hosts, allow_api=cfg.protocol == "get_api")
         if resource.source_page_url:
             _assert_allowed_url(resource.source_page_url, cfg.allowed_hosts, allow_landing=True)
 
@@ -236,7 +236,7 @@ def _custom_tags(cfg: DatasetCfg) -> dict[str, Any]:
 
 
 def _item_from_resource(cfg: DatasetCfg, resource: ResourceCfg, logger: Any) -> dict[str, Any]:
-    _assert_allowed_url(resource.source_url, cfg.allowed_hosts)
+    _assert_allowed_url(resource.source_url, cfg.allowed_hosts, allow_api=cfg.protocol == "get_api")
     mode = resource.profile_mode or cfg.profile_mode
     base = {
         "source_url": resource.source_url,
@@ -417,12 +417,24 @@ def _fetch_text(url: str) -> str:
     return response.text
 
 
-def _assert_allowed_url(url: str, allowed_hosts: tuple[str, ...], *, allow_landing: bool = False) -> None:
-    if not _url_allowed(url, allowed_hosts, allow_landing=allow_landing):
+def _assert_allowed_url(
+    url: str,
+    allowed_hosts: tuple[str, ...],
+    *,
+    allow_landing: bool = False,
+    allow_api: bool = False,
+) -> None:
+    if not _url_allowed(url, allowed_hosts, allow_landing=allow_landing, allow_api=allow_api):
         raise ValueError(f"URL is not accepted by supranational URL-only policy: {url}")
 
 
-def _url_allowed(url: str, allowed_hosts: tuple[str, ...], *, allow_landing: bool = False) -> bool:
+def _url_allowed(
+    url: str,
+    allowed_hosts: tuple[str, ...],
+    *,
+    allow_landing: bool = False,
+    allow_api: bool = False,
+) -> bool:
     parsed = urlparse(url)
     host = parsed.netloc.lower()
     if parsed.scheme != "https" or not host:
@@ -432,6 +444,8 @@ def _url_allowed(url: str, allowed_hosts: tuple[str, ...], *, allow_landing: boo
     lowered = url.lower()
     if any(marker in lowered for marker in BLOCKED_URL_MARKERS):
         return False
+    if allow_api and (parsed.query or "/api/" in parsed.path.lower()):
+        return True
     return allow_landing or _download_suffix_allowed(url)
 
 
