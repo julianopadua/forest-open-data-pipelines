@@ -1,0 +1,28 @@
+id: jrc_ghsl_pop_r2023a
+title: "JRC GHSL - Population Grid R2023A"
+protocol: static_files
+source_dataset_url: "https://human-settlement.emergency.copernicus.eu/download.php"
+bucket_prefix: supranational/jrc/ghsl_pop_r2023a
+source_agency: "European Commission - Joint Research Centre"
+notes: "Produto global GHSL POP R2023A em arquivos ZIP oficiais de 1000 m."
+allowed_hosts:
+  - human-settlement.emergency.copernicus.eu
+  - jeodpp.jrc.ec.europa.eu
+source_license_url: "https://human-settlement.emergency.copernicus.eu/terms.php"
+geographic_scope: global
+temporal_granularity: vintage
+dataset_version: R2023A
+profile_mode: headers
+resources:
+  - title: "GHS POP 1975, 1000 m"
+    period: "1975"
+    filename: GHS_POP_E1975_GLOBE_R2023A_54009_1000_V1_0.zip
+    source_url: "https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GHSL/GHS_POP_GLOBE_R2023A/GHS_POP_E1975_GLOBE_R2023A_54009_1000/V1-0/GHS_POP_E1975_GLOBE_R2023A_54009_1000_V1_0.zip"
+    source_page_url: "https://human-settlement.emergency.copernicus.eu/download.php"
+    format: zip
+  - title: "GHS POP 2020, 1000 m"
+    period: "2020"
+    filename: GHS_POP_E2020_GLOBE_R2023A_54009_1000_V1_0.zip
+    source_url: "https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GHSL/GHS_POP_GLOBE_R2023A/GHS_POP_E2020_GLOBE_R2023A_54009_1000/V1-0/GHS_POP_E2020_GLOBE_R2023A_54009_1000_V1_0.zip"
+    source_page_url: "https://human-settlement.emergency.copernicus.eu/download.php"
+    format: zip

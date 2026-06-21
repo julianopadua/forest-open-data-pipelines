@@ -1,0 +1,28 @@
+id: ilo_ilostat_indicator_bulk_rds
+title: "ILOSTAT - Indicator Bulk RDS"
+protocol: rds_bulk
+source_dataset_url: "https://ilostat.ilo.org/data/bulk/"
+bucket_prefix: supranational/ilo/ilostat_indicator_bulk_rds
+source_agency: "International Labour Organization - ILOSTAT"
+notes: "Recursos RDS oficiais do ILOSTAT. O profiling de conteudo fica leve para evitar dependencia nova nesta execucao."
+allowed_hosts:
+  - ilostat.ilo.org
+  - rplumber.ilo.org
+source_terms_url: "https://www.ilo.org/global/copyright/lang--en/index.htm"
+geographic_scope: global
+temporal_granularity: annual
+dataset_version: latest
+profile_mode: headers
+resources:
+  - title: "Table of contents"
+    period: "Atual"
+    filename: table_of_contents_en.rds
+    source_url: "https://rplumber.ilo.org/files/indicator/table_of_contents_en.rds"
+    source_page_url: "https://ilostat.ilo.org/data/bulk/"
+    format: rds
+  - title: "Unemployment by sex and age, annual"
+    period: "Atual"
+    filename: UNE_TUNE_SEX_AGE_NB_A.rds
+    source_url: "https://rplumber.ilo.org/files/indicator/UNE_TUNE_SEX_AGE_NB_A.rds"
+    source_page_url: "https://ilostat.ilo.org/data/bulk/"
+    format: rds

@@ -1,0 +1,24 @@
+id: energydata_brazil_road_network
+title: "EnergyData.info - Brazil Road Network"
+protocol: ckan_files
+source_dataset_url: "https://energydata.info/dataset/brazil-road-network-federal-and-state-highways"
+bucket_prefix: supranational/energydata/brazil_road_network
+source_agency: "World Bank Group - EnergyData.info"
+notes: "Rede rodoviaria brasileira em recursos finais oficiais do pacote CKAN EnergyData.info."
+allowed_hosts:
+  - energydata.info
+  - datacatalogfiles.worldbank.org
+  - gep-source-archive.s3.amazonaws.com
+ckan_package_id: 6f74ce08-b5e9-463c-97e1-60a772db4f60
+ckan_api_url: "https://energydata.info/api/3/action/package_show?id=6f74ce08-b5e9-463c-97e1-60a772db4f60"
+accepted_license_ids:
+  - CC-BY-4.0
+source_license_url: "https://creativecommons.org/licenses/by/4.0/"
+geographic_scope: BRA
+temporal_granularity: vintage
+dataset_version: latest
+profile_mode: headers
+resource_exclude:
+  - "datastore"
+  - "preview"
+  - "app"

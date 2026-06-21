@@ -1,0 +1,15 @@
+id: faostat_em
+title: "FAOSTAT - Emissions"
+protocol: bulk_catalog
+source_dataset_url: "https://www.fao.org/faostat/en/#data/EM"
+bucket_prefix: supranational/faostat/em
+source_agency: "FAO - FAOSTAT"
+notes: "Dataset FAOSTAT selecionado pelo catalogo bulk XML oficial. Apenas FileLocation oficial e aceito."
+allowed_hosts: [www.fao.org, bulks-faostat.fao.org]
+faostat_catalog_url: "https://bulks-faostat.fao.org/production/datasets_E.xml"
+faostat_dataset_code: EM
+source_terms_url: "https://www.fao.org/contact-us/terms/db-terms-of-use/en/"
+geographic_scope: global
+temporal_granularity: annual
+dataset_version: latest
+profile_mode: headers

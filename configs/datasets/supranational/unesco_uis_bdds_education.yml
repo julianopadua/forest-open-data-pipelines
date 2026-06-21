@@ -1,0 +1,34 @@
+id: unesco_uis_bdds_education
+title: "UNESCO UIS - Bulk Data Download Service"
+protocol: static_files
+source_dataset_url: "https://databrowser.uis.unesco.org/resources/bulk"
+bucket_prefix: supranational/unesco/uis_bdds_education
+source_agency: "UNESCO Institute for Statistics"
+notes: "Arquivos ZIP oficiais do Bulk Data Download Service. Espelhos e arquivos archive nao entram nesta execucao."
+allowed_hosts:
+  - databrowser.uis.unesco.org
+  - download.uis.unesco.org
+source_terms_url: "https://www.unesco.org/en/terms-use"
+geographic_scope: global
+temporal_granularity: vintage
+dataset_version: "202602"
+profile_mode: headers
+resources:
+  - title: "Sustainable Development Goals"
+    period: "202602"
+    filename: SDG.zip
+    source_url: "https://download.uis.unesco.org/bdds/202602/SDG.zip"
+    source_page_url: "https://databrowser.uis.unesco.org/resources/bulk"
+    format: zip
+  - title: "Other policy relevant indicators"
+    period: "202602"
+    filename: OPRI.zip
+    source_url: "https://download.uis.unesco.org/bdds/202602/OPRI.zip"
+    source_page_url: "https://databrowser.uis.unesco.org/resources/bulk"
+    format: zip
+  - title: "Demographic indicators"
+    period: "202602"
+    filename: DEM.zip
+    source_url: "https://download.uis.unesco.org/bdds/202602/DEM.zip"
+    source_page_url: "https://databrowser.uis.unesco.org/resources/bulk"
+    format: zip

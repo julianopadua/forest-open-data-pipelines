@@ -1,0 +1,27 @@
+id: nasa_power_ag_daily_reference_points
+title: "NASA POWER - Agricultural Daily Reference Points"
+protocol: get_api
+source_dataset_url: "https://power.larc.nasa.gov/"
+bucket_prefix: supranational/nasa/power_ag_daily_reference_points
+source_agency: "NASA POWER"
+notes: "Consultas GET fechadas para pontos brasileiros de referencia agroclimatica. Cada source_url contem parametros, periodo, coordenadas e formato."
+allowed_hosts:
+  - power.larc.nasa.gov
+source_license_url: "https://power.larc.nasa.gov/docs/overview/citation/"
+geographic_scope: BRA
+temporal_granularity: daily
+dataset_version: "2025"
+profile_mode: headers
+resources:
+  - title: "Brasilia daily agroclimate 2025"
+    period: "2025"
+    filename: nasa_power_daily_ag_brasilia_20250101_20251231.csv
+    source_url: "https://power.larc.nasa.gov/api/temporal/daily/point?parameters=PRECTOTCORR,T2M,WS2M,ALLSKY_SFC_SW_DWN&community=AG&longitude=-47.9292&latitude=-15.7801&start=20250101&end=20251231&format=CSV&header=false&time-standard=UTC"
+    source_page_url: "https://power.larc.nasa.gov/docs/services/api/temporal/daily/"
+    format: csv
+  - title: "Sorriso daily agroclimate 2025"
+    period: "2025"
+    filename: nasa_power_daily_ag_sorriso_20250101_20251231.csv
+    source_url: "https://power.larc.nasa.gov/api/temporal/daily/point?parameters=PRECTOTCORR,T2M,WS2M,ALLSKY_SFC_SW_DWN&community=AG&longitude=-55.7253&latitude=-12.5425&start=20250101&end=20251231&format=CSV&header=false&time-standard=UTC"
+    source_page_url: "https://power.larc.nasa.gov/docs/services/api/temporal/daily/"
+    format: csv

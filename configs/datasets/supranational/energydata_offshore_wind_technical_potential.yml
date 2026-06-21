@@ -1,0 +1,24 @@
+id: energydata_offshore_wind_technical_potential
+title: "EnergyData.info - Offshore Wind Technical Potential"
+protocol: ckan_files
+source_dataset_url: "https://energydata.info/dataset/offshore-wind-technical-potential"
+bucket_prefix: supranational/energydata/offshore_wind_technical_potential
+source_agency: "World Bank Group - EnergyData.info"
+notes: "Recursos oficiais do pacote CKAN EnergyData.info. DataStore e apps interativos sao excluidos."
+allowed_hosts:
+  - energydata.info
+  - datacatalogfiles.worldbank.org
+  - gep-source-archive.s3.amazonaws.com
+ckan_package_id: f9084ff2-996b-474d-8808-1017cf1dc40e
+ckan_api_url: "https://energydata.info/api/3/action/package_show?id=f9084ff2-996b-474d-8808-1017cf1dc40e"
+accepted_license_ids:
+  - CC-BY-4.0
+source_license_url: "https://creativecommons.org/licenses/by/4.0/"
+geographic_scope: global
+temporal_granularity: vintage
+dataset_version: latest
+profile_mode: headers
+resource_exclude:
+  - "datastore"
+  - "preview"
+  - "app"

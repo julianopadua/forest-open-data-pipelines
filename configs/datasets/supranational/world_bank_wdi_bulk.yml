@@ -1,0 +1,22 @@
+id: world_bank_wdi_bulk
+title: "World Bank - World Development Indicators - Bulk CSV"
+protocol: get_api
+source_dataset_url: "https://datatopics.worldbank.org/world-development-indicators/"
+bucket_prefix: supranational/world_bank/wdi_bulk
+source_agency: "World Bank"
+notes: "Bulk CSV oficial do World Development Indicators. O payload bruto permanece na URL oficial do Banco Mundial."
+allowed_hosts:
+  - datatopics.worldbank.org
+  - databank.worldbank.org
+source_license_url: "https://datacatalog.worldbank.org/public-licenses#cc-by"
+geographic_scope: global
+temporal_granularity: annual
+dataset_version: latest
+profile_mode: headers
+resources:
+  - title: "World Development Indicators bulk CSV"
+    period: "Atual"
+    filename: WDI_CSV.zip
+    source_url: "https://databank.worldbank.org/data/download/WDI_CSV.zip"
+    source_page_url: "https://datatopics.worldbank.org/world-development-indicators/"
+    format: zip

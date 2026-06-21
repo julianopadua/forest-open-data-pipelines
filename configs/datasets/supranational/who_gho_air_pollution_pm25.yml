@@ -1,0 +1,22 @@
+id: who_gho_air_pollution_pm25
+title: "WHO GHO - Ambient PM2.5 Air Pollution"
+protocol: get_api
+source_dataset_url: "https://www.who.int/data/gho"
+bucket_prefix: supranational/who/gho_air_pollution_pm25
+source_agency: "World Health Organization"
+notes: "Indicador ambiental PM2.5 do Global Health Observatory via endpoint OData publico."
+allowed_hosts:
+  - www.who.int
+  - ghoapi.azureedge.net
+source_license_url: "https://www.who.int/about/policies/publishing/data-policy"
+geographic_scope: global
+temporal_granularity: annual
+dataset_version: latest
+profile_mode: headers
+resources:
+  - title: "Ambient PM2.5 air pollution"
+    period: "Atual"
+    filename: who_gho_sdgpm25_all.json
+    source_url: "https://ghoapi.azureedge.net/api/SDGPM25"
+    source_page_url: "https://www.who.int/data/gho"
+    format: json
