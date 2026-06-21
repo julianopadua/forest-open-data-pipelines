@@ -212,6 +212,16 @@ def _validate_cfg(cfg: DatasetCfg) -> None:
     if not cfg.allowed_hosts:
         raise ValueError(f"Invalid config for {cfg.id}: missing allowed_hosts")
     _assert_allowed_url(cfg.source_dataset_url, cfg.allowed_hosts, allow_landing=True)
+    if cfg.protocol in {"static_files", "get_api", "rds_bulk"} and not cfg.resources:
+        raise ValueError(f"Invalid config for {cfg.id}: missing resources")
+    if cfg.protocol == "ckan_files":
+        if not cfg.ckan_api_url:
+            raise ValueError(f"Invalid config for {cfg.id}: missing ckan_api_url")
+        _assert_allowed_url(cfg.ckan_api_url, cfg.allowed_hosts, allow_api=True)
+    if cfg.protocol == "bulk_catalog":
+        if not cfg.faostat_catalog_url or not cfg.faostat_dataset_code:
+            raise ValueError(f"Invalid config for {cfg.id}: missing FAOSTAT catalog fields")
+        _assert_allowed_url(cfg.faostat_catalog_url, cfg.allowed_hosts)
     for resource in cfg.resources:
         _assert_allowed_url(
             resource.source_url,

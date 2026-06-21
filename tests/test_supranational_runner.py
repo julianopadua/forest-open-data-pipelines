@@ -112,6 +112,33 @@ def test_url_policy_rejects_non_contract_urls() -> None:
     assert not runner._url_allowed("https://example.test/data.zip", allowed)
 
 
+def test_catalog_config_rejects_unallowlisted_api_url(tmp_path: Path) -> None:
+    datasets_dir = tmp_path / "datasets"
+    config_dir = datasets_dir / "supranational"
+    config_dir.mkdir(parents=True)
+    (config_dir / "energydata_brazil_road_network.yml").write_text(
+        "\n".join(
+            [
+                "id: energydata_brazil_road_network",
+                'title: "EnergyData.info - Brazil Road Network"',
+                "protocol: ckan_files",
+                'source_dataset_url: "https://energydata.info/dataset/brazil-road-network-federal-and-state-highways"',
+                "bucket_prefix: supranational/energydata/brazil_road_network",
+                'source_agency: "World Bank Group - EnergyData.info"',
+                'notes: "Official CKAN resources."',
+                "allowed_hosts:",
+                "  - energydata.info",
+                'ckan_api_url: "https://example.test/api/3/action/package_show?id=road-network"',
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="URL is not accepted"):
+        runner.load_dataset_cfg(datasets_dir, "energydata_brazil_road_network")
+
+
 def test_ckan_runner_filters_license_hosts_and_datastore(tmp_path: Path, monkeypatch: Any) -> None:
     datasets_dir = tmp_path / "datasets"
     config_dir = datasets_dir / "supranational"
