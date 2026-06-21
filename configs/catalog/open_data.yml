@@ -1328,3 +1328,232 @@ datasets:
     description: "Dados abertos oficiais da ANP sobre vendas de derivados de petróleo e biocombustíveis."
     manifest_path: anp/vendas-de-derivados-de-petroleo-e-biocombustiveis/manifest.json
     source_url: "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/vendas-de-derivados-de-petroleo-e-biocombustiveis"
+
+  # =========================================
+  # Fontes supranacionais
+  # =========================================
+  - id: world_bank_wdi_bulk
+    category_title: "Economia e desenvolvimento"
+    subcategory_title: "Indicadores globais"
+    source_id: world_bank
+    source_title: "World Bank"
+    slug: world-bank-wdi-bulk
+    title: "World Bank - World Development Indicators - Bulk CSV"
+    description: "Arquivo bulk oficial do World Development Indicators, com indicadores globais de desenvolvimento, ambiente, economia e população."
+    manifest_path: supranational/world_bank/wdi_bulk/manifest.json
+    source_url: "https://datatopics.worldbank.org/world-development-indicators/"
+
+  - id: un_wpp_2024_bulk_csv
+    category_title: "Economia e desenvolvimento"
+    subcategory_title: "Demografia"
+    source_id: un_population
+    source_title: "UN Population Division"
+    slug: un-wpp-2024-bulk-csv
+    title: "UN WPP 2024 - Bulk CSV"
+    description: "Arquivos CSV oficiais do World Population Prospects 2024 para indicadores demográficos e população por idade e sexo."
+    manifest_path: supranational/un/wpp_2024_bulk_csv/manifest.json
+    source_url: "https://population.un.org/wpp/"
+
+  - id: jrc_ghsl_smod_r2023a
+    category_title: "Território e ambiente"
+    subcategory_title: "Assentamentos humanos"
+    source_id: jrc
+    source_title: "European Commission - Joint Research Centre"
+    slug: jrc-ghsl-smod-r2023a
+    title: "JRC GHSL - Settlement Model R2023A"
+    description: "Produto global GHSL SMOD R2023A para classificação de assentamentos humanos."
+    manifest_path: supranational/jrc/ghsl_smod_r2023a/manifest.json
+    source_url: "https://human-settlement.emergency.copernicus.eu/datasets.php"
+
+  - id: jrc_ghsl_pop_r2023a
+    category_title: "Território e ambiente"
+    subcategory_title: "População geoespacial"
+    source_id: jrc
+    source_title: "European Commission - Joint Research Centre"
+    slug: jrc-ghsl-pop-r2023a
+    title: "JRC GHSL - Population Grid R2023A"
+    description: "Produto global GHSL POP R2023A com grade populacional em resolução de 1000 m."
+    manifest_path: supranational/jrc/ghsl_pop_r2023a/manifest.json
+    source_url: "https://human-settlement.emergency.copernicus.eu/download.php"
+
+  - id: jrc_gsw_v2021_aggregated
+    category_title: "Território e ambiente"
+    subcategory_title: "Água superficial"
+    source_id: jrc
+    source_title: "European Commission - Joint Research Centre"
+    slug: jrc-global-surface-water-v2021
+    title: "JRC Global Surface Water - Aggregated Layers"
+    description: "Tiles oficiais agregados do Global Surface Water para ocorrência e sazonalidade de água superficial."
+    manifest_path: supranational/jrc/global_surface_water_v2021/manifest.json
+    source_url: "https://global-surface-water.appspot.com/download"
+
+  - id: nasa_power_ag_daily_reference_points
+    category_title: "Mercado de commodities"
+    segment_title: "Energia"
+    subcategory_title: "Clima e agroenergia"
+    source_id: nasa_power
+    source_title: "NASA POWER"
+    slug: nasa-power-ag-daily-reference-points
+    title: "NASA POWER - Agricultural Daily Reference Points"
+    description: "Consultas oficiais NASA POWER para variáveis agroclimáticas diárias em pontos brasileiros de referência."
+    manifest_path: supranational/nasa/power_ag_daily_reference_points/manifest.json
+    source_url: "https://power.larc.nasa.gov/"
+
+  - id: oecd_sdd_stes_cli
+    category_title: "Economia e desenvolvimento"
+    subcategory_title: "Indicadores econômicos"
+    source_id: oecd
+    source_title: "OECD"
+    slug: oecd-sdd-stes-cli
+    title: "OECD Data Explorer - Composite Leading Indicator"
+    description: "Consulta CSV SDMX oficial do OECD Data Explorer para o Composite Leading Indicator."
+    manifest_path: supranational/oecd/sdd_stes_cli/manifest.json
+    source_url: "https://data-explorer.oecd.org/"
+
+  - id: energydata_offshore_wind_technical_potential
+    category_title: "Mercado de commodities"
+    segment_title: "Energia"
+    subcategory_title: "Biocombustíveis e renováveis"
+    source_id: energydata
+    source_title: "EnergyData.info"
+    slug: energydata-offshore-wind-technical-potential
+    title: "EnergyData.info - Offshore Wind Technical Potential"
+    description: "Recursos oficiais do pacote EnergyData.info sobre potencial técnico de energia eólica offshore."
+    manifest_path: supranational/energydata/offshore_wind_technical_potential/manifest.json
+    source_url: "https://energydata.info/dataset/offshore-wind-technical-potential"
+
+  - id: energydata_brazil_road_network
+    category_title: "Território e ambiente"
+    subcategory_title: "Infraestrutura logística"
+    source_id: energydata
+    source_title: "EnergyData.info"
+    slug: energydata-brazil-road-network
+    title: "EnergyData.info - Brazil Road Network"
+    description: "Recursos oficiais do pacote EnergyData.info para rodovias federais e estaduais do Brasil."
+    manifest_path: supranational/energydata/brazil_road_network/manifest.json
+    source_url: "https://energydata.info/dataset/brazil-road-network-federal-and-state-highways"
+
+  - id: faostat_qcl
+    category_title: "Mercado de commodities"
+    segment_title: "Agropecuária"
+    subcategory_title: "Produção agropecuária"
+    source_id: faostat
+    source_title: "FAOSTAT"
+    slug: faostat-qcl
+    title: "FAOSTAT - Crops and Livestock Products"
+    description: "Dataset bulk oficial FAOSTAT sobre produção de culturas e produtos pecuários."
+    manifest_path: supranational/faostat/qcl/manifest.json
+    source_url: "https://www.fao.org/faostat/en/#data/QCL"
+
+  - id: faostat_tcl
+    category_title: "Mercado de commodities"
+    segment_title: "Agropecuária"
+    subcategory_title: "Comércio agropecuário"
+    source_id: faostat
+    source_title: "FAOSTAT"
+    slug: faostat-tcl
+    title: "FAOSTAT - Trade Crops and Livestock Products"
+    description: "Dataset bulk oficial FAOSTAT sobre comércio de culturas e produtos pecuários."
+    manifest_path: supranational/faostat/tcl/manifest.json
+    source_url: "https://www.fao.org/faostat/en/#data/TCL"
+
+  - id: faostat_rl
+    category_title: "Território e ambiente"
+    subcategory_title: "Uso da terra"
+    source_id: faostat
+    source_title: "FAOSTAT"
+    slug: faostat-rl
+    title: "FAOSTAT - Land Use"
+    description: "Dataset bulk oficial FAOSTAT sobre uso da terra."
+    manifest_path: supranational/faostat/rl/manifest.json
+    source_url: "https://www.fao.org/faostat/en/#data/RL"
+
+  - id: faostat_lc
+    category_title: "Território e ambiente"
+    subcategory_title: "Cobertura da terra"
+    source_id: faostat
+    source_title: "FAOSTAT"
+    slug: faostat-lc
+    title: "FAOSTAT - Land Cover"
+    description: "Dataset bulk oficial FAOSTAT sobre cobertura da terra."
+    manifest_path: supranational/faostat/lc/manifest.json
+    source_url: "https://www.fao.org/faostat/en/#data/LC"
+
+  - id: faostat_fo
+    category_title: "Mercado de commodities"
+    segment_title: "Agropecuária"
+    subcategory_title: "Florestas"
+    source_id: faostat
+    source_title: "FAOSTAT"
+    slug: faostat-fo
+    title: "FAOSTAT - Forestry Production and Trade"
+    description: "Dataset bulk oficial FAOSTAT sobre produção e comércio florestal."
+    manifest_path: supranational/faostat/fo/manifest.json
+    source_url: "https://www.fao.org/faostat/en/#data/FO"
+
+  - id: faostat_em
+    category_title: "Território e ambiente"
+    subcategory_title: "Emissões"
+    source_id: faostat
+    source_title: "FAOSTAT"
+    slug: faostat-em
+    title: "FAOSTAT - Emissions"
+    description: "Dataset bulk oficial FAOSTAT sobre indicadores de emissões."
+    manifest_path: supranational/faostat/em/manifest.json
+    source_url: "https://www.fao.org/faostat/en/#data/EM"
+
+  - id: faostat_ei
+    category_title: "Território e ambiente"
+    subcategory_title: "Emissões"
+    source_id: faostat
+    source_title: "FAOSTAT"
+    slug: faostat-ei
+    title: "FAOSTAT - Emissions Intensities"
+    description: "Dataset bulk oficial FAOSTAT sobre intensidades de emissões."
+    manifest_path: supranational/faostat/ei/manifest.json
+    source_url: "https://www.fao.org/faostat/en/#data/EI"
+
+  - id: faostat_be
+    category_title: "Mercado de commodities"
+    segment_title: "Energia"
+    subcategory_title: "Biocombustíveis e renováveis"
+    source_id: faostat
+    source_title: "FAOSTAT"
+    slug: faostat-be
+    title: "FAOSTAT - Bioenergy"
+    description: "Dataset bulk oficial FAOSTAT sobre bioenergia."
+    manifest_path: supranational/faostat/be/manifest.json
+    source_url: "https://www.fao.org/faostat/en/#data/BE"
+
+  - id: ilo_ilostat_indicator_bulk_rds
+    category_title: "Economia e desenvolvimento"
+    subcategory_title: "Trabalho"
+    source_id: ilostat
+    source_title: "ILOSTAT"
+    slug: ilo-ilostat-indicator-bulk-rds
+    title: "ILOSTAT - Indicator Bulk RDS"
+    description: "Recursos oficiais RDS do ILOSTAT para sumário de indicadores e desemprego por sexo e idade."
+    manifest_path: supranational/ilo/ilostat_indicator_bulk_rds/manifest.json
+    source_url: "https://ilostat.ilo.org/data/bulk/"
+
+  - id: unesco_uis_bdds_education
+    category_title: "Economia e desenvolvimento"
+    subcategory_title: "Educação"
+    source_id: unesco_uis
+    source_title: "UNESCO Institute for Statistics"
+    slug: unesco-uis-bdds-education
+    title: "UNESCO UIS - Bulk Data Download Service"
+    description: "Arquivos ZIP oficiais do Bulk Data Download Service da UNESCO UIS."
+    manifest_path: supranational/unesco/uis_bdds_education/manifest.json
+    source_url: "https://databrowser.uis.unesco.org/resources/bulk"
+
+  - id: who_gho_air_pollution_pm25
+    category_title: "Economia e desenvolvimento"
+    subcategory_title: "Saúde ambiental"
+    source_id: who
+    source_title: "World Health Organization"
+    slug: who-gho-air-pollution-pm25
+    title: "WHO GHO - Ambient PM2.5 Air Pollution"
+    description: "Indicador ambiental PM2.5 do Global Health Observatory por endpoint OData público."
+    manifest_path: supranational/who/gho_air_pollution_pm25/manifest.json
+    source_url: "https://www.who.int/data/gho"
