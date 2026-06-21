@@ -49,6 +49,7 @@ FILE_SUFFIXES = {
     ".tiff",
     ".xls",
     ".xlsx",
+    ".xml",
     ".zip",
 }
 FILE_FORMATS = {"CSV", "GEOJSON", "JSON", "KML", "RDS", "TIF", "TIFF", "XLS", "XLSX", "ZIP"}
