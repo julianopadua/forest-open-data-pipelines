@@ -4,7 +4,6 @@ from __future__ import annotations
 import json
 import zipfile
 from collections import Counter, defaultdict
-from pathlib import Path
 from typing import Any
 
 from forest_pipelines.audits.markdown import render_bullets, render_table
@@ -175,18 +174,6 @@ def run_audit(
                 "sample_values": sample_preview,
             }
         )
-
-    inventory_rows = [
-        {
-            "year": profile["year"],
-            "zip_name": profile["zip_name"],
-            "row_count": fmt_int(int(profile["row_count"])),
-            "column_count": profile["column_count"],
-            "datetime_column_detected": profile["datetime_column_detected"] or "-",
-            "state_column_detected": profile["state_column_detected"] or "-",
-        }
-        for profile in sorted(file_profiles, key=lambda x: (x["year"] or 0))
-    ]
 
     summary = {
         "dataset_id": dataset_id,

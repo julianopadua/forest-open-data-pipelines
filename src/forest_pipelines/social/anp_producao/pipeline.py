@@ -11,7 +11,7 @@ import re
 import shutil
 import urllib.request
 from dataclasses import asdict, dataclass
-from datetime import date, datetime, timezone
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 

@@ -63,10 +63,8 @@ def sync(
         if res.ok:
             current_manifest = res.json()
             logger.info("Manifesto anterior carregado.")
-    except:
+    except Exception:
         logger.info("Iniciando nova indexação (sem manifesto anterior).")
-
-    existing_items = {it["period"]: it for it in current_manifest.get("items", [])}
 
     # 2. Explorar o servidor INPE
     logger.info("Indexando links do Dataserver INPE: %s", cfg.source_url)

@@ -1042,7 +1042,6 @@ def build_bdqueimadas_social_assets(
     log_stage(log, "render_chart_png_done", {"path": str(out_png.resolve())})
     log_stage(log, "chart_spec_json_written", {"path": str(out_json.resolve())})
 
-    llm_graphic_text: str | None = None
     carousel_body_texts: dict[str, str] = {}
     carousel_body_models: dict[str, str] = {}
     post_caption_text: str | None = None
@@ -1119,8 +1118,6 @@ def build_bdqueimadas_social_assets(
                     )
                     carousel_body_texts[slug] = gt["text"]
                     carousel_body_models[slug] = gt["model"]
-                    if slug == "nacional":
-                        llm_graphic_text = gt["text"]
                 except Exception as e:  # noqa: BLE001
                     log.exception("carousel_graphic_failed")
                     log_stage(
@@ -1480,7 +1477,7 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--app-config",
         type=Path,
         default=None,
-        help=f"Caminho para app.yml (default: <repo>/configs/app.yml). Usado com --llm.",
+        help="Caminho para app.yml (default: <repo>/configs/app.yml). Usado com --llm.",
     )
     p.add_argument(
         "--out-social-llm",

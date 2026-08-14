@@ -601,12 +601,9 @@ def audit_dataset(
 
 def _fetch_existing_report_meta(storage: Any, report_id: str, logger: Any) -> dict | None:
     """Try to fetch the published manifest for a report to check if it already exists."""
-    from typing import Any as _Any  # noqa: PLC0415
     try:
-        from forest_pipelines.reports.registry.reports import get_report_runner  # noqa: PLC0415
         # Derive bucket prefix from the registry config (same logic as publish)
         from forest_pipelines.reports.definitions.base import load_report_cfg  # noqa: PLC0415
-        from pathlib import Path  # noqa: PLC0415
 
         # We need settings to get reports_dir - load minimal config
         from forest_pipelines.settings import load_settings as _ls  # noqa: PLC0415

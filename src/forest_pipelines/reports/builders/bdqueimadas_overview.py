@@ -21,7 +21,6 @@ from forest_pipelines.reports.builders.bdqueimadas_incremental import (
     build_incremental_year_caches,
     consolidate_year_payloads,
     read_focos_subset_brasil_file,
-    _df_to_records,
 )
 from forest_pipelines.reports.definitions.base import (
     ReportConfig,
@@ -126,7 +125,6 @@ def build_package(
     annual_all_df = consolidated["annual_all_df"]
     annual_by_biome_df = consolidated["annual_by_biome_df"]
     state_year_all_df = consolidated["state_year_all_df"]
-    state_year_by_biome_df = consolidated["state_year_by_biome_df"]
     state_month_all_df = consolidated["state_month_all_df"]
     state_month_by_biome_df = consolidated["state_month_by_biome_df"]
     available_biomes = consolidated["available_biomes"]

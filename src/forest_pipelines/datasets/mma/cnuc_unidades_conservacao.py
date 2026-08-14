@@ -92,7 +92,6 @@ def pick_tabular_dictionary_pdf(resources: list[dict[str, Any]]) -> dict[str, An
     for res in resources:
         fmt = str(res.get("format") or "").upper()
         name = str(res.get("name") or "")
-        url = str(res.get("url") or "")
         if fmt != "PDF":
             continue
         if "shapefile" in name.lower():

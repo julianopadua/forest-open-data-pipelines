@@ -593,7 +593,7 @@ def _build_manifest(
             "slots": {
                 "topic_tag": topic.cover_topic_tag,
                 "published_at": published_at,
-                "caption": f"Publicações por ano · OpenAlex (últimos 10 anos)",
+                "caption": "Publicações por ano · OpenAlex (últimos 10 anos)",
                 "image_url": img(CHART_PUB_YEAR),
                 "body_text": _publications_body(yearly_counts_10y, today.year, topic),
             },

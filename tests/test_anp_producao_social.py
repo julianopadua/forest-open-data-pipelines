@@ -9,7 +9,6 @@ from forest_pipelines.social.anp_producao.pipeline import (
     RESOURCE_DEFS,
     _state_text_restates_volume,
     build_manifest,
-    build_panel_payloads,
     discover_resource_urls_from_html,
     latest_common_positive_metrics,
     load_resource_frame,

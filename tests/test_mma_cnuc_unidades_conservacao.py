@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
+from typing import Any
 
 from forest_pipelines.datasets.mma import cnuc_unidades_conservacao as module
 
