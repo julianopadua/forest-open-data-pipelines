@@ -124,7 +124,8 @@
     </div>
   </div>
 
-  <script>
+  <script type="module">
+    import { DEFAULT_CHROME_SIZES, DEFAULT_GLOBAL_SLOTS as REGISTRY_GLOBAL_SLOTS, getPresetConfig, getThemeConfig } from "/src/shared/preset-registry.js";
     const SLIDE_META = {
       cover: {
         label: "Capa",
@@ -180,25 +181,9 @@
       },
     };
 
-    const DEFAULT_CHROME = {
-      topicTagPx: 24,
-      datePx: 26,
-      pageNumberPx: 24,
-      logoHeightPx: 54,
-    };
-
-    const PATHS = {
-      cover: "/red/slides/cover.html",
-      body_image_text: "/red/slides/body-image-text.html",
-      body_chart: "/red/slides/body-chart.html",
-      body_text: "/red/slides/body-text.html",
-      cta: "/red/slides/cta.html",
-    };
-
-    const DEFAULT_GLOBAL_SLOTS = {
-      topic_tag: "Instituto Forest",
-      published_at: "Mai 2026",
-    };
+    const DEFAULT_CHROME = { ...DEFAULT_CHROME_SIZES };
+    const PATHS = getThemeConfig("red").slidePaths;
+    const DEFAULT_GLOBAL_SLOTS = { ...REGISTRY_GLOBAL_SLOTS };
 
     const GLOBAL_SLOT_KEYS = ["topic_tag", "published_at"];
 
@@ -223,12 +208,6 @@
         published_at: first.published_at ?? DEFAULT_GLOBAL_SLOTS.published_at,
       };
     }
-
-    const PRESET_MANIFESTS = {
-      bdqueimadas: "/examples/bdqueimadas-social.manifest.json",
-      "bdqueimadas-diario": "/examples/bdqueimadas-daily-social.manifest.json",
-      "bdqueimadas-daily": "/examples/bdqueimadas-daily-social.manifest.json",
-    };
 
     function bdqueimadasDailyDeck(data) {
       const copy = JSON.parse(JSON.stringify(data));
@@ -860,9 +839,10 @@
       let source = DEFAULT_EXAMPLE;
       const params = new URLSearchParams(window.location.search);
       const preset = params.get("preset");
-      if (PRESET_MANIFESTS[preset]) {
+      const presetConfig = getPresetConfig(preset);
+      if (presetConfig?.theme === "red") {
         try {
-          const r = await fetch(PRESET_MANIFESTS[preset]);
+          const r = await fetch(presetConfig.manifestPath);
           if (!r.ok) throw new Error(r.statusText);
           const data = applyPresetDeck(preset, await r.json());
           runId = data.runId;

@@ -124,7 +124,8 @@
     </div>
   </div>
 
-  <script>
+  <script type="module">
+    import { DEFAULT_CHROME_SIZES, DEFAULT_GLOBAL_SLOTS as REGISTRY_GLOBAL_SLOTS, getPresetConfig, getThemeConfig } from "/src/shared/preset-registry.js";
     const SLIDE_META = {
       cover: {
         label: "Capa",
@@ -180,25 +181,9 @@
       },
     };
 
-    const DEFAULT_CHROME = {
-      topicTagPx: 24,
-      datePx: 26,
-      pageNumberPx: 24,
-      logoHeightPx: 54,
-    };
-
-    const PATHS = {
-      cover: "/navy/slides/cover.html",
-      body_image_text: "/navy/slides/body-image-text.html",
-      body_chart: "/navy/slides/body-chart.html",
-      body_text: "/navy/slides/body-text.html",
-      cta: "/navy/slides/cta.html",
-    };
-
-    const DEFAULT_GLOBAL_SLOTS = {
-      topic_tag: "Instituto Forest",
-      published_at: "Mai 2026",
-    };
+    const DEFAULT_CHROME = { ...DEFAULT_CHROME_SIZES };
+    const PATHS = getThemeConfig("navy").slidePaths;
+    const DEFAULT_GLOBAL_SLOTS = { ...REGISTRY_GLOBAL_SLOTS };
 
     const GLOBAL_SLOT_KEYS = ["topic_tag", "published_at"];
 
@@ -813,9 +798,10 @@
       let chromeSizes = { ...(DEFAULT_EXAMPLE.sizes || DEFAULT_CHROME) };
       let source = DEFAULT_EXAMPLE;
       const params = new URLSearchParams(window.location.search);
-      if (params.get("preset") === "bdqueimadas") {
+      const presetConfig = getPresetConfig(params.get("preset"));
+      if (presetConfig?.theme === "navy") {
         try {
-          const r = await fetch("/examples/bdqueimadas-social.manifest.json");
+          const r = await fetch(presetConfig.manifestPath);
           if (!r.ok) throw new Error(r.statusText);
           const data = await r.json();
           runId = data.runId;
@@ -823,20 +809,7 @@
           chromeSizes = { ...DEFAULT_CHROME, ...(data.sizes || {}) };
           source = data;
         } catch (e) {
-          console.warn("Preset bdqueimadas indisponível, usando exemplo padrão.", e);
-        }
-      }
-      if (params.get("preset") === "anp-producao-petroleo-gas") {
-        try {
-          const r = await fetch("/examples/anp-producao-petroleo-gas.manifest.json");
-          if (!r.ok) throw new Error(r.statusText);
-          const data = await r.json();
-          runId = data.runId;
-          slides = data.slides;
-          chromeSizes = { ...DEFAULT_CHROME, ...(data.sizes || {}) };
-          source = data;
-        } catch (e) {
-          console.warn("Preset anp-producao-petroleo-gas indisponível, usando exemplo padrão.", e);
+          console.warn("Preset indisponível, usando exemplo padrão.", e);
         }
       }
       const globalSlots = extractGlobalSlotsFromManifest(source);
