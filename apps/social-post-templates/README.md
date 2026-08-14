@@ -189,7 +189,7 @@ Mudar um default num único tema: edite o `font-size` direto no HTML corresponde
 
 **3. Paleta do tema** (background, accent, text-primary/secondary/muted): tokens em `src/<theme>/theme.css`. Trocar o accent muda automaticamente a cor do CTA kicker, URL, gráficos placeholder, bordas.
 
-## Exportar PNGs (Playwright)
+## Validar, testar e exportar PNGs
 
 Instalação única do Chromium para o Playwright:
 
@@ -199,15 +199,19 @@ npx playwright install chromium
 
 Com o servidor de desenvolvimento em execução (`npm run dev` em outro terminal):
 
-**Legado** - um PNG por tema (`green` usa a capa verde; navy/white usam as páginas principais):
+Valide todos os manifests, presets registrados e assets públicos:
 
 ```bash
-npm run export
+npm run check
 ```
 
-Saída: `dist-exports/green/card.png`, `dist-exports/navy/card.png`, `dist-exports/white/card.png`.
+Execute o smoke test de hubs, compositores, presets, parâmetros de estilo, modo `blank=1` e exportação ZIP:
 
-**Manifest** - sequência de slides verdes:
+```bash
+npm run test:e2e
+```
+
+Exporte qualquer manifest registrado. O exportador usa o tema e os tipos de slide declarados no próprio manifest:
 
 ```bash
 npm run export:manifest -- examples/green-manifest.example.json
@@ -219,7 +223,7 @@ Ou:
 MANIFEST=examples/green-manifest.example.json npm run export:manifest
 ```
 
-Saída: `dist-exports/green/<runId>/01-cover.png`, `02-body_image_text.png`, … (pasta `dist-exports/` está no `.gitignore`).
+Saída: `dist-exports/<theme>/<runId>/01-cover.png`, `02-body_image_text.png` e os demais slides. A pasta `dist-exports/` está no `.gitignore`.
 
 ## Pipeline ANP produção (carrossel 5 slides, tema azul)
 
@@ -364,7 +368,7 @@ Isso gera:
 - `public/generated/bdqueimadas-chart-<slug>.png` e `chart_spec-<slug>.json` para cada recorte; cópias nacionais `bdqueimadas-chart.png` e `chart_spec.json`.
 - `examples/bdqueimadas-social.manifest.json` e cópia em `public/examples/` para o preset `?preset=bdqueimadas` no compositor.
 
-Depois: `npm run dev` neste app; export Playwright opcional: `npm run export:manifest -- examples/bdqueimadas-social.manifest.json`.
+Depois: `npm run dev` neste app; valide o manifest com `npm run check` e exporte com `npm run export:manifest -- examples/bdqueimadas-social.manifest.json`.
 
 A legenda para colar no Instagram está em `social_llm.json` → `post_description` quando você roda o pipeline com `--llm` e inclui `post_description` em `--llm-components`.
 

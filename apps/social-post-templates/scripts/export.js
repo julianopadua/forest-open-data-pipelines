@@ -1,159 +1,102 @@
-/**
- * Export PNG screenshots of post templates.
- *
- * Prerequisites:
- *   npm install
- *   npx playwright install chromium
- *
- * Usage:
- *   # Legacy: one PNG per theme (green/navy/white index pages)
- *   npm run export
- *
- *   # Manifest: sequence of green slides (dev server must be running)
- *   npm run export:manifest -- examples/green-manifest.example.json
- *   MANIFEST=examples/foo.json npm run export:manifest
- *
- * Env:
- *   BASE_URL   default http://localhost:5173
- *   MANIFEST   path to manifest JSON (same as first CLI arg)
- */
-
 import { chromium } from "playwright";
-import { mkdirSync, readFileSync, existsSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { join, dirname, resolve } from "node:path";
+import { getThemeConfig } from "../src/shared/preset-registry.js";
+import { validateManifest } from "../src/shared/manifest-validation.js";
 
-const __dir = dirname(fileURLToPath(import.meta.url));
-const appRoot = join(__dir, "..");
-const BASE_URL = process.env.BASE_URL ?? "http://localhost:5173";
-const CARD_W = 1080;
-const CARD_H = 1350;
+const appRoot = dirname(fileURLToPath(new URL("../package.json", import.meta.url)));
+const baseUrl = process.env.BASE_URL ?? "http://localhost:5173";
+const cardWidth = 1080;
+const cardHeight = 1350;
 
-const LEGACY_TEMPLATES = [
-  { name: "green", path: "/green/slides/cover.html" },
-  { name: "navy", path: "/navy/index.html" },
-  { name: "white", path: "/white/index.html" },
-];
-
-const GREEN_SLIDE_PATHS = {
-  cover: "/green/slides/cover.html",
-  body_image_text: "/green/slides/body-image-text.html",
-  body_chart: "/green/slides/body-chart.html",
-  body_text: "/green/slides/body-text.html",
-  cta: "/green/slides/cta.html",
-};
-
-function pad2(n) {
-  return String(n).padStart(2, "0");
+function pad2(value) {
+  return String(value).padStart(2, "0");
 }
 
 function manifestPathFromArgs() {
-  const arg = process.argv[2];
-  if (arg) return resolve(arg);
-  if (process.env.MANIFEST) return resolve(process.env.MANIFEST);
-  return null;
+  return process.argv[2] ? resolve(process.argv[2]) : process.env.MANIFEST ? resolve(process.env.MANIFEST) : null;
 }
 
-async function screenshotCard(page, outPath) {
-  await page.waitForLoadState("networkidle");
+function loadManifest(manifestPath) {
+  if (!manifestPath || !existsSync(manifestPath)) {
+    throw new Error(`Manifest not found: ${manifestPath ?? "provide a manifest path"}`);
+  }
+  let manifest;
+  try {
+    manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+  } catch (error) {
+    throw new Error(`Manifest is not valid JSON: ${error.message}`);
+  }
+  const errors = validateManifest(manifest);
+  if (errors.length) throw new Error(`Invalid manifest:\n${errors.map((error) => `- ${error}`).join("\n")}`);
+  return manifest;
+}
+
+async function preparePage(browser, path) {
+  const page = await browser.newPage({ viewport: { width: cardWidth, height: cardHeight } });
+  await page.goto(`${baseUrl}${path}`, { waitUntil: "networkidle" });
+  await page.waitForFunction(
+    () => typeof window.applySlots === "function" && typeof window.applyChromeSizes === "function",
+  );
   await page.evaluate(() => {
     document.documentElement.style.setProperty("--canvas-scale", "1");
   });
-  const card = page.locator("#card");
-  await card.screenshot({ path: outPath });
+  return page;
 }
 
-async function exportLegacy(browser) {
-  for (const { name, path: p } of LEGACY_TEMPLATES) {
-    const outDir = join(appRoot, "dist-exports", name);
-    mkdirSync(outDir, { recursive: true });
-    const page = await browser.newPage();
-    await page.setViewportSize({ width: CARD_W, height: CARD_H });
-    await page.goto(`${BASE_URL}${p}`);
-    await screenshotCard(page, join(outDir, "card.png"));
-    console.log(`Exported: dist-exports/${name}/card.png`);
-    await page.close();
-  }
-}
+async function exportManifest(browser, manifest) {
+  const themeConfig = getThemeConfig(manifest.theme);
+  const outputDirectory = join(appRoot, "dist-exports", manifest.theme, manifest.runId);
+  mkdirSync(outputDirectory, { recursive: true });
 
-async function exportGreenManifest(browser, manifestFile) {
-  const raw = readFileSync(manifestFile, "utf8");
-  const manifest = JSON.parse(raw);
-  if (!manifest.slides || !Array.isArray(manifest.slides)) {
-    throw new Error("Manifest must include a slides array");
-  }
-  const runId = manifest.runId ?? `run-${Date.now()}`;
-  const outDir = join(appRoot, "dist-exports", "green", runId);
-  mkdirSync(outDir, { recursive: true });
-
-  const total = manifest.slides.length;
-  let index = 0;
-
-  for (const slide of manifest.slides) {
-    const pathKey = GREEN_SLIDE_PATHS[slide.type];
-    if (!pathKey) {
-      throw new Error(`Unknown slide type: ${slide.type}`);
-    }
-    const page = await browser.newPage();
-    await page.setViewportSize({ width: CARD_W, height: CARD_H });
-    await page.goto(`${BASE_URL}${pathKey}`);
-
-    const cardNum = `${pad2(index + 1)} / ${pad2(total)}`;
-    const slots = { ...(slide.slots || {}), card_number: cardNum };
-
-    await page.waitForLoadState("networkidle");
-    await page.waitForFunction(
-      () => typeof window.applySlots === "function" && typeof window.applyChromeSizes === "function"
-    );
-    await page.evaluate(() => {
-      document.documentElement.style.setProperty("--canvas-scale", "1");
-    });
-    const chromeSizes = manifest.sizes || {};
-    await page.evaluate(({ slide: s, slots: sl, sizes }) => {
-      window.applyChromeSizes(sizes || {});
-      if (s.type === "body_image_text") {
-        const el = document.querySelector("[data-body-image-text]");
-        if (el) el.dataset.side = s.imageSide || "left";
+  for (const [index, slide] of manifest.slides.entries()) {
+    const page = await preparePage(browser, themeConfig.slidePaths[slide.type]);
+    const slots = {
+      ...manifest.globalSlots,
+      ...slide.slots,
+      card_number: `${pad2(index + 1)} / ${pad2(manifest.slides.length)}`,
+    };
+    await page.evaluate(({ currentSlide, currentSlots, sizes }) => {
+      window.applyChromeSizes(sizes ?? {});
+      const imageText = document.querySelector("[data-body-image-text]");
+      if (imageText && currentSlide.imageSide) imageText.dataset.side = currentSlide.imageSide;
+      if (imageText && currentSlide.imageFit) imageText.dataset.fit = currentSlide.imageFit;
+      const bodyText = document.querySelector("[data-body-text]");
+      if (bodyText && currentSlide.columns) bodyText.dataset.cols = String(currentSlide.columns);
+      const logoHalf = document.querySelector("[data-body-logo-half]");
+      if (logoHalf && currentSlide.logoSide) logoHalf.dataset.side = currentSlide.logoSide;
+      window.applySlots(currentSlots);
+      for (const slot of currentSlide.hiddenSlots ?? []) {
+        document.querySelectorAll(`[data-slot="${slot}"]`).forEach((element) => {
+          element.style.display = "none";
+        });
       }
-      if (s.type === "body_text") {
-        const el = document.querySelector("[data-body-text]");
-        if (el) el.dataset.cols = String(s.columns ?? 2);
+      for (const [slot, styles] of Object.entries(currentSlide.slotStyles ?? {})) {
+        document.querySelectorAll(`[data-slot="${slot}"]`).forEach((element) => {
+          Object.assign(element.style, styles);
+        });
       }
-      window.applySlots(sl);
-    }, { slide, slots, sizes: chromeSizes });
-
+    }, { currentSlide: slide, currentSlots: slots, sizes: manifest.sizes });
     const fileName = `${pad2(index + 1)}-${slide.type}.png`;
-    const outPath = join(outDir, fileName);
-    const card = page.locator("#card");
-    await card.screenshot({ path: outPath });
-    console.log(`Exported: dist-exports/green/${runId}/${fileName}`);
-
+    await page.locator("#card").screenshot({ path: join(outputDirectory, fileName) });
     await page.close();
-    index += 1;
+    console.log(`Exported: dist-exports/${manifest.theme}/${manifest.runId}/${fileName}`);
   }
 }
 
-async function exportAll() {
-  const mp = manifestPathFromArgs();
+async function main() {
+  const manifestPath = manifestPathFromArgs();
+  const manifest = loadManifest(manifestPath);
   const browser = await chromium.launch();
-
   try {
-    if (mp) {
-      if (!existsSync(mp)) {
-        throw new Error(`Manifest not found: ${mp}`);
-      }
-      console.log(`Using manifest: ${mp}`);
-      await exportGreenManifest(browser, mp);
-    } else {
-      await exportLegacy(browser);
-    }
+    await exportManifest(browser, manifest);
   } finally {
     await browser.close();
   }
-  console.log("Done.");
 }
 
-exportAll().catch((err) => {
-  console.error(err);
+main().catch((error) => {
+  console.error(error);
   process.exit(1);
 });
