@@ -1,0 +1,45 @@
+name: Quality
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+      - name: Lint Python
+        run: ruff check src tests sdk/forest_data/forest_data sdk/forest_data/tests
+      - name: Test Python without warnings
+        run: python -W error -m pytest -q
+
+  social-templates:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/social-post-templates
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/social-post-templates/package-lock.json
+      - name: Install application dependencies
+        run: npm ci
+      - name: Install browser
+        run: npx playwright install --with-deps chromium
+      - name: Validate manifests and assets
+        run: npm run check
+      - name: Build templates application
+        run: npm run build
+      - name: Test templates application
+        run: npm run test:e2e

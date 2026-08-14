@@ -299,10 +299,10 @@ def _profile_delimited(path: Path, suffix: str) -> dict[str, Any]:
 
 def _profile_excel(path: Path) -> dict[str, Any]:
     try:
-        xl = pd.ExcelFile(path)
-        sheet = xl.sheet_names[0]
-        header = pd.read_excel(path, sheet_name=sheet, nrows=0)
-        df = pd.read_excel(path, sheet_name=sheet)
+        with pd.ExcelFile(path) as xl:
+            sheet = xl.sheet_names[0]
+            header = pd.read_excel(xl, sheet_name=sheet, nrows=0)
+            df = pd.read_excel(xl, sheet_name=sheet)
     except Exception as exc:
         return {
             "profile_status": "partial",
