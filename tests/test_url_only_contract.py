@@ -90,6 +90,19 @@ def test_manifest_builder_requires_explicit_source_url() -> None:
         )
 
 
+def test_manifest_builder_rejects_storage_metadata_url() -> None:
+    with pytest.raises(ValueError, match="official source"):
+        build_manifest(
+            "dataset", "Dataset", "https://source.test/page", "source/dataset",
+            [{"kind": "data", "period": "2024", "filename": "data.csv",
+              "source_url": "https://source.test/data.csv"}],
+            meta={"metadata_file": {
+                "filename": "dictionary.txt",
+                "source_url": "https://example.supabase.co/storage/v1/object/public/open-data/meta/dictionary.txt",
+            }},
+        )
+
+
 def test_incremental_manifest_merge_retains_existing_source_urls() -> None:
     class Logger:
         def info(self, *args: object, **kwargs: object) -> None:

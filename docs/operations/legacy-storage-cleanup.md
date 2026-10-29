@@ -17,3 +17,5 @@ A API do projeto precisa estar liberada. Durante a restrição `exceed_storage_s
 A exclusão pela API é permanente. Nunca use `DELETE FROM storage.objects`: apagar somente a linha de metadados pode deixar o arquivo físico órfão e ainda sujeito à cobrança. Consulte [Delete Objects](https://supabase.com/docs/guides/storage/management/delete-objects) e [Storage Schema](https://supabase.com/docs/guides/storage/schema/design).
 
 A métrica de cota é calculada como média de GB-horas no ciclo. Mesmo após a limpeza, a restrição pode persistir até o novo ciclo. Consulte [Manage Storage size usage](https://supabase.com/docs/guides/platform/manage-your-usage/storage-size).
+
+Após a recuperação, `.github/workflows/weekly_sync.yml` atualiza semanalmente os manifests de focos e boletins INPE, os três datasets CVM com maiores cópias legadas e os catálogos. A mescla incremental preserva URLs oficiais históricas quando a execução usa um recorte recente.

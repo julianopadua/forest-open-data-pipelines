@@ -29,4 +29,11 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           SUPABASE_BUCKET_OPEN_DATA: open-data
         run: |
-          forest-pipelines sync cvm_fi_inf_diario --latest-months 12
+          status=0
+          forest-pipelines sync inpe_bdqueimadas_focos --latest-months 2 || status=1
+          forest-pipelines sync inpe_bdqueimadas_boletins_integrados --latest-months 3 || status=1
+          forest-pipelines sync cvm_fi_inf_diario --latest-months 12 || status=1
+          forest-pipelines sync cvm_fi_doc_entrega --latest-months 12 || status=1
+          forest-pipelines sync cvm_fi_doc_extrato || status=1
+          forest-pipelines publish-catalog || status=1
+          exit "$status"
