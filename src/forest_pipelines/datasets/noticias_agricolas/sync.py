@@ -259,21 +259,7 @@ def sync(
     except json.JSONDecodeError as e:
         raise RuntimeError("JSON inválido após serialização") from e
 
-    prefix = cfg.bucket_prefix.rstrip("/")
-    now = datetime.now(timezone.utc)
-    snap_dir = f"{prefix}/snapshots/{now:%Y}/{now:%m}/{now:%d}"
-    snap_name = f"{now:%Y%m%dT%H%M%SZ}.json"
-    snapshot_path = f"{snap_dir}/{snap_name}"
-
-    logger.info("Enviando snapshot versionado: %s", snapshot_path)
-    storage.upload_bytes(
-        object_path=snapshot_path,
-        data=raw_bytes,
-        content_type="application/json",
-        upsert=True,
-    )
-
-    stable_path = f"{prefix}/manifest.json"
+    stable_path = f"{cfg.bucket_prefix.rstrip('/')}/manifest.json"
     logger.info("Atualizando manifest estável: %s", stable_path)
     storage.upload_bytes(
         object_path=stable_path,

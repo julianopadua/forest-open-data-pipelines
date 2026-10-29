@@ -42,46 +42,6 @@ class SupabaseStorage:
     def client(self):
         return create_client(self.supabase_url, self.service_role_key)
 
-    def upload_file(self, object_path: str, local_path: str, content_type: str, upsert: bool = True) -> None:
-        upsert_str = "true" if upsert else "false"
-        last_error: Exception | None = None
-
-        for attempt in range(1, 4):
-            try:
-                with open(local_path, "rb") as f:
-                    resp = (
-                        self.client.storage
-                        .from_(self.bucket)
-                        .upload(
-                            file=f,
-                            path=object_path,
-                            file_options={"content-type": content_type, "upsert": upsert_str},
-                        )
-                    )
-
-                if self.logger:
-                    self.logger.info(
-                        "Upload: %s -> %s (attempt=%s, resp=%s)",
-                        local_path,
-                        object_path,
-                        attempt,
-                        str(resp)[:200],
-                    )
-                return
-            except Exception as e:  # noqa: BLE001
-                last_error = e
-                if self.logger:
-                    self.logger.warning(
-                        "Falha no upload de arquivo %s (attempt=%s). erro=%s",
-                        object_path,
-                        attempt,
-                        e,
-                    )
-                if attempt < 3:
-                    time.sleep(2 * attempt)
-
-        raise RuntimeError(f"Falha ao subir arquivo para {object_path}") from last_error
-
     def upload_bytes(self, object_path: str, data: bytes, content_type: str, upsert: bool = True) -> None:
         upsert_str = "true" if upsert else "false"
         last_error: Exception | None = None

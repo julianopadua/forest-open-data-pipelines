@@ -12,7 +12,6 @@ Ingerir as cinco notícias mais recentes de cada uma das três categorias config
 | Configuração | `configs/datasets/noticias_agricolas_news.yml` |
 | Prefixo no bucket | `news/noticias-agricolas` |
 | Manifest estável | `news/noticias-agricolas/manifest.json` |
-| Snapshots versionados | `news/noticias-agricolas/snapshots/YYYY/MM/DD/<timestamp>.json` |
 
 ## Execução local
 
@@ -28,12 +27,14 @@ O parâmetro `--latest-months` não se aplica a este dataset e é ignorado.
 
 O manifest inclui `source`, `source_name`, `generated_at`, `item_count`, `categories_monitored`, `items[]`, além de `dataset_id`, `title`, `source_dataset_url` e `bucket_prefix` para alinhamento com o restante do repositório. Cada item contém `url`, `title`, `category_slug`, `category_label`, `categories`, `published_at` (ISO 8601 em UTC com sufixo `Z`), `lead`, `excerpt` (igual ao lead quando existente; senão primeiro parágrafo útil do corpo), `content_text`, `image_url` (pode ser `null`), `tags`, `source`, `source_name`, `source_article_id`, `scraped_at` e `rank_within_category`.
 
-## Publicação segura (rollback)
+## Publicação segura
 
 1. Toda a coleta e montagem ocorrem em memória.
 2. Validação mínima (quantidade de itens e campos obrigatórios por item).
-3. Só então são enviados o snapshot datado e, em seguida, o `manifest.json` estável.
+3. Só então o `manifest.json` estável é atualizado com upsert.
 4. Se a validação falhar, nenhum upload é feito e o manifest anterior permanece inalterado no Storage.
+
+Snapshots datados não são mais criados. Os snapshots publicados por versões anteriores continuam no bucket até uma limpeza feita pela API oficial do Storage.
 
 ## Limitações (versão atual)
 
@@ -44,6 +45,5 @@ O manifest inclui `source`, `source_name`, `generated_at`, `item_count`, `catego
 
 ## Próximos passos sugeridos (fora do escopo atual)
 
-- Espelhar imagens no Storage.
 - Incluir mais categorias ou filtros temáticos (incêndios, desmatamento, clima extremo).
 - Integração explícita na sidebar do relatório `bdqueimadas_overview` no `forest-portal` ([forest-portal-bdqueimadas-related-news-prompt.md](../integrations/forest-portal-bdqueimadas-related-news-prompt.md)).
