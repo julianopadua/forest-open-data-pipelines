@@ -1,7 +1,12 @@
 # tests/test_noticias_agricolas_parsers.py
 from __future__ import annotations
 
+import importlib
+import logging
+from dataclasses import replace
 from pathlib import Path
+from types import SimpleNamespace
+
 
 from forest_pipelines.datasets.noticias_agricolas.article_parser import (
     extract_source_article_id,
@@ -14,6 +19,7 @@ from forest_pipelines.datasets.noticias_agricolas.models import NewsListItem
 from forest_pipelines.datasets.noticias_agricolas.text_cleanup import first_useful_paragraph
 
 FIX = Path(__file__).resolve().parent / "fixtures" / "noticias_agricolas"
+news_sync = importlib.import_module("forest_pipelines.datasets.noticias_agricolas.sync")
 
 
 def _read(name: str) -> str:
@@ -115,3 +121,44 @@ def test_merge_dedup_url_two_categories() -> None:
     assert set(m.category_slugs) == {"clima", "meio-ambiente"}
     assert m.rank_within_category == 1
     assert m.primary_slug == "clima"
+
+
+def test_sync_publishes_only_stable_manifest(monkeypatch) -> None:
+    datasets_dir = Path(__file__).resolve().parents[1] / "configs" / "datasets"
+    cfg = news_sync.load_dataset_cfg(datasets_dir, "noticias_agricolas_news")
+    monkeypatch.setattr(
+        news_sync,
+        "load_dataset_cfg",
+        lambda _datasets_dir, _dataset_id: replace(cfg, min_items_for_stable_publish=1),
+    )
+
+    class FakeHttpClient:
+        def __init__(self, *_args, **_kwargs) -> None:
+            pass
+
+        def get_text(self, url: str) -> str:
+            if url.endswith("/"):
+                return _read("category_list.html")
+            return _read("article_full.html")
+
+    class FakeStorage:
+        def __init__(self) -> None:
+            self.uploads: list[tuple[str, bytes]] = []
+
+        def upload_bytes(self, object_path: str, data: bytes, **_kwargs) -> None:
+            self.uploads.append((object_path, data))
+
+        def public_url(self, object_path: str) -> str:
+            return f"https://example.com/{object_path}"
+
+    monkeypatch.setattr(news_sync, "ResilientHttpClient", FakeHttpClient)
+    storage = FakeStorage()
+    result = news_sync.sync(
+        SimpleNamespace(datasets_dir=datasets_dir),
+        storage,
+        logging.getLogger(__name__),
+    )
+
+    assert len(storage.uploads) == 1
+    assert storage.uploads[0][0] == "news/noticias-agricolas/manifest.json"
+    assert result["_cli_skip_manifest_upload"] is True
