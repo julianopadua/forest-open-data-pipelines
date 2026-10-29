@@ -20,7 +20,7 @@ from forest_pipelines.cli_help import (
 )
 from forest_pipelines.freshness.cli import app as freshness_app
 from forest_pipelines.logging_ import get_logger
-from forest_pipelines.manifests.build_manifest import build_manifest
+from forest_pipelines.manifests.build_manifest import build_manifest, is_storage_object_url
 from forest_pipelines.profiling import profile_cache_from_manifest, use_profile_cache
 from forest_pipelines.registry.datasets import get_dataset_runner
 from forest_pipelines.reports.publish.supabase import publish_report_package
@@ -342,8 +342,17 @@ def _merge_incremental_manifest_items(
         for item in existing_items
         if isinstance(item, dict)
         and isinstance(item.get("source_url"), str)
+        and not is_storage_object_url(item["source_url"])
         and item.get("source_url") not in seen
     ]
+    skipped = sum(
+        isinstance(item, dict)
+        and isinstance(item.get("source_url"), str)
+        and is_storage_object_url(item["source_url"])
+        for item in existing_items
+    )
+    if skipped:
+        logger.warning("Skipped legacy manifest items without official source URLs: %d", skipped)
     if not retained:
         return current_manifest
 

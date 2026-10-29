@@ -5,6 +5,8 @@ import sys
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
+
 import forest_pipelines.cli as cli_module
 from forest_pipelines.cli import _merge_incremental_manifest_items, _run_dataset_sync
 from forest_pipelines.manifests.build_manifest import build_manifest
@@ -32,7 +34,7 @@ def test_registered_dataset_runners_do_not_upload_payload_files() -> None:
     assert offenders == []
 
 
-def test_manifest_builder_removes_legacy_storage_urls() -> None:
+def test_manifest_builder_keeps_official_urls_and_removes_legacy_fields() -> None:
     manifest = build_manifest(
         "dataset",
         "Dataset",
@@ -43,6 +45,7 @@ def test_manifest_builder_removes_legacy_storage_urls() -> None:
                 "kind": "data",
                 "period": "2024",
                 "filename": "data.csv",
+                "source_url": "https://source.test/data.csv",
                 "public_url": "https://storage.test/data.csv",
                 "storage_path": "source/dataset/data.csv",
             }
@@ -50,6 +53,7 @@ def test_manifest_builder_removes_legacy_storage_urls() -> None:
         meta={
             "metadata_file": {
                 "filename": "dictionary.txt",
+                "source_url": "https://source.test/dictionary.txt",
                 "public_url": "https://storage.test/dictionary.txt",
                 "storage_path": "source/dataset/dictionary.txt",
             }
@@ -58,17 +62,40 @@ def test_manifest_builder_removes_legacy_storage_urls() -> None:
 
     item = manifest["items"][0]
     metadata_file = manifest["meta"]["metadata_file"]
-    assert item["source_url"] == "https://storage.test/data.csv"
-    assert metadata_file["source_url"] == "https://storage.test/dictionary.txt"
+    assert item["source_url"] == "https://source.test/data.csv"
+    assert metadata_file["source_url"] == "https://source.test/dictionary.txt"
     assert "public_url" not in item
     assert "storage_path" not in item
     assert "public_url" not in metadata_file
     assert "storage_path" not in metadata_file
 
 
+def test_manifest_builder_rejects_storage_object_urls() -> None:
+    with pytest.raises(ValueError, match="official source"):
+        build_manifest(
+            "dataset", "Dataset", "https://source.test/page", "source/dataset",
+            [{"kind": "data", "period": "2024", "filename": "data.csv",
+              "source_url": "https://example.supabase.co/storage/v1/object/public/open-data/data.csv"}],
+            meta={},
+        )
+
+
+def test_manifest_builder_requires_explicit_source_url() -> None:
+    with pytest.raises(ValueError, match="missing required source_url"):
+        build_manifest(
+            "dataset", "Dataset", "https://source.test/page", "source/dataset",
+            [{"kind": "data", "period": "2024", "filename": "data.csv",
+              "public_url": "https://example.supabase.co/storage/v1/object/public/open-data/data.csv"}],
+            meta={},
+        )
+
+
 def test_incremental_manifest_merge_retains_existing_source_urls() -> None:
     class Logger:
         def info(self, *args: object, **kwargs: object) -> None:
+            return None
+
+        def warning(self, *args: object, **kwargs: object) -> None:
             return None
 
     current = build_manifest(
@@ -104,6 +131,14 @@ def test_incremental_manifest_merge_retains_existing_source_urls() -> None:
             }
         ],
         meta={},
+    )
+    existing["items"].append(
+        {
+            "kind": "data",
+            "period": "2023",
+            "filename": "legacy.csv",
+            "source_url": "https://example.supabase.co/storage/v1/object/public/open-data/data/legacy.csv",
+        }
     )
 
     merged = _merge_incremental_manifest_items(

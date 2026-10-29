@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from typing import Any, Iterable, Literal
+from urllib.parse import urlsplit
 
 MANIFEST_SCHEMA_VERSION = "2.0"
 
@@ -21,12 +22,25 @@ def now_iso() -> str:
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
+def is_storage_object_url(value: str) -> bool:
+    return "/storage/v1/object/" in urlsplit(value).path.lower()
+
+
+def _require_source_url(value: Any, label: str) -> str:
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(f"{label} missing required source_url")
+    if is_storage_object_url(value):
+        raise ValueError(f"{label} source_url points to Storage instead of the official source")
+    return value
+
+
 def _normalize_metadata_file(value: Any) -> Any:
     if not isinstance(value, dict):
         return value
     normalized = dict(value)
-    if "source_url" not in normalized and normalized.get("public_url"):
-        normalized["source_url"] = normalized["public_url"]
+    normalized["source_url"] = _require_source_url(
+        normalized.get("source_url"), "metadata_file"
+    )
     normalized.pop("public_url", None)
     normalized.pop("storage_path", None)
     return normalized
@@ -79,12 +93,9 @@ def _normalize_item(item: dict[str, Any]) -> dict[str, Any]:
         raise TypeError("manifest items must be dicts")
 
     normalized = dict(item)
-    if "source_url" not in normalized and normalized.get("public_url"):
-        normalized["source_url"] = normalized["public_url"]
-    if "source_url" not in normalized and normalized.get("url"):
-        normalized["source_url"] = normalized["url"]
-    if not normalized.get("source_url"):
-        raise ValueError("manifest item missing required source_url")
+    normalized["source_url"] = _require_source_url(
+        normalized.get("source_url"), "manifest item"
+    )
 
     normalized.pop("public_url", None)
     normalized.pop("storage_path", None)
